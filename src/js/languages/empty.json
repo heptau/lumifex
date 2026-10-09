@@ -832,8 +832,7 @@
     "Theme:": "",
     "URL:": "",
     "Color Picker": "",
-    "squares": "",
-    "grey": "",
+    "Squares": "",
     "pixels": "",
     "inches": "",
     "centimeters": "",
@@ -1489,5 +1488,12 @@
     "Underline:": "",
     "Strikethrough:": "",
     "Stroke color:": "",
-    "Alignment:": ""
+    "Alignment:": "",
+    "white": "",
+    "black": "",
+    "yellow": "",
+    "cyan": "",
+    "magenta": "",
+    "Cyan": "",
+    "Magenta": ""
 }

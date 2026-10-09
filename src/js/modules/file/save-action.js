@@ -109,7 +109,7 @@ class File_save_action_class {
 			//PDF - one page, the image as JPEG (a page has the size of the image at the resolution from Settings)
 			if (Helper.strpos(fname, '.pdf') == false)
 				fname = `${fname  }.pdf`;
-			const dpi = parseInt(this.owner.Tools_settings.get_setting('resolution'), 10) || 72;
+			const dpi = parseInt(this.owner.Tools_settings.get_setting('resolution'), 10) || 96;
 			canvas.toBlob(async (blob) => {
 				const jpeg = new Uint8Array(await blob.arrayBuffer());
 				const pdf = build_pdf(jpeg, canvas.width, canvas.height, canvas.width * 72 / dpi, canvas.height * 72 / dpi);

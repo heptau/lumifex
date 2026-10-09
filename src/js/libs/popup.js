@@ -44,6 +44,7 @@ import Base_layers_class from './../core/base-layers.js';
 import Base_gui_class from './../core/base-gui.js';
 import Tools_translate_class, { t } from './../modules/tools/translate.js';
 import Helper_class from './../libs/helpers.js';
+import { SEPARATOR } from './../libs/transparency-types.js';
 import { is_replaying, next_replay_params, note_dialog_done, note_dialog_cancelled } from './../libs/actions.js';
 
 const template = `
@@ -665,6 +666,10 @@ class Dialog_class {
 								sel = 'selected="selected"';
 							if (parameter.value == undefined && k == 0)
 								sel = 'selected="selected"';
+							if (parameter.values[j] === SEPARATOR) {
+								html += '<option disabled value="">──────────</option>';
+								continue;
+							}
 							html += `<option ${sel} value="${esc(parameter.values[j])}">${esc(this.option_label(parameter.values[j]))}</option>`;
 							k++;
 						}

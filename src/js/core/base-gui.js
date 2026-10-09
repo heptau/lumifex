@@ -5,6 +5,7 @@
 
 import app from './../app.js';
 import config from './../config.js';
+import { is_transparency_type, normalize_transparency_type, transparency_class } from './../libs/transparency-types.js';
 import Base_layers_class from './base-layers.js';
 import GUI_tools_class from './gui/gui-tools.js';
 import GUI_preview_class from './gui/gui-preview.js';
@@ -127,25 +128,17 @@ class Base_gui_class {
 	load_default_values() {
 		//transparency
 		const transparency_cookie = this.Helper.getCookie('transparency');
-		if (transparency_cookie === null) {
-			//default
-			config.TRANSPARENCY = false;
-		}
-		if (transparency_cookie) {
-			config.TRANSPARENCY = true;
-		}
-		else {
-			config.TRANSPARENCY = false;
-		}
+		//transparency is on by default
+		config.TRANSPARENCY = transparency_cookie === null ? true : !!transparency_cookie;
 
 		//transparency_type
 		const transparency_type = this.Helper.getCookie('transparency_type');
 		if (transparency_type === null) {
 			//default
-			config.TRANSPARENCY_TYPE = 'squares';
+			config.TRANSPARENCY_TYPE = 'Squares';
 		}
-		if (transparency_type) {
-			config.TRANSPARENCY_TYPE = transparency_type;
+		if (is_transparency_type(transparency_type)) {
+			config.TRANSPARENCY_TYPE = normalize_transparency_type(transparency_type);
 		}
 
 		//snap
@@ -501,7 +494,7 @@ class Base_gui_class {
 			return false;
 		}
 		else{
-			target.className = `transparent-grid ${  config.TRANSPARENCY_TYPE}`;
+			target.className = `transparent-grid ${  transparency_class(config.TRANSPARENCY_TYPE)}`;
 		}
 		target.style.backgroundSize = `${gap * 2  }px auto`;
 	}

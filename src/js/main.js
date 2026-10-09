@@ -69,4 +69,6 @@ window.addEventListener('load', () => {
 	// Render all
 	GUI.init();
 	Layers.init();
+	//rulers are shown by default
+	Layers.View_ruler.ruler();
 }, false);

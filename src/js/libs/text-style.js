@@ -1,4 +1,9 @@
 /**
+ * @typedef {Object<string, any>} Meta style of a span (size, bold, fill_color...)
+ * @typedef {{text: string, meta: Meta}} Span
+ */
+
+/**
  * Changes of the style of a whole text layer. A text layer keeps its text as lines of spans
  * ([[{text, meta}]], see text-replace.js); the meta of a span holds only what differs from the defaults of the Text tool,
  * so the functions here take those defaults as an argument and never write a default value back. Pure functions, no DOM.
@@ -106,10 +111,10 @@ function unmark(data) {
 }
 
 /**
- * @param {object[][]} data
- * @param {function(object, object): object} change gets a copy of a span inside the range and its meta, returns the new meta
+ * @param {Span[][]} data
+ * @param {function(Span, Meta): Meta} change gets a copy of a span inside the range and its meta, returns the new meta
  * @param {object} [range] only this part of the text; without it the whole text
- * @returns {object[][]} a changed copy
+ * @returns {Span[][]} a changed copy
  */
 function map_spans(data, change, range) {
 	const marked = mark_range(data, range);
@@ -126,11 +131,11 @@ function map_spans(data, change, range) {
 /**
  * Sets the given style on the spans of the range (or all).
  *
- * @param {object[][]} data
- * @param {object} changes for example {size: 24, bold: true, fill_color: '#ff0000'}
- * @param {object} defaults the default meta of the Text tool; a value equal to the default is not stored
+ * @param {Span[][]} data
+ * @param {Meta} changes for example {size: 24, bold: true, fill_color: '#ff0000'}
+ * @param {Meta} defaults the default meta of the Text tool; a value equal to the default is not stored
  * @param {object} [range]
- * @returns {object[][]}
+ * @returns {Span[][]}
  */
 export function apply_meta(data, changes, defaults, range) {
 	return map_spans(data, (span, meta) => {
@@ -144,10 +149,10 @@ export function apply_meta(data, changes, defaults, range) {
 /**
  * The style of the first span that has some text (the dialog shows it), with the defaults filled in.
  *
- * @param {object[][]} data
- * @param {object} defaults
+ * @param {Span[][]|null} data
+ * @param {Meta} defaults
  * @param {object} [range] the style of the beginning of this part
- * @returns {object}
+ * @returns {Meta}
  */
 export function read_meta(data, defaults, range) {
 	let found = null;
@@ -173,11 +178,11 @@ export function read_meta(data, defaults, range) {
 /**
  * Turns a flag (bold, italic, underline, strikethrough) on for the text (or the range), or off when it is on everywhere already.
  *
- * @param {object[][]} data
+ * @param {Span[][]} data
  * @param {string} key
- * @param {object} defaults
+ * @param {Meta} defaults
  * @param {object} [range]
- * @returns {object[][]}
+ * @returns {Span[][]}
  */
 export function toggle_flag(data, key, defaults, range) {
 	let all = true;
@@ -205,10 +210,10 @@ function title_case(text) {
 }
 
 /**
- * @param {object[][]} data
+ * @param {Span[][]} data
  * @param {'upper'|'lower'|'title'} mode
  * @param {object} [range]
- * @returns {object[][]}
+ * @returns {Span[][]}
  */
 export function change_case(data, mode, range) {
 	return map_spans(data, (span, meta) => {
@@ -221,9 +226,9 @@ export function change_case(data, mode, range) {
 /**
  * Replaces the text by another, the first span keeps its style (the rest of the spans disappears).
  *
- * @param {object[][]} data
+ * @param {Span[][]|null} data
  * @param {string} text lines are separated by \n
- * @returns {object[][]}
+ * @returns {Span[][]}
  */
 export function replace_text(data, text) {
 	const first = data && data[0] && data[0][0] && data[0][0].meta ? data[0][0].meta : {};

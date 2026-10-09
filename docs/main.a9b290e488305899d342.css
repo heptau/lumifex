@@ -2086,10 +2086,28 @@ body .sp-preview{
 	background:white;
 }
 .transparent-grid.green{
-	background: #5be471;
+	background: #00ff00;
 }
 .transparent-grid.grey{
-	background: #dfdfdf;
+	background: #808080;
+}
+.transparent-grid.black{
+	background: #000000;
+}
+.transparent-grid.red{
+	background: #ff0000;
+}
+.transparent-grid.blue{
+	background: #0000ff;
+}
+.transparent-grid.yellow{
+	background: #ffff00;
+}
+.transparent-grid.cyan{
+	background: #00ffff;
+}
+.transparent-grid.magenta{
+	background: #ff00ff;
 }
 canvas{
 	position:relative;
@@ -4661,4 +4679,4 @@ html.large_ui input[type="number"] {
 }
 
 
-/*# sourceMappingURL=main.ab4d39b3c782f964b755.css.map*/
+/*# sourceMappingURL=main.a9b290e488305899d342.css.map*/

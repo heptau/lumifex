@@ -42,7 +42,7 @@ class Image_resize_class {
 
 	resize() {
 		const units = this.Tools_settings.get_setting('default_units');
-		const resolution = parseInt(this.Tools_settings.get_setting('resolution'), 10) || 72;
+		const resolution = parseInt(this.Tools_settings.get_setting('resolution'), 10) || 96;
 
 		//convert units
 		const width = from_pixels(config.WIDTH, units, resolution);

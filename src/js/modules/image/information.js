@@ -46,7 +46,7 @@ class Image_information_class {
 				{title: "Width:", value: `${width  } ${  units}`},
 				{title: "Height:", value: `${height  } ${  units}`},
 				{title: "Pixels:", value: pixels},
-				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 72},
+				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 96},
 				{name: "units", title: "Units:", type: "select", values: UNIT_NAMES, value: units},
 				{title: "Layers:", value: config.layers.length},
 				{title: "Unique colors:", value: '...'},
@@ -58,7 +58,7 @@ class Image_information_class {
 				}
 				dpi = clamp_dpi(dpi);
 				const new_units = is_unit(params.units) ? params.units : units;
-				if (dpi != (parseInt(resolution, 10) || 72) || new_units != units) {
+				if (dpi != (parseInt(resolution, 10) || 96) || new_units != units) {
 					app.State.do_action(new app.Actions.Update_config_action({RESOLUTION: dpi, UNITS: new_units})).then(() => {
 						this.Base_gui.GUI_information.update_units();
 					});

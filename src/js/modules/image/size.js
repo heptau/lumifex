@@ -40,7 +40,7 @@ class Image_size_class {
 				{name: "w", title: "Width:", value: width, placeholder: width},
 				{name: "h", title: "Height:", value: height, placeholder: height},
 				{name: "units", title: "Units:", type: "select", values: UNIT_NAMES, value: units},
-				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 72},
+				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 96},
 				{title: "Pixels:", html: '<span id="size_pixels">-</span>'},
 				{name: "resolution", title: "Preset:", values: resolutions},
 				{name: "layout", title: "Layout:", value: "Custom", values: ["Custom", "Landscape", "Portrait"]},

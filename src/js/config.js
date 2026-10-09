@@ -3,7 +3,7 @@
 const config = {};
 
 config.TRANSPARENCY = false;
-config.TRANSPARENCY_TYPE = 'squares'; //squares, green, grey
+config.TRANSPARENCY_TYPE = 'Squares'; //see TRANSPARENCY_TYPES in libs/transparency-types.js
 config.LANG = 'en';
 config.WIDTH = null;
 config.HEIGHT = null;

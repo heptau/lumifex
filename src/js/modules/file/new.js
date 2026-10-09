@@ -45,7 +45,7 @@ class File_new_class {
 		let transparency_cookie = this.Helper.getCookie('transparency');
 		if (transparency_cookie === null) {
 			//default
-			transparency_cookie = false;
+			transparency_cookie = true;
 		}
 		if (transparency_cookie) {
 			transparency = true;
@@ -66,7 +66,7 @@ class File_new_class {
 				{name: "width", title: "Width:", value: width},
 				{name: "height", title: "Height:", value: height},
 				{name: "units", title: "Units:", type: "select", values: UNIT_NAMES, value: units},
-				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 72},
+				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 96},
 				{title: "Pixels:", html: '<span id="new_pixels">-</span>'},
 				{name: "transparency", title: "Transparent:", value: transparency},
 			],

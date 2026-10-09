@@ -9,6 +9,16 @@ Only changes since version 5.0.0 are listed here.
 
 ## [Unreleased]
 
+### Fixed
+
+- CI: type check of `text-style.js` (typed spans); handlebars updated to 4.7.10 (Dependabot alerts); Jest 30 and webpack-dev-server 6 (the remaining `npm audit` findings have no patched release yet: `braces`, `sprintf-js`); the translation markup is built without parsing HTML and the language loader is checked before it is called (CodeQL alerts).
+
+### Changed
+
+- Transparency is on by default and shown as squares; the default resolution is 96 dpi; rulers are shown at start.
+- Transparency background names start with a capital letter like other select boxes.
+- Transparency background: pure green (#00ff00), grey exactly between white and black (#808080), new pure white, black, red, blue, yellow, cyan and magenta; the list is divided into groups by separators.
+
 ## [26.1.1] - 2026-10-09
 
 ### Fixed

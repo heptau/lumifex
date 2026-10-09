@@ -124,7 +124,7 @@ class Tools_translate_class {
 			return this.pending_langs[lang_code];
 		}
 		const loader = LANG_LOADERS.get(lang_code);
-		if (!loader) {
+		if (typeof loader !== 'function') {
 			return Promise.reject(new Error(`Unknown language: ${  lang_code}`));
 		}
 		this.pending_langs[lang_code] = loader().then((dict) => {

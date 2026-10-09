@@ -2,6 +2,7 @@ import config from './../../config.js';
 import Dialog_class from './../../libs/popup.js';
 import Helper_class from './../../libs/helpers.js';
 import Base_gui_class from './../../core/base-gui.js';
+import { TRANSPARENCY_TYPES, normalize_transparency_type } from './../../libs/transparency-types.js';
 import { AUTO, get_system_languages, order_languages } from './../../libs/system-preferences.js';
 import Tools_translate_class, { LANGUAGE_NAMES, t } from './../tools/translate.js';
 
@@ -24,7 +25,7 @@ class Tools_settings_class {
 	}
 
 	settings() {
-		const transparency_values = ['squares', 'green', 'grey'];
+		const transparency_values = TRANSPARENCY_TYPES;
 		const resolutions_values = [72, 96, 150, 300, 600];
 		const default_units_all = Object.keys(this.default_units_config);
 		const transparency = this.get_setting('transparency');
@@ -153,7 +154,7 @@ class Tools_settings_class {
 
 		//update config
 		config.TRANSPARENCY = this.get_setting('transparency');
-		config.TRANSPARENCY_TYPE = this.get_setting('transparency_type');
+		config.TRANSPARENCY_TYPE = normalize_transparency_type(this.get_setting('transparency_type')) || 'Squares';
 		config.SNAP = this.get_setting('snap');
 		config.guides_enabled = this.get_setting('guides');
 		this.Base_gui.change_theme(this.get_setting('theme'));
@@ -198,14 +199,14 @@ class Tools_settings_class {
 	get_setting(key, raw) {
 		const default_values = {
 			'theme': null,
-			'transparency': false,
+			'transparency': true,
 			'snap': true,
 			'guides': true,
 			'safe_search': true,
 			'exit_confirm': true,
 			'default_units': Object.keys(this.default_units_config)[0],
 			'default_units_short': Object.values(this.default_units_config)[0],
-			'resolution': 72,
+			'resolution': 96,
 			'thick_guides': false,
 			'enable_autoresize': config.enable_autoresize_by_default,
 			'open_in_new_tab': true,

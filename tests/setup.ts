@@ -25,7 +25,7 @@ jest.mock('alertifyjs', () => mockAlertify);
 // Mock config
 jest.mock('../src/js/config.js', () => ({
 	TRANSPARENCY: false,
-	TRANSPARENCY_TYPE: 'squares',
+	TRANSPARENCY_TYPE: 'Squares',
 	LANG: 'en',
 	WIDTH: 800,
 	HEIGHT: 600,

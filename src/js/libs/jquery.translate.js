@@ -4,40 +4,76 @@
 	const ALLOWED_TAGS = ['B', 'I', 'U', 'EM', 'STRONG', 'SPAN', 'SMALL', 'BR', 'CODE', 'SUB', 'SUP', 'A'];
 	const ALLOWED_ATTRS = ['class', 'title', 'href', 'target', 'rel'];
 
-	function clean_node(source, target) {
-		Array.prototype.forEach.call(source.childNodes, (node) => {
-			if (node.nodeType === 3) {
-				target.appendChild(document.createTextNode(node.nodeValue));
+	const ENTITIES = {amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0'};
+
+	function decode_entities(text) {
+		return text.replace(/&(#\d{1,6}|#x[0-9a-f]{1,5}|[a-z]{2,5});/gi, (match, name) => {
+			if (name[0] === '#') {
+				const code = name[1].toLowerCase() === 'x' ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
+				return code > 0 && code < 0x10ffff && !(code >= 0xd800 && code <= 0xdfff) ? String.fromCodePoint(code) : match;
 			}
-			else if (node.nodeType === 1) {
-				if (ALLOWED_TAGS.indexOf(node.tagName) < 0) {
-					//unknown element: keep only its (cleaned) content
-					clean_node(node, target);
-					return;
-				}
-				const copy = document.createElement(node.tagName);
-				Array.prototype.forEach.call(node.attributes, (attribute) => {
-					const name = attribute.name.toLowerCase();
-					if (ALLOWED_ATTRS.indexOf(name) < 0) {
-						return;
-					}
-					if (name === 'href' && /^(https?:|mailto:|#)/i.test(attribute.value.trim()) === false) {
-						return;
-					}
-					copy.setAttribute(name, attribute.value);
-				});
-				clean_node(node, copy);
-				target.appendChild(copy);
-			}
+			return Object.prototype.hasOwnProperty.call(ENTITIES, name.toLowerCase()) ? ENTITIES[name.toLowerCase()] : match;
 		});
 	}
 
-	//sets the content of the element from a text with simple markup, without evaluating it as HTML
+	//copies the allowed attributes of a tag (`attributes` is the text between the tag name and ">")
+	function copy_attributes(element, attributes) {
+		const pattern = /([a-z][a-z0-9-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+		let match;
+		while ((match = pattern.exec(attributes)) !== null) {
+			const name = match[1].toLowerCase();
+			const value = decode_entities(match[2] !== undefined ? match[2] : match[3]);
+			if (ALLOWED_ATTRS.indexOf(name) < 0) {
+				continue;
+			}
+			if (name === 'href' && /^(https?:|mailto:|#)/i.test(value.trim()) === false) {
+				continue;
+			}
+			element.setAttribute(name, value);
+		}
+	}
+
+	//sets the content of the element from a text with simple markup. The text is never parsed as HTML:
+	//only the allowed tags are recognized and built with the DOM API, everything else stays plain text
 	function set_safe_content($element, text) {
-		const parsed = new DOMParser().parseFromString(String(text), 'text/html');
-		const fragment = document.createDocumentFragment();
-		clean_node(parsed.body, fragment);
-		$element.empty().append(fragment);
+		const root = document.createDocumentFragment();
+		const stack = [root];
+		const open_tags = [];
+		const tag = /<(\/?)([a-z][a-z0-9]*)((?:\s+[a-z][a-z0-9-]*\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>/gi;
+		const source = String(text);
+		let last = 0;
+		let match;
+		const add_text = (chunk) => {
+			if (chunk !== '') {
+				stack[stack.length - 1].appendChild(document.createTextNode(decode_entities(chunk)));
+			}
+		};
+		while ((match = tag.exec(source)) !== null) {
+			add_text(source.slice(last, match.index));
+			last = tag.lastIndex;
+			const name = match[2].toUpperCase();
+			if (ALLOWED_TAGS.indexOf(name) < 0) {
+				//unknown element: its tags are dropped, the content is kept
+				continue;
+			}
+			if (match[1] === '/') {
+				const index = open_tags.lastIndexOf(name);
+				if (index >= 0) {
+					open_tags.length = index;
+					stack.length = index + 1;
+				}
+				continue;
+			}
+			const element = document.createElement(name);
+			copy_attributes(element, match[3]);
+			stack[stack.length - 1].appendChild(element);
+			if (name !== 'BR' && match[4] !== '/') {
+				open_tags.push(name);
+				stack.push(element);
+			}
+		}
+		add_text(source.slice(last));
+		$element.empty().append(root);
 	}
 
 	$.fn.translate = function (options) {

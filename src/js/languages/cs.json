@@ -856,8 +856,7 @@
     "Theme:": "Motiv:",
     "URL:": "URL:",
     "Color Picker": "Výběr barvy",
-    "squares": "Čtverečky",
-    "grey": "Šedé",
+    "Squares": "Čtverečky",
     "pixels": "Pixely",
     "inches": "Palce",
     "centimeters": "Centimetry",
@@ -1489,5 +1488,7 @@
     "Outline": "Obrys",
     "Move Selection Content": "Přesun obsahu výběru",
     "Copy Selection Content": "Kopie obsahu výběru",
-    "Move Selection": "Přesun výběru"
+    "Move Selection": "Přesun výběru",
+    "Cyan": "Azurová",
+    "Magenta": "Purpurová"
 }
