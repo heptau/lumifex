@@ -651,7 +651,8 @@ body .sp-preview{
 	font-kerning: normal !important;
 }
 .loaded .canvas_wrapper canvas{
-	border: 1px solid var(--border-color);
+	border: 0;
+	box-shadow: 0 0 0 1px var(--border-color);
 }
 #mouse{
 	position:absolute;
@@ -703,6 +704,14 @@ body .sp-preview{
 }
 .transparent-grid.magenta{
 	background: #ff00ff;
+}
+/* The background of the image is 1 px smaller on every side: the edge pixels of the canvas may be only partly covered
+   (a fractional position, scaling) and the color of the background would then show as a frame around the image */
+.canvas_wrapper > .transparent-grid{
+	top: 1px;
+	left: 1px;
+	width: calc(100% - 2px);
+	height: calc(100% - 2px);
 }
 canvas{
 	position:relative;

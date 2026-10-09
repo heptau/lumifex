@@ -275,11 +275,15 @@ class GUI_preview_class {
 			canvas.style.margin = `${Math.round((this.PREVIEW_BOX.h - h) / 2)  }px auto 0`;
 		}
 		if (background) {
-			background.style.width = `${w  }px`;
-			background.style.height = `${h  }px`;
-			background.style.left = '50%';
-			background.style.top = `${Math.round((this.PREVIEW_BOX.h - h) / 2)  }px`;
-			background.style.transform = 'translateX(-50%)';
+			//centered by the same rule as the canvas (auto margins), not by a transform that can land between pixels;
+			//1 px smaller on every side so that its color never shows around the preview (see .canvas_wrapper > .transparent-grid)
+			background.style.width = `${Math.max(1, w - 2)  }px`;
+			background.style.height = `${Math.max(1, h - 2)  }px`;
+			background.style.left = '0';
+			background.style.right = '0';
+			background.style.margin = '0 auto';
+			background.style.top = `${Math.round((this.PREVIEW_BOX.h - h) / 2) + 1  }px`;
+			background.style.transform = 'none';
 		}
 		config.need_render = true;
 		return true;

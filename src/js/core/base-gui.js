@@ -283,6 +283,21 @@ class Base_gui_class {
 			this.prepare_canvas();
 			config.need_render = true;
 		}, false);
+		if (typeof ResizeObserver !== 'undefined') {
+			//panels, rulers... change the free space without a window resize
+			let pending = false;
+			new ResizeObserver(() => {
+				if (pending) {
+					return;
+				}
+				pending = true;
+				requestAnimationFrame(() => {
+					pending = false;
+					this.snap_canvas_to_pixels();
+					this.check_canvas_offset();
+				});
+			}).observe(document.getElementById('main_wrapper'));
+		}
 		this.check_canvas_offset();
 
 		//confirmation on exit
@@ -417,7 +432,30 @@ class Base_gui_class {
 		document.getElementById('canvas_wrapper').style.width = `${w  }px`;
 		document.getElementById('canvas_wrapper').style.height = `${h  }px`;
 
+		this.snap_canvas_to_pixels();
 		this.check_canvas_offset();
+	}
+
+	/**
+	 * The canvas is centered, so with an odd free space or a panel on a fractional position it lands between
+	 * device pixels: its edges are then blended with the background below it and a light frame shows around the image.
+	 * The wrapper is moved (position: relative) to the nearest device pixel.
+	 */
+	snap_canvas_to_pixels() {
+		const wrapper = document.getElementById('canvas_wrapper');
+		if (!wrapper) {
+			return;
+		}
+		wrapper.style.left = '0px';
+		wrapper.style.top = '0px';
+		if (is_transformed(config.view)) {
+			return;
+		}
+		const rect = wrapper.getBoundingClientRect();
+		const ratio = window.devicePixelRatio || 1;
+		const shift = (value) => Math.round(value * ratio) / ratio - value;
+		wrapper.style.left = `${shift(rect.left)}px`;
+		wrapper.style.top = `${shift(rect.top)}px`;
 	}
 
 	load_saved_changes() {

@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Fixed
 
+- A strip of the transparency background (a white frame) was visible on the left and top edge of the image: the canvas border shifted the canvas against the background; the outline is now a shadow outside the canvas, the canvas is snapped to whole device pixels, and when the whole image is visible it is drawn exactly over the whole canvas (at zoom other than 100 % the edge row was partly transparent and the background color showed through) (a centered canvas used to land between pixels); the background under the image is 1 px smaller on every side so that it can never show as a frame; the same in the Navigator preview, where the background is also centered the same way as the canvas).
 - CI: type check of `text-style.js` (typed spans); handlebars updated to 4.7.10 (Dependabot alerts); Jest 30 and webpack-dev-server 6 (the remaining `npm audit` findings have no patched release yet: `braces`, `sprintf-js`); the translation markup is built without parsing HTML and the language loader is checked before it is called (CodeQL alerts).
 
 ### Changed

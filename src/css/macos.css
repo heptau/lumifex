@@ -864,8 +864,10 @@ body.no_status {
 	background-color: var(--background);
 }
 .loaded .canvas_wrapper canvas {
-	border: 0.5px solid var(--border-color);
-	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+	/* no border: it would shift the canvas against the transparency background under it and
+	   a strip of that background would show on the left and top edge; the outline is drawn outside */
+	border: 0;
+	box-shadow: 0 0 0 0.5px var(--border-color), 0 1px 8px rgba(0, 0, 0, 0.3);
 }
 .ruler_left, .ruler_top {
 	background-color: var(--section-background-color);

@@ -96,6 +96,19 @@ const zoomView = (() => {
 			if (wp2.y < ctx.canvas.height) {
 				m[5] = (pos.y -= wp2.y - ctx.canvas.height);
 			}
+			//The canvas has whole pixels (ceil of the scaled image), the uniform scale does not match it exactly, so
+			//a strip of the background below the canvas would show along an edge. When the whole image is visible
+			//(it differs from the canvas by less than a pixel) it is stretched to the canvas exactly.
+			const width = bounds.right - bounds.left;
+			const height = bounds.bottom - bounds.top;
+			if (width > 0 && height > 0
+				&& Math.abs(ctx.canvas.width - width * scale) < 1
+				&& Math.abs(ctx.canvas.height - height * scale) < 1) {
+				m[0] = ctx.canvas.width / width;
+				m[3] = ctx.canvas.height / height;
+				m[4] = pos.x = -bounds.left * m[0];
+				m[5] = pos.y = -bounds.top * m[3];
+			}
 		},
 		toWorld(from_x, from_y) {  // convert screen to world coords
 						const pointW = {};
