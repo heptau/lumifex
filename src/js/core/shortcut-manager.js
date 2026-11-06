@@ -9,7 +9,7 @@ const STORAGE_KEY = 'lumifex_shortcuts';
 
 //commands that make sense when the key is held down (the others run once per press: holding a key repeats the
 //event, and a command that switches something would switch it back and forth)
-const REPEATABLE = ['tools/brush_size.decrease', 'tools/brush_size.increase', 'view/zoom.in', 'view/zoom.out', 'edit/undo.undo', 'edit/redo.redo', 'edit/redo.redo|alternative'];
+const REPEATABLE = ['tools/brush_size.decrease', 'tools/brush_size.increase', 'view/zoom.in', 'view/zoom.out', 'edit/undo.undo', 'edit/redo.redo', 'edit/redo.redo|alternative', 'layer/blend_cycle.next', 'layer/blend_cycle.previous'];
 
 /**
  * The keyboard shortcuts of the program: the defaults (config-shortcuts.js and the menu), what the user changed

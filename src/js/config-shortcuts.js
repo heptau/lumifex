@@ -166,4 +166,7 @@ export const EXTRA_SHORTCUTS = [
 	{id: 'layer/move.up', group: 'Layer', name: 'Move Layer Up', target: 'layer/move.up', spec: 'Mod+]'},
 	{id: 'layer/move.down', group: 'Layer', name: 'Move Layer Down', target: 'layer/move.down', spec: 'Mod+['},
 	{id: 'layer/visibility.toggle', group: 'Layer', name: 'Show / Hide Layer', target: 'layer/visibility.toggle', spec: ''},
+	//Shift is not told apart for + and -, so Alt+Shift++ of Photoshop is Alt++ here
+	{id: 'layer/blend_cycle.next', group: 'Layer', name: 'Next Blend Mode', target: 'layer/blend_cycle.next', spec: 'Alt++'},
+	{id: 'layer/blend_cycle.previous', group: 'Layer', name: 'Previous Blend Mode', target: 'layer/blend_cycle.previous', spec: 'Alt+-'},
 ];

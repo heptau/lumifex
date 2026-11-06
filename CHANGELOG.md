@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Alt++ / Alt+- step through the blend modes of the active layer (Layer > Next / Previous Blend Mode in the shortcut editor, `libs/blend-modes.js`); the list of modes moved out of the layers panel.
 - Number keys set the opacity of the active layer like in Photoshop: 1 = 10 %, 5 = 50 %, 0 = 100 %; two digits typed quickly make an exact value (3, 5 = 35 %, 0, 0 = 0 %) (`libs/opacity-keys.js`).
 - Vector layers (line, arrow, curve, brush, pencil, pen) can now be rotated with the same rotation handle as raster layers (`libs/vector-rotation.js`); older projects that stored `rotate: null` for these layers are upgraded on load.
 

@@ -15,26 +15,7 @@ import Layer_duplicate_class from './../../modules/layer/duplicate.js';
 import Layer_raster_class from './../../modules/layer/raster.js';
 import { panel_rows, group_props_of } from './../../libs/layer-groups.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
-
-//blend modes shown in the layers panel (like Photoshop), canvas composite operation -> label
-const BLEND_MODES = [
-	['source-over', 'Normal'],
-	['darken', 'Darken'],
-	['multiply', 'Multiply'],
-	['color-burn', 'Color Burn'],
-	['lighten', 'Lighten'],
-	['screen', 'Screen'],
-	['color-dodge', 'Color Dodge'],
-	['overlay', 'Overlay'],
-	['soft-light', 'Soft Light'],
-	['hard-light', 'Hard Light'],
-	['difference', 'Difference'],
-	['exclusion', 'Exclusion'],
-	['hue', 'Hue'],
-	['saturation', 'Saturation'],
-	['color', 'Color'],
-	['luminosity', 'Luminosity'],
-];
+import { BLEND_MODES } from './../../libs/blend-modes.js';
 
 const template = `
 	<input type="search" id="layer_search" class="layer_search" aria-label="Search layers" autocomplete="off" />
