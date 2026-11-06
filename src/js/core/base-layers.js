@@ -17,6 +17,7 @@ import { t } from '../modules/tools/translate.js';
 import { fill_alpha, split_halo_filters } from "./../libs/layer-fill.js";
 import { effective_alpha, plan_groups } from "./../libs/layer-groups.js";
 import { make_identity, stack_signature, split_for_cache, preview_scale } from "./../libs/layer-signature.js";
+import { needs_generic_rotation, rotation_pivot } from "./../libs/vector-rotation.js";
 import { is_default as blend_if_is_default, apply_blend_if } from "./../libs/blend-if.js";
 import { adjust_image, mix_adjusted } from "./../libs/adjustment-layers.js";
 
@@ -922,9 +923,20 @@ class Base_layers_class {
 				typeof this.Base_gui.GUI_tools.tools_modules[render_class] !=
 				"undefined"
 			) {
+				const turned = needs_generic_rotation(object);
+				if (turned) {
+					const pivot = rotation_pivot(object);
+					ctx.save();
+					ctx.translate(pivot.x, pivot.y);
+					ctx.rotate((object.rotate * Math.PI) / 180);
+					ctx.translate(-pivot.x, -pivot.y);
+				}
 				this.Base_gui.GUI_tools.tools_modules[render_class].object[
 					render_function
 				](ctx, object, is_preview);
+				if (turned) {
+					ctx.restore();
+				}
 			} else {
 				this.render_success = false;
 				console.error(`Error: unknown layer type: ${  object.type}`);

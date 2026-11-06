@@ -50,7 +50,7 @@ class Line_class extends Base_tools_class {
 			render_function: [this.name, 'render'],
 			x: mouse_x,
 			y: mouse_y,
-			rotate: null,
+			rotate: 0,
 			is_vector: true,
 			color: config.COLOR
 		};

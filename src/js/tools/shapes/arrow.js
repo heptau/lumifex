@@ -51,7 +51,7 @@ class Arrow_class extends Base_tools_class {
 			render_function: [this.name, 'render'],
 			x: Math.round(mouse_x),
 			y: Math.round(mouse_y),
-			rotate: null,
+			rotate: 0,
 			is_vector: true,
 			color: config.COLOR
 		};

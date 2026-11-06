@@ -3,6 +3,7 @@ import config from './../config.js';
 import { Base_action } from './base.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
+import { normalize_rotate } from '../libs/vector-rotation.js';
 
 export class Insert_layer_action extends Base_action {
 	/**
@@ -78,6 +79,7 @@ export class Insert_layer_action extends Base_action {
 			}
 			layer[i] = this.settings[i];
 		}
+		layer.rotate = normalize_rotate(layer);
 
 		// Prepare image
 		let image_load_promise;

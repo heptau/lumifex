@@ -105,7 +105,7 @@ class Bezier_Curve_class extends Base_tools_class {
 				width: null,
 				height: null,
 				hide_selection_if_active: true,
-				rotate: null,
+				rotate: 0,
 				is_vector: true,
 				color: config.COLOR,
 				status: 'draft',

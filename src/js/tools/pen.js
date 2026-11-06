@@ -181,7 +181,7 @@ class Pen_class extends Base_tools_class {
 			height,
 			width_original: width,
 			height_original: height,
-			rotate: null,
+			rotate: 0,
 			is_vector: true,
 			color: config.COLOR,
 		};

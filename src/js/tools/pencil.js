@@ -81,7 +81,7 @@ class Pencil_class extends Base_tools_class {
 				width: config.WIDTH,
 				height: config.HEIGHT,
 				hide_selection_if_active: true,
-				rotate: null,
+				rotate: 0,
 				is_vector: true,
 				color: config.COLOR
 			};
