@@ -615,6 +615,10 @@ config.TOOLS = [
 		on_update: 'on_params_update',
 		on_leave: 'on_leave',
 		attributes: {
+			grid_overlay: {
+				value: 'Thirds',
+				values: ['None', 'Thirds', 'Golden Ratio', 'Diagonals', 'Grid'],
+			},
 			crop: true,
 		},
 	},

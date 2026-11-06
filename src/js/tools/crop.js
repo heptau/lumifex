@@ -29,6 +29,8 @@ class Crop_class extends Base_tools_class {
 			enable_borders: true,
 			enable_controls: true,
 			crop_lines: true,
+			//the guides inside the frame follow the option of the tool (a function, because the tool exists before its settings)
+			overlay_function: () => (config.TOOL && config.TOOL.name == this.name ? this.getParams().grid_overlay : null),
 			enable_rotation: false,
 			enable_move: false,
 			data_function: () => {

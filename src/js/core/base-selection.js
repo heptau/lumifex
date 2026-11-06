@@ -5,6 +5,7 @@
 
 import { is_ratio_modifier, keeps_ratio, constrain_ratio } from './../libs/resize-ratio.js';
 import { draw_rect_ants, ant_phase } from './../libs/marching-ants.js';
+import { overlay_lines } from './../libs/crop-overlay.js';
 import config from './../config.js';
 
 let instance = null;
@@ -262,39 +263,19 @@ class Base_selection_class {
 			}
 		}
 
-		//show crop lines
-		if(settings.crop_lines === true){
-
-			let part;
-			for(part = 1; part < 3; part++) {
-				this.ctx.lineWidth = 1 / config.ZOOM;
-				this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+		//show crop lines (rule of thirds, golden ratio...)
+		if (settings.crop_lines === true) {
+			const kind = typeof settings.overlay_function == 'function' ? settings.overlay_function() : null;
+			const lines = overlay_lines(kind, w, h);
+			this.ctx.lineWidth = 1 / config.ZOOM;
+			for (const style of ['rgba(255, 255, 255, 0.85)', 'rgba(0, 0, 0, 0.35)']) {
+				this.ctx.strokeStyle = style;
 				this.ctx.beginPath();
-				this.ctx.moveTo(x + w / 3 * part - halfLineWidth, y);
-				this.ctx.lineTo(x + w / 3 * part - halfLineWidth, y + h);
-				this.ctx.stroke();
-
-				this.ctx.lineWidth = 1 / config.ZOOM;
-				this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-				this.ctx.beginPath();
-				this.ctx.moveTo(x + w / 3 * part - halfLineWidth, y);
-				this.ctx.lineTo(x + w / 3 * part - halfLineWidth, y + h);
-				this.ctx.stroke();
-			}
-
-			for(part = 1; part < 3; part++) {
-				this.ctx.lineWidth = 1 / config.ZOOM;
-				this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-				this.ctx.beginPath();
-				this.ctx.moveTo(x, y + h / 3 * part - halfLineWidth);
-				this.ctx.lineTo(x + w, y + h / 3 * part - halfLineWidth);
-				this.ctx.stroke();
-
-				this.ctx.lineWidth = 1 / config.ZOOM;
-				this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-				this.ctx.beginPath();
-				this.ctx.moveTo(x, y + h / 3 * part - halfLineWidth);
-				this.ctx.lineTo(x + w, y + h / 3 * part - halfLineWidth);
+				for (const [x1, y1, x2, y2] of lines) {
+					//the half pixel keeps the line sharp, as before
+					this.ctx.moveTo(x + x1 - (x1 === x2 ? halfLineWidth : 0), y + y1 - (y1 === y2 ? halfLineWidth : 0));
+					this.ctx.lineTo(x + x2 - (x1 === x2 ? halfLineWidth : 0), y + y2 - (y1 === y2 ? halfLineWidth : 0));
+				}
 				this.ctx.stroke();
 			}
 		}
