@@ -1508,5 +1508,11 @@
     "Bands:": "",
     "Shift (%):": "",
     "Channel split:": "",
-    "Pattern:": ""
+    "Pattern:": "",
+    "Check for Updates": "",
+    "Could not check for updates. Are you online?": "",
+    "Lumifex is up to date.": "",
+    "Version {new} is available (you have {current}). Restart Lumifex to update?": "",
+    "Open documents are saved automatically and offered for restoring after the restart.": "",
+    "Restart": ""
 }

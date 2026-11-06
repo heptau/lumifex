@@ -9,6 +9,11 @@ const menuDefinition = [
 				target: 'help/about.about'
 			},
 			{
+				name: 'Check for Updates',
+				ellipsis: true,
+				target: 'help/update.check'
+			},
+			{
 				name: 'Support the Project',
 				href: 'https://github.com/sponsors/heptau'
 			},

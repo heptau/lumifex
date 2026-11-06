@@ -62,6 +62,12 @@ module.exports = (env, argv) => {
 			new CopyWebpackPlugin({
 				patterns: [
 					{ from: 'public/sw.js', to: 'sw.js' },
+					//the running application compares its version with this file (Lumifex > Check for Updates)
+					{
+						from: 'VERSION',
+						to: 'version.json',
+						transform: () => JSON.stringify({ version: app_version }) + '\n',
+					},
 					{ from: 'public/manifest.webmanifest', to: 'manifest.webmanifest' },
 				],
 			}),
