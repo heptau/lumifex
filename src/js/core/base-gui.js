@@ -26,6 +26,7 @@ import shortcutsDefinition from './../config-shortcuts.js';
 import menuDefinition from './../config-menu.js';
 import Shortcut_manager_class from './shortcut-manager.js';
 import { is_typing_target } from './../libs/shortcuts.js';
+import { digit_from_event, next_opacity } from './../libs/opacity-keys.js';
 import { attach_long_press, long_press_allowed } from './../libs/long-press.js';
 import { AUTO, normalize_lang_code, resolve_theme, system_prefers_dark, on_system_theme_change } from './../libs/system-preferences.js';
 import { is_pixel_grid_visible, pixel_grid_positions } from './../libs/pixel-grid.js';
@@ -216,6 +217,29 @@ class Base_gui_class {
 		}
 	}
 
+	/**
+	 * Number keys set the opacity of the active layer (1 = 10 %, 0 = 100 %, two digits = exact value).
+	 * It is a contextual key like Esc, not a command, so it is not in the shortcut registry.
+	 */
+	set_opacity_from_key(event) {
+		const digit = digit_from_event(event);
+		const layer = config.layer;
+		if (digit === null || !layer) {
+			return;
+		}
+		event.preventDefault();
+		const result = next_opacity(this.opacity_keys_state ?? null, digit, Date.now());
+		this.opacity_keys_state = result.state;
+		if (layer.opacity === result.opacity) {
+			return;
+		}
+		app.State.do_action(
+			new app.Actions.Bundle_action('change_layer_details', 'Change Layer Details', [
+				new app.Actions.Update_layer_action(layer.id, {opacity: result.opacity})
+			])
+		);
+	}
+
 	set_events() {
 
 		//the commands that actions may record and play
@@ -233,6 +257,7 @@ class Base_gui_class {
 
 			const entry = this.Shortcuts.find(event);
 			if (entry == null) {
+				this.set_opacity_from_key(event);
 				return;
 			}
 			event.preventDefault();

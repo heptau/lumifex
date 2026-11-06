@@ -216,6 +216,7 @@ A quick overview of what is already done (so that it is not added twice) and whe
 | Alt + click in Brush/Pencil/Fill/Gradient = eyedropper (a capture listener in `pick_color.js`, the coordinates are taken directly from the event, because the main mouse tracking runs only after it) | `tools/pick_color.js` | Alt+click |
 | Recent colors below the swatch (cookie `color_history`), Pixel Grid from zoom 600 % (`config.pixel_grid`, cookie `pixel_grid`) | `core/gui/gui-colors.js`, `libs/color-history.js`, `libs/pixel-grid.js`, `modules/view/grid.js` | – |
 | Eyedropper with a sample size (point … 31x31 average) | `tools/pick_color.js`, `libs/color-sampling.js` | – |
+| Number keys = opacity of the active layer (1 = 10 %, 0 = 100 %, two digits quickly = exact value, 0 0 = 0 %; a contextual key in `Base_gui.set_opacity_from_key`, not in the shortcut registry, so it is not remappable; one undo step, works on locked layers) | `libs/opacity-keys.js`, `core/base-gui.js` | 0-9 |
 
 ### Retouching, tools and quick edits (stage 2)
 
