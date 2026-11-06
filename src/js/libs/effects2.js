@@ -222,6 +222,52 @@ export function chromatic_aberration(image, amount) {
 }
 
 /**
+ * Glitch - horizontal bands of the picture are shifted sideways (wrapping around) and their red and blue channels are
+ * split apart, like a damaged video signal. The bands come from a seeded generator, so the same seed always gives the
+ * same result (the preview is what you get).
+ *
+ * @param {number} bands number of bands, 1 .. 60
+ * @param {number} shift largest sideways shift of a band in % of the width, 0 .. 50
+ * @param {number} split shift of the red and blue channel inside a band in pixels, 0 .. 40
+ * @param {number} seed any whole number, another number = another pattern
+ */
+export function glitch(image, bands, shift, split, seed) {
+	bands = Math.round(clamp(parseFloat(bands) || 0, 1, 60));
+	shift = clamp(parseFloat(shift) || 0, 0, 50);
+	split = Math.round(clamp(parseFloat(split) || 0, 0, 40));
+	let state = (Math.abs(Math.round(parseFloat(seed) || 0)) % 2147483646) + 1;
+	const random = () => {
+		state = (state * 16807) % 2147483647;
+		return (state - 1) / 2147483646;
+	};
+	const w = image.width;
+	const h = image.height;
+	if (w < 2 || h < 1 || (shift === 0 && split === 0)) {
+		return image;
+	}
+	const source = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const wrap = (x) => ((x % w) + w) % w;
+	for (let b = 0; b < bands; b++) {
+		const top = Math.floor(random() * h);
+		const height = Math.max(1, Math.round(random() * h * 0.08));
+		const dx = Math.round((random() * 2 - 1) * shift / 100 * w);
+		const channel = Math.round((random() * 2 - 1) * split);
+		for (let y = top; y < Math.min(h, top + height); y++) {
+			for (let x = 0; x < w; x++) {
+				const i = (y * w + x) * 4;
+				const from = y * w;
+				data[i] = source[(from + wrap(x - dx - channel)) * 4];
+				data[i + 1] = source[(from + wrap(x - dx)) * 4 + 1];
+				data[i + 2] = source[(from + wrap(x - dx + channel)) * 4 + 2];
+				data[i + 3] = source[(from + wrap(x - dx)) * 4 + 3];
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Halftone - the brightness becomes a grid of dots (like in print).
  *
  * @param {number} cell size of the grid cell in pixels, 3 .. 40

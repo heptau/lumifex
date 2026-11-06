@@ -1616,6 +1616,11 @@ const menuDefinition = [
 						name: 'Chromatic Aberration',
 						ellipsis: true,
 						target: 'image/photo_effects.chromatic_aberration'
+					},
+					{
+						name: 'Glitch',
+						ellipsis: true,
+						target: 'image/photo_effects.glitch'
 					}
 				]
 			},

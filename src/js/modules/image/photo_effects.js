@@ -80,6 +80,15 @@ class Image_photo_effects_class {
 		], (img, p) => Effects2.chromatic_aberration(img, p.amount));
 	}
 
+	glitch() {
+		this.Adjustments.show_dialog('Glitch', [
+			{name: "bands", title: "Bands:", value: 12, range: [1, 60]},
+			{name: "shift", title: "Shift (%):", value: 10, range: [0, 50]},
+			{name: "split", title: "Channel split:", value: 6, range: [0, 40]},
+			{name: "seed", title: "Pattern:", value: 1, range: [1, 100]},
+		], (img, p) => Effects2.glitch(img, p.bands, p.shift, p.split, p.seed));
+	}
+
 	dust_scratches() {
 		this.Adjustments.show_dialog('Dust & Scratches', [
 			{name: "radius", title: "Radius:", value: 1, range: [1, 4]},

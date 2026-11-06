@@ -1,4 +1,4 @@
-import { vignette, dehaze, tilt_shift, split_toning, chromatic_aberration, halftone, film_grain, dust_scratches, blur_rgba } from '../src/js/libs/effects2.js';
+import { vignette, dehaze, tilt_shift, split_toning, chromatic_aberration, halftone, film_grain, dust_scratches, glitch, blur_rgba } from '../src/js/libs/effects2.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -91,5 +91,39 @@ describe('effects', () => {
 		const blurred = blur_rgba(img, 6);
 		expect(blurred[(10 * 21 + 10) * 4]).toBeLessThan(255);
 		expect(blurred[(10 * 21 + 12) * 4]).toBeGreaterThan(0);
+	});
+
+	it('glitch is deterministic for a seed and different for another one', () => {
+		const make = () => image(40, 40, (x, y) => [x * 6, y * 6, (x + y) * 3]);
+		const a = make(), b = make(), c = make();
+		glitch(a, 10, 20, 4, 7);
+		glitch(b, 10, 20, 4, 7);
+		glitch(c, 10, 20, 4, 8);
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(make().data));
+	});
+
+	it('glitch shifts whole rows sideways and keeps the size and the other rows', () => {
+		const img = image(20, 1, (x) => [x * 10, 0, 0]);
+		glitch(img, 1, 50, 0, 3);
+		//one band that covers the single row: the red values are a rotation of the original
+		const reds = Array.from({ length: 20 }, (_, x) => px(img, x, 0)[0]).sort((p, q) => p - q);
+		expect(reds).toEqual(Array.from({ length: 20 }, (_, x) => x * 10));
+	});
+
+	it('glitch with no shift and no split, or a tiny image, changes nothing', () => {
+		const img = image(10, 10, (x, y) => [x, y, 0]);
+		const before = Array.from(img.data);
+		glitch(img, 5, 0, 0, 1);
+		expect(Array.from(img.data)).toEqual(before);
+		const thin = image(1, 5, () => [9, 9, 9]);
+		glitch(thin, 5, 50, 10, 1);
+		expect(px(thin, 0, 2)).toEqual([9, 9, 9, 255]);
+	});
+
+	it('glitch keeps values valid for wild parameters', () => {
+		const img = image(8, 8, () => [1, 2, 3, 4]);
+		expect(() => glitch(img, NaN, -5, 999, 'x' as any)).not.toThrow();
 	});
 });

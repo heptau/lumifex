@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Effects > Distort > Glitch: horizontal bands are shifted sideways and their red and blue channels split apart; a seed gives a repeatable pattern (`glitch` in `libs/effects2.js`).
 - Crop has a composition overlay option: None, Thirds (default, as before), Golden Ratio, Diagonals, Grid (`libs/crop-overlay.js`).
 - Layer > Lock Transparency: on a raster layer painting, fills, filters, adjustments and the eraser change only the colors of existing pixels; the alpha channel stays (`libs/alpha-lock.js`, a ▧ mark in the layers panel).
 - Alt++ / Alt+- step through the blend modes of the active layer (Layer > Next / Previous Blend Mode in the shortcut editor, `libs/blend-modes.js`); the list of modes moved out of the layers panel.
