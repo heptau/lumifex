@@ -14,6 +14,8 @@ Information for AI agents working on Lumifex (formerly miniPaint, a web image ed
 
 `VERSION` in the root is the only source of the application version (read by webpack and by `make build`); new things go to `CHANGELOG.md` under `## [Unreleased]`. `dist/` and `coverage/` are in `.gitignore` (a release goes to `docs/` through `make build`; `npm run build` alone copies only `index.html` and the images to `docs/`).
 
+`make release VERSION=X.Y.Z` makes a complete release (checks, version, `CHANGELOG.md`, build, commit, tag, **push**); it is for the maintainer - agents run it only when the user asks for a release (`DRY_RUN=1` only checks).
+
 Before finishing a change run `npm test` and `npm run lint`. `dist/` and `docs/` are **build artifacts** (`docs/` is committed, `dist/` is not; do not edit them by hand; file hashes change with every build). Do not build unless the user wants it.
 
 ## Structure

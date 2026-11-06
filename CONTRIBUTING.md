@@ -125,6 +125,20 @@ committed.
    bundle and copies it to `docs/`.
 5. Commit the changes including `docs/`, push, and tag the commit `vX.Y.Z`.
 
+Steps 1-5 are automated by one command:
+
+```bash
+make release VERSION=X.Y.Z
+```
+
+It checks that `main` is clean and up to date, that the version is newer than
+the current one, that the tag is free and that `## [Unreleased]` has entries,
+and runs the tests, lint and type check. Only then it sets `VERSION`,
+`package.json`, `package-lock.json` and `CHANGELOG.md`, builds to `docs/`,
+commits `chore: release X.Y.Z`, creates the annotated tag `vX.Y.Z` and pushes
+`main` and the tag. `DRY_RUN=1` runs only the checks, `YES=1` skips the
+confirmation question (`scripts/release.sh`).
+
 `docs/.well-known/security.txt` is generated too: its source is `public/.well-known/security.txt`
 (edit it there and renew its `Expires` date at least once a year); `scripts/post-build.js` copies it to
 `dist/` and `docs/` on every build. The same applies to `docs/CNAME` (custom domain

@@ -9,11 +9,12 @@
 #   make lint       - Run linter
 #   make typecheck  - Run TypeScript type checker
 #   make clean      - Remove build artifacts
+#   make release VERSION=X.Y.Z - Full release (changelog, build, commit, tag, push)
 
 # Version of the application = content of the VERSION file
 VERSION := $(strip $(shell cat VERSION))
 
-.PHONY: help build dev test lint typecheck clean install version
+.PHONY: help build dev test lint typecheck clean install version release
 
 # Default target - show help
 help:
@@ -31,6 +32,7 @@ help:
 	@echo "  clean       Remove build artifacts (dist/, docs/)"
 	@echo "  install     Install npm dependencies"
 	@echo "  version     Show the version from the VERSION file"
+	@echo "  release     Full release: make release VERSION=X.Y.Z (DRY_RUN=1 only checks, YES=1 skips the question)"
 	@echo "  help        Show this help message"
 	@echo ""
 
@@ -79,6 +81,17 @@ clean:
 # Install dependencies
 install:
 	npm install
+
+# Full release: make release VERSION=X.Y.Z
+# Checks (clean up-to-date main, newer version, entries in the changelog, tests, lint, type check), sets the version
+# (VERSION, package.json, package-lock.json, CHANGELOG.md), builds to docs/, commits "chore: release X.Y.Z",
+# tags vX.Y.Z and pushes both. DRY_RUN=1 runs only the checks, YES=1 skips the confirmation question.
+# VERSION has to be given on the command line (the value from the VERSION file is the current version).
+release:
+	@if [ "$(origin VERSION)" != "command line" ]; then \
+		echo "Usage: make release VERSION=X.Y.Z   (current version: $(VERSION))"; exit 1; \
+	fi
+	@DRY_RUN="$(DRY_RUN)" YES="$(YES)" bash scripts/release.sh "$(VERSION)" "$(MAKE)"
 
 # Full CI pipeline (lint + typecheck + test + build)
 ci: lint typecheck test build
