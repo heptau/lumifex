@@ -9,6 +9,8 @@ Only changes since version 5.0.0 are listed here.
 
 ## [Unreleased]
 
+## [26.2.0] - 2026-11-06
+
 ### Added
 
 - `npm run translations:report` shows how complete each language is compared with the Czech reference dictionary and can list the missing keys of one language (`scripts/translations-report.js`).
