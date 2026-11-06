@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- `npm run translations:report` shows how complete each language is compared with the Czech reference dictionary and can list the missing keys of one language (`scripts/translations-report.js`).
 - Effects > Distort > Glitch: horizontal bands are shifted sideways and their red and blue channels split apart; a seed gives a repeatable pattern (`glitch` in `libs/effects2.js`).
 - Crop has a composition overlay option: None, Thirds (default, as before), Golden Ratio, Diagonals, Grid (`libs/crop-overlay.js`).
 - Layer > Lock Transparency: on a raster layer painting, fills, filters, adjustments and the eraser change only the colors of existing pixels; the alpha channel stays (`libs/alpha-lock.js`, a ▧ mark in the layers panel).

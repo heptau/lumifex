@@ -20,6 +20,7 @@
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
     "translations:sync": "node scripts/sync-translations.js",
+    "translations:report": "node scripts/translations-report.js",
     "lint": "eslint src/js public tests scripts"
   },
   "repository": {
