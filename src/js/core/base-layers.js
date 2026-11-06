@@ -43,7 +43,7 @@ let instance = null;
  * - fill_opacity (0-100, default 100) opacity of the layer's own pixels, layer styles are not faded
  * - mask (object|null) layer mask, see libs/layer-mask.js
  * - mask_enabled (bool, default true)
- * - locked (bool), group (string|null), color_label (string|null), link_id (number|null), blend_if (object|null)
+ * - locked (bool), lock_alpha (bool, Lock Transparency), group (string|null), color_label (string|null), link_id (number|null), blend_if (object|null)
  * - order (int)
  * - composition (string)
  * - rotate (int) 0-359

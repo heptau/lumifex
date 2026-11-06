@@ -143,7 +143,7 @@ class Edit_fill_class {
 		if (layer.type !== null) {
 			return app.State.do_action(
 				new app.Actions.Bundle_action('fill', 'Fill', [
-					new app.Actions.Update_layer_image_action(canvas)
+					new app.Actions.Update_layer_image_action(canvas, null, {keep_alpha: true})
 				])
 			);
 		}

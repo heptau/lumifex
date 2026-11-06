@@ -1492,5 +1492,7 @@
     "Cyan": "Azurová",
     "Magenta": "Purpurová",
     "Next Blend Mode": "Další režim prolnutí",
-    "Previous Blend Mode": "Předchozí režim prolnutí"
+    "Previous Blend Mode": "Předchozí režim prolnutí",
+    "Lock Transparency": "Zamknout průhlednost",
+    "Unlock Transparency": "Odemknout průhlednost"
 }

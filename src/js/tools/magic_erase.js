@@ -88,7 +88,7 @@ class Magic_erase_class extends Base_tools_class {
 
 		app.State.do_action(
 			new app.Actions.Bundle_action('magic_erase_tool', 'Magic Eraser Tool', [
-				new app.Actions.Update_layer_image_action(canvas)
+				new app.Actions.Update_layer_image_action(canvas, null, {keep_alpha: true})
 			])
 		);
 		//prevent crash bug on touch screen - hard to explain and debug

@@ -227,7 +227,7 @@ class Patch_class extends Base_tools_class {
 		config.need_render = true;
 		return app.State.do_action(
 			new app.Actions.Bundle_action('patch_tool', 'Patch Tool', [
-				new app.Actions.Update_layer_image_action(canvas),
+				new app.Actions.Update_layer_image_action(canvas, null, {keep_alpha: true}),
 			])
 		);
 	}

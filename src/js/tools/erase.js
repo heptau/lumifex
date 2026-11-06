@@ -121,7 +121,7 @@ class Erase_class extends Base_tools_class {
 
 		app.State.do_action(
 			new app.Actions.Bundle_action('erase_tool', 'Erase Tool', [
-				new app.Actions.Update_layer_image_action(this.tmpCanvas)
+				new app.Actions.Update_layer_image_action(this.tmpCanvas, null, {keep_alpha: true})
 			])
 		);
 

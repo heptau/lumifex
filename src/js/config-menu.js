@@ -1054,6 +1054,10 @@ const menuDefinition = [
 				target: 'layer/lock.toggle'
 			},
 			{
+				name: 'Lock Transparency',
+				target: 'layer/lock.toggle_alpha'
+			},
+			{
 				name: 'Link Layers',
 				ellipsis: true,
 				target: 'layer/link.link'

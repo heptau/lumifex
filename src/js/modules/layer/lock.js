@@ -22,6 +22,23 @@ class Layer_lock_class {
 		);
 	}
 
+	/**
+	 * Layer > Lock Transparency: painting, fills, filters and adjustments change only the colors of the pixels
+	 * that exist, the alpha channel stays (libs/alpha-lock.js). Works on a raster layer.
+	 */
+	toggle_alpha() {
+		const layer = config.layer;
+		if (layer == null || layer.type != 'image') {
+			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
+			return;
+		}
+		return app.State.do_action(
+			new app.Actions.Bundle_action('layer_lock_alpha', layer.lock_alpha === true ? 'Unlock Transparency' : 'Lock Transparency', [
+				new app.Actions.Update_layer_action(layer.id, {lock_alpha: layer.lock_alpha !== true}),
+			])
+		);
+	}
+
 }
 
 export default Layer_lock_class;

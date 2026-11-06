@@ -551,7 +551,7 @@ class Image_adjustments_class {
 		}
 
 		//save
-		const action = new app.Actions.Update_layer_image_action(canvas);
+		const action = new app.Actions.Update_layer_image_action(canvas, null, {keep_alpha: true});
 		this.last_adjustment = {layer_id: config.layer.id, before, action};
 		return app.State.do_action(action);
 	}
@@ -615,7 +615,7 @@ class Image_adjustments_class {
 				const canvas = this.Base_layers.convert_layer_to_canvas(layer_id, true);
 				canvas.getContext('2d').putImageData(mix(canvas, params.opacity), 0, 0);
 				this.last_adjustment = null;
-				app.State.do_action(new app.Actions.Update_layer_image_action(canvas, layer_id));
+				app.State.do_action(new app.Actions.Update_layer_image_action(canvas, layer_id, {keep_alpha: true}));
 			},
 		});
 	}

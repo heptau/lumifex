@@ -56,6 +56,7 @@ export class Insert_layer_action extends Base_action {
 			mask: null,
 			mask_enabled: true,
 			locked: false,
+			lock_alpha: false,
 			group: null,
 			group_opacity: 100,
 			group_props: null,
