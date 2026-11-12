@@ -13,6 +13,11 @@ Only changes since version 5.0.0 are listed here.
 
 - Lumifex > Check for Updates…: compares the running version with `version.json` published by the build and, when a newer one exists, restarts the application on it (the service worker and its caches are cleared, open documents are saved and offered for restoring). An installed PWA window that stays open for days never noticed new releases before.
 
+### Fixed
+
+- Image > Palette no longer fails on a layer that is transparent or completely white (the color library found no pixels and the command crashed without a message); a white layer shows white, an empty one reports "Layer is empty.".
+- The Content-Security-Policy in `index.html` no longer contains `frame-ancestors`, which browsers ignore in a `<meta>` element and report as an error in the console on every start.
+
 ## [26.2.0] - 2026-11-06
 
 ### Added

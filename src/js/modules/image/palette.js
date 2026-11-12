@@ -20,8 +20,18 @@ class Image_color_class {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
 			return;
 		}
-		const palette = this.alertify.getPalette(config.layer.link);
-		let dominant = this.alertify.getColor(config.layer.link);
+		let palette = this.alertify.getPalette(config.layer.link);
+		//getColor fails itself when the library finds no pixels, so ask only when there is a palette
+		let dominant = palette && palette.length ? this.alertify.getColor(config.layer.link) : null;
+		if (!dominant) {
+			//the library skips transparent and nearly white pixels, so it finds nothing in such a layer
+			if (!this.has_visible_pixels(config.layer.link)) {
+				alertify.error(t('Layer is empty.'));
+				return;
+			}
+			palette = [[255, 255, 255]];
+			dominant = palette[0];
+		}
 		dominant = this.Helper.rgbToHex(dominant[0], dominant[1], dominant[2]);
 
 		const settings = {
@@ -38,6 +48,21 @@ class Image_color_class {
 			);
 		}
 		this.POP.show(settings);
+	}
+
+	has_visible_pixels(image) {
+		const canvas = document.createElement('canvas');
+		canvas.width = image.width || image.naturalWidth;
+		canvas.height = image.height || image.naturalHeight;
+		const ctx = canvas.getContext('2d');
+		ctx.drawImage(image, 0, 0);
+		const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+		for (let i = 3; i < data.length; i += 4) {
+			if (data[i] >= 125) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	generate_color_box(color, width) {
