@@ -16,6 +16,23 @@ export function parse_version_info(data) {
 	return /^\d{1,6}\.\d{1,6}\.\d{1,6}$/.test(version) ? version : null;
 }
 
+//the automatic check: a while after the start, then at most once in this many milliseconds
+export const AUTO_CHECK_DELAY = 15 * 1000;
+export const AUTO_CHECK_INTERVAL = 6 * 60 * 60 * 1000;
+
+/**
+ * @param {number} now time in milliseconds
+ * @param {number|null} last time of the last automatic check (null = not yet)
+ * @param {number} [interval]
+ * @returns {boolean} true when it is time for the next automatic check (a clock that went back counts as time too)
+ */
+export function is_check_due(now, last, interval = AUTO_CHECK_INTERVAL) {
+	if (typeof last !== 'number' || !isFinite(last)) {
+		return true;
+	}
+	return now - last >= interval || now < last;
+}
+
 /**
  * @param {string} remote version on the server
  * @param {string} current version of the running application

@@ -1,4 +1,4 @@
-import { parse_version_info, is_newer } from '../src/js/libs/app-update.js';
+import { parse_version_info, is_newer, is_check_due, AUTO_CHECK_INTERVAL } from '../src/js/libs/app-update.js';
 
 describe('app update', () => {
 	it('reads a valid version.json only', () => {
@@ -22,5 +22,14 @@ describe('app update', () => {
 		expect(is_newer('26.2.0', 'dev')).toBe(false);
 		expect(is_newer('', '26.1.2')).toBe(false);
 		expect(is_newer(undefined as any, '26.1.2')).toBe(false);
+	});
+
+	it('the automatic check waits for its interval', () => {
+		expect(is_check_due(1000, null)).toBe(true);
+		expect(is_check_due(1000, undefined as any)).toBe(true);
+		expect(is_check_due(1000 + AUTO_CHECK_INTERVAL - 1, 1000)).toBe(false);
+		expect(is_check_due(1000 + AUTO_CHECK_INTERVAL, 1000)).toBe(true);
+		expect(is_check_due(500, 1000, 100)).toBe(true);
+		expect(is_check_due(1050, 1000, 100)).toBe(false);
 	});
 });

@@ -1509,5 +1509,6 @@
     "Lumifex is up to date.": "Lumifex je aktuální.",
     "Version {new} is available (you have {current}). Restart Lumifex to update?": "Je k dispozici verze {new} (máte {current}). Restartovat Lumifex a aktualizovat?",
     "Open documents are saved automatically and offered for restoring after the restart.": "Otevřené dokumenty se automaticky uloží a po restartu se nabídne jejich obnovení.",
-    "Restart": "Restartovat"
+    "Restart": "Restartovat",
+    "Lumifex {new} is available. Click here to update.": "Je k dispozici Lumifex {new}. Kliknutím sem aktualizujete."
 }

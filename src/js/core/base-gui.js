@@ -109,6 +109,11 @@ class Base_gui_class {
 		this.load_default_values();
 		this.render_main_gui();
 		this.init_service_worker();
+		//looks for a newer version by itself (Lumifex > Check for Updates does it on request)
+		const updater = this.modules['help/update'];
+		if (updater && updater.start_auto_check) {
+			updater.start_auto_check();
+		}
 	}
 
 	load_modules() {

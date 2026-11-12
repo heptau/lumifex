@@ -1514,5 +1514,6 @@
     "Lumifex is up to date.": "",
     "Version {new} is available (you have {current}). Restart Lumifex to update?": "",
     "Open documents are saved automatically and offered for restoring after the restart.": "",
-    "Restart": ""
+    "Restart": "",
+    "Lumifex {new} is available. Click here to update.": ""
 }
