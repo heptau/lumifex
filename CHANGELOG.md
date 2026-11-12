@@ -9,6 +9,8 @@ Only changes since version 5.0.0 are listed here.
 
 ## [Unreleased]
 
+## [26.3.0] - 2026-11-12
+
 ### Added
 
 - Lumifex > Check for Updates…: compares the running version with `version.json` published by the build and, when a newer one exists, restarts the application on it (the service worker and its caches are cleared, open documents are saved and offered for restoring). An installed PWA window that stays open for days never noticed new releases before.
