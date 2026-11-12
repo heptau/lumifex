@@ -16,6 +16,7 @@ Only changes since version 5.0.0 are listed here.
 ### Fixed
 
 - Image > Palette no longer fails on a layer that is transparent or completely white (the color library found no pixels and the command crashed without a message); a white layer shows white, an empty one reports "Layer is empty.".
+- File > Open > Open as Layer opens SVG files too (it reported "Sorry, image could not be loaded."); the picture stays a vector layer, as with File > Open.
 - The Content-Security-Policy in `index.html` no longer contains `frame-ancestors`, which browsers ignore in a `<meta>` element and report as an error in the console on every start.
 
 ## [26.2.0] - 2026-11-06

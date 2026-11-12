@@ -169,21 +169,29 @@ class File_open_class {
 				continue;
 			}
 			try {
-				//createImageBitmap: the page does not allow blob: images (CSP)
-				const bitmap = await createImageBitmap(file);
-				const canvas = document.createElement('canvas');
-				canvas.width = bitmap.width;
-				canvas.height = bitmap.height;
-				canvas.getContext('2d').drawImage(bitmap, 0, 0);
-				if (bitmap.close) {
-					bitmap.close();
+				let data;
+				if (file.type == 'image/svg+xml' || String(file.name).toLowerCase().endsWith('.svg')) {
+					//createImageBitmap can not decode SVG; the data URL keeps it a vector layer, as File > Open does
+					data = await this.read_as_data_url(file);
+				}
+				else {
+					//createImageBitmap: the page does not allow blob: images (CSP)
+					const bitmap = await createImageBitmap(file);
+					const canvas = document.createElement('canvas');
+					canvas.width = bitmap.width;
+					canvas.height = bitmap.height;
+					canvas.getContext('2d').drawImage(bitmap, 0, 0);
+					if (bitmap.close) {
+						bitmap.close();
+					}
+					data = canvas.toDataURL('image/png');
 				}
 				await app.State.do_action(
 					new app.Actions.Bundle_action('open_as_layer', 'Open as Layer', [
 						new app.Actions.Insert_layer_action({
 							name: sanitize_filename(file.name),
 							type: 'image',
-							data: canvas.toDataURL('image/png'),
+							data,
 						}, false),
 					])
 				);
@@ -192,6 +200,15 @@ class File_open_class {
 				alertify.error(t('Sorry, image could not be loaded.'));
 			}
 		}
+	}
+
+	read_as_data_url(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(reader.result);
+			reader.onerror = () => reject(reader.error);
+			reader.readAsDataURL(file);
+		});
 	}
 
 	open_webcam(){
