@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- A double click on the Hand tool in the toolbar fits the picture on the screen, on the Zoom tool it shows 100 %, as in Photoshop.
 - Move tool: Shift + drag keeps the move on a single axis (horizontal or vertical), as in Photoshop.
 - Shift+[ and Shift+] make the Brush softer / harder (its Hardness, steps of 10), as in Photoshop.
 - Brush and Pencil: Shift + click draws a straight line from the end of the last stroke, as in Photoshop.

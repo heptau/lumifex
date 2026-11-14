@@ -12,6 +12,9 @@ import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Base_gui_class from '../base-gui.js';
 
+//a double click on these tools in the toolbar runs a command (Photoshop: Hand = Fit on Screen, Zoom = 100 %)
+const DOUBLE_CLICK_TARGETS = {hand: 'view/zoom.auto', zoom: 'view/zoom.original'};
+
 let instance = null;
 
 /**
@@ -134,6 +137,14 @@ class GUI_tools_class {
 			itemDom.addEventListener('click', (event) => {
 				this.activate_tool(event.currentTarget.id);
 			});
+
+			//a double click on the Hand fits the picture on the screen, on the Zoom it shows 100 % (Photoshop)
+			const double_click_target = DOUBLE_CLICK_TARGETS[item.name];
+			if (double_click_target) {
+				itemDom.addEventListener('dblclick', () => {
+					app.GUI.run_target(double_click_target);
+				});
+			}
 
 			// Keyboard support
 			itemDom.addEventListener('keydown', (event) => {
