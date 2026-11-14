@@ -7,6 +7,7 @@ import { schedule_ants_redraw } from './../core/base-selection.js';
 import app from './../app.js';
 import { describe_transform, remember_transform } from './../libs/transform-repeat.js';
 import { linked_with, follow_transform } from './../libs/layer-link.js';
+import { constrain_axis } from './../libs/move-constrain.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
 import Base_layers_class from './../core/base-layers.js';
@@ -292,8 +293,10 @@ class Select_tool_class extends Base_tools_class {
 		}
 		else if (this.moving) {
 			//move object
-			config.layer.x = Math.round(mouse.x - mouse.click_x + this.mousedown_dimensions.x);
-			config.layer.y = Math.round(mouse.y - mouse.click_y + this.mousedown_dimensions.y);
+			//Shift keeps the move on one axis
+			const shift_move = constrain_axis(mouse.x - mouse.click_x, mouse.y - mouse.click_y, e.shiftKey === true);
+			config.layer.x = Math.round(shift_move.x + this.mousedown_dimensions.x);
+			config.layer.y = Math.round(shift_move.y + this.mousedown_dimensions.y);
 
 			//apply snap
 			const snap_info = this.calc_snap(e, config.layer.x, config.layer.y);
@@ -394,8 +397,9 @@ class Select_tool_class extends Base_tools_class {
 			}
 		}
 		else if (this.moving) {
-			let new_x = Math.round(mouse.x - mouse.click_x + this.mousedown_dimensions.x);
-			let new_y = Math.round(mouse.y - mouse.click_y + this.mousedown_dimensions.y);
+			const shift_move = constrain_axis(mouse.x - mouse.click_x, mouse.y - mouse.click_y, e.shiftKey === true);
+			let new_x = Math.round(shift_move.x + this.mousedown_dimensions.x);
+			let new_y = Math.round(shift_move.y + this.mousedown_dimensions.y);
 			config.layer.x = this.mousedown_dimensions.x;
 			config.layer.y = this.mousedown_dimensions.y;
 
