@@ -1515,5 +1515,7 @@
     "Version {new} is available (you have {current}). Restart Lumifex to update?": "",
     "Open documents are saved automatically and offered for restoring after the restart.": "",
     "Restart": "",
-    "Lumifex {new} is available. Click here to update.": ""
+    "Lumifex {new} is available. Click here to update.": "",
+    "Smart Filter": "",
+    "Select a layer with a smart filter first.": ""
 }

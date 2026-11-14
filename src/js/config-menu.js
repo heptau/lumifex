@@ -830,6 +830,37 @@ const menuDefinition = [
 				target: 'layer/style.paste'
 			},
 			{
+				name: 'Smart Filter',
+				children: [
+					{ name: 'Brightness/Contrast', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'brightness_contrast' },
+					{ name: 'Levels', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'levels' },
+					{ name: 'Hue/Saturation', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'hue_saturation' },
+					{ name: 'Vibrance', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'vibrance' },
+					{ name: 'Exposure', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'exposure' },
+					{ name: 'Color Balance', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'color_balance' },
+					{ name: 'Photo Filter', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'photo_filter' },
+					{ name: 'Temperature/Tint', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'temperature_tint' },
+					{ name: 'Black and White', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'black_white' },
+					{ name: 'Gradient Map', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'gradient_map' },
+					{ name: 'Selective Color', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'selective_color' },
+					{ name: 'Threshold', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'threshold' },
+					{ name: 'Posterize', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'posterize' },
+					{ name: 'Invert', target: 'layer/smart_filter.add', parameter: 'invert' },
+					{ divider: true },
+					{ name: 'Unsharp Mask', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'unsharp_mask' },
+					{ name: 'High Pass', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'high_pass' },
+					{ name: 'Clarity', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'clarity' },
+					{ name: 'Motion Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'motion_blur' },
+					{ name: 'Smart Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'smart_blur' },
+					{ name: 'Surface Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'surface_blur' },
+					{ name: 'Median', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'median' },
+					{ name: 'Pixelate', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'pixelate' },
+					{ name: 'Emboss', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'emboss' },
+					{ name: 'Find Edges', target: 'layer/smart_filter.add', parameter: 'find_edges' },
+					{ name: 'Add Noise', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'add_noise' }
+				]
+			},
+			{
 				name: 'Blend If',
 				ellipsis: true,
 				target: 'layer/blend_if.blend_if'

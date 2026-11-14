@@ -9,6 +9,10 @@ Only changes since version 5.0.0 are listed here.
 
 ## [Unreleased]
 
+### Added
+
+- Layer > Smart Filter: Unsharp Mask, High Pass, Clarity, Motion/Smart/Surface Blur, Median, Pixelate, Emboss, Find Edges, Add Noise and the color adjustments (Levels, Hue/Saturation, …) can be applied as non-destructive filters. The layer keeps its original picture and the settings; a click on the filter name in the Layers panel edits it, the dot next to it switches it off, the cross deletes it (`libs/smart-filters.js`, `modules/layer/smart_filter.js`).
+
 ## [26.3.0] - 2026-11-12
 
 ### Added

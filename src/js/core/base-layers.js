@@ -15,6 +15,7 @@ import { deserialize_layer_mask } from "./../libs/layer-mask.js";
 import alertify from "./../../../node_modules/alertifyjs/build/alertify.min.js";
 import { t } from '../modules/tools/translate.js';
 import { fill_alpha, split_halo_filters } from "./../libs/layer-fill.js";
+import { active_smart_filters, smart_signature, run_smart_filters, is_smart_entry, MAX_SMART_PIXELS } from "./../libs/smart-filters.js";
 import { effective_alpha, plan_groups } from "./../libs/layer-groups.js";
 import { make_identity, stack_signature, split_for_cache, preview_scale } from "./../libs/layer-signature.js";
 import { needs_generic_rotation, rotation_pivot } from "./../libs/vector-rotation.js";
@@ -907,7 +908,7 @@ class Base_layers_class {
 			// TODO - Not sure why the check should be with null,
 			// if nothing will break, then better to check if it's just truthy
 			ctx.drawImage(
-				object.link_canvas != null ? object.link_canvas : object.link,
+				this.get_smart_source(object),
 				-object.width / 2,
 				-object.height / 2,
 				object.width,
@@ -948,11 +949,55 @@ class Base_layers_class {
 	}
 
 	/**
+	 * The picture of an image layer with its smart filters applied (Layer > Smart Filter). The filtered canvas is kept
+	 * per picture and per settings, so dragging or zooming does not compute the filters again.
+	 *
+	 * @param {object} object image layer
+	 * @returns {HTMLImageElement|HTMLCanvasElement} the original picture when there is no active smart filter
+	 */
+	get_smart_source(object) {
+		const source = object.link_canvas != null ? object.link_canvas : object.link;
+		const list = active_smart_filters(object.filters);
+		if (list.length == 0 || !source) {
+			return source;
+		}
+		const width = source.naturalWidth || source.width;
+		const height = source.naturalHeight || source.height;
+		if (!width || !height || width * height > MAX_SMART_PIXELS || source.complete === false) {
+			return source;
+		}
+		if (!this.smart_cache) {
+			this.smart_cache = new WeakMap();
+		}
+		const signature = smart_signature(list);
+		const cached = this.smart_cache.get(source);
+		if (cached && cached.signature == signature && cached.width == width && cached.height == height) {
+			return cached.canvas;
+		}
+		const canvas = document.createElement("canvas");
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext("2d", {willReadFrequently: true});
+		ctx.drawImage(source, 0, 0);
+		try {
+			ctx.putImageData(run_smart_filters(ctx.getImageData(0, 0, width, height), list), 0, 0);
+		}
+		catch (error) {
+			console.error("Error: smart filter failed", error);
+			this.render_success = false;
+			return source;
+		}
+		this.smart_cache.set(source, {signature, width, height, canvas});
+		return canvas;
+	}
+
+	/**
 	 * A layer with a fill opacity below 100 and a shadow or glow: the pixels fade, the shadow / glow stays as strong
 	 * as it is. The halo is what the shadow and glow add to the bare pixels, so it is drawn on its own first.
 	 */
 	render_object_with_halo(ctx, object, is_preview) {
 		const parts = split_halo_filters(object.filters);
+		parts.smart = object.filters.filter(is_smart_entry); //they change the pixels, so the bare layer needs them too
 		const make = () => {
 			const temp = document.createElement("canvas");
 			temp.width = ctx.canvas.width;
@@ -965,9 +1010,9 @@ class Base_layers_class {
 
 		//the bare pixels and the pixels with the halos, both at full strength
 		const bare = make();
-		this.render_object_plain(bare.getContext("2d"), Object.assign({}, object, full, {filters: []}), is_preview);
+		this.render_object_plain(bare.getContext("2d"), Object.assign({}, object, full, {filters: parts.smart}), is_preview);
 		const halo = make();
-		this.render_object_plain(halo.getContext("2d"), Object.assign({}, object, full, {filters: parts.halo}), is_preview);
+		this.render_object_plain(halo.getContext("2d"), Object.assign({}, object, full, {filters: parts.halo.concat(parts.smart)}), is_preview);
 		const halo_ctx = halo.getContext("2d");
 		halo_ctx.save();
 		halo_ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -998,8 +1043,8 @@ class Base_layers_class {
 		//apply pre-filters
 		for (let i in object.filters) {
 			const filter = object.filters[i];
-			if (filter.id == this.disabled_filter_id) {
-				continue;
+			if (filter.id == this.disabled_filter_id || is_smart_entry(filter)) {
+				continue; //smart filters change the picture of the layer (get_smart_source), they draw nothing around it
 			}
 
 			filter.name = filter.name.replace("drop-shadow", "shadow");
@@ -1033,8 +1078,8 @@ class Base_layers_class {
 		//apply post-filters
 		for (let i in object.filters) {
 			const filter = object.filters[i];
-			if (filter.id == this.disabled_filter_id) {
-				continue;
+			if (filter.id == this.disabled_filter_id || is_smart_entry(filter)) {
+				continue; //smart filters change the picture of the layer (get_smart_source), they draw nothing around it
 			}
 			filter.name = filter.name.replace("drop-shadow", "shadow");
 

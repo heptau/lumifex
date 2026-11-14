@@ -16,6 +16,7 @@ import Layer_raster_class from './../../modules/layer/raster.js';
 import { panel_rows, group_props_of } from './../../libs/layer-groups.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import { BLEND_MODES } from './../../libs/blend-modes.js';
+import { SMART_FILTERS, is_smart_filter, is_smart_entry } from './../../libs/smart-filters.js';
 
 const template = `
 	<input type="search" id="layer_search" class="layer_search" aria-label="Search layers" autocomplete="off" />
@@ -267,6 +268,13 @@ class GUI_layers_class {
 					new app.Actions.Delete_layer_filter_action(target.dataset.pid, target.dataset.id)
 				);
 			}
+			else if (target.id == 'smart_filter_toggle') {
+				app.GUI.modules['layer/smart_filter'].toggle(target.dataset.id, target.dataset.pid);
+			}
+			else if (target.id == 'filter_name' && target.dataset.smart) {
+				this.Base_layers.select(target.dataset.pid);
+				app.GUI.run_target('layer/smart_filter.edit', target.dataset.id);
+			}
 			else if (target.id == 'filter_name') {
 				//edit filter
 				const effects = this.Effects_browser.get_effects_list();
@@ -516,10 +524,19 @@ class GUI_layers_class {
 						const filter = layers[i].filters[j];
 						let title = this.Helper.escapeHtml(this.Helper.ucfirst(String(filter.name)));
 						title = title.replace(/-/g, ' ');
+						const smart = is_smart_entry(filter) && is_smart_filter(filter.params && filter.params.key);
+						if (smart) {
+							//a smart filter: its name, an on/off switch, a click on the name edits it
+							title = this.Helper.escapeHtml(SMART_FILTERS[filter.params.key].title);
+						}
 
 						html += '<div class="filter">';
 						html += `	<span class="delete" id="delete_filter" data-pid="${layers[i].id}" data-id="${filter.id}" title="delete"></span>`;
-						html += `	<span class="layer_name" id="filter_name" data-pid="${layers[i].id}" data-id="${filter.id}" data-filter="${this.Helper.escapeHtml(String(filter.name))}">${title}</span>`;
+						if (smart) {
+							const on = filter.params.enabled !== false;
+							html += `	<span class="layer_name" id="smart_filter_toggle" data-pid="${layers[i].id}" data-id="${filter.id}" role="switch" aria-checked="${on}" title="Show / Hide">${on ? '&#9679;' : '&#9675;'}</span>`;
+						}
+						html += `	<span class="layer_name" id="filter_name" data-pid="${layers[i].id}" data-id="${filter.id}" data-filter="${this.Helper.escapeHtml(String(filter.name))}"${smart ? ` data-smart="true"` : ''}>${title}</span>`;
 						html += '	<div class="clear"></div>';
 						html += '</div>';
 					}
