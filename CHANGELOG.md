@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Channels panel (Window > Channels): the red, green, blue and transparency channels of the active layer as small gray pictures. The eye hides a color channel in the view, a click on the name shows that channel alone, the button next to it loads it as a selection. Only the view changes, never the image (`libs/channel-view.js`, `core/gui/gui-channels.js`).
 - A double click on the Hand tool in the toolbar fits the picture on the screen, on the Zoom tool it shows 100 %, as in Photoshop.
 - Move tool: Shift + drag keeps the move on a single axis (horizontal or vertical), as in Photoshop.
 - Shift+[ and Shift+] make the Brush softer / harder (its Hardness, steps of 10), as in Photoshop.

@@ -24,7 +24,6 @@ class View_proof_class {
 	 * @param {string} name protanopia, deuteranopia, tritanopia, achromatopsia or "none"
 	 */
 	proof(name) {
-		const canvas = document.getElementById('canvas_minipaint');
 		let holder = document.getElementById('proof_filters');
 		if (!holder) {
 			holder = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -47,14 +46,14 @@ class View_proof_class {
 			document.body.appendChild(holder);
 		}
 		if (name == 'none' || MATRICES[name] == undefined || name == this.current) {
-			canvas.style.filter = '';
 			this.current = null;
 			config.proof = null;
+			document.dispatchEvent(new Event('minipaint:view-filter'));
 			return;
 		}
-		canvas.style.filter = `url(#proof_${name})`;
 		this.current = name;
 		config.proof = name;
+		document.dispatchEvent(new Event('minipaint:view-filter'));
 		alertify.message(t('Proof colors is on - it only changes the view. Choose it again to turn it off.'), 4);
 	}
 }

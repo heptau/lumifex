@@ -1558,5 +1558,11 @@
     "Bring Layer to Front": "",
     "Send Layer to Back": "",
     "Softer brush": "",
-    "Harder brush": ""
+    "Harder brush": "",
+    "Channels": "",
+    "RGB": "",
+    "Show / hide the channel in the view": "",
+    "Show the whole picture": "",
+    "Show only this channel": "",
+    "Load channel as selection": ""
 }

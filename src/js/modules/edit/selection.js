@@ -351,6 +351,22 @@ class Edit_selection_class {
 	}
 
 	/**
+	 * Channels panel: the channel of the active layer becomes the selection right away (no dialog)
+	 *
+	 * @param {string} channel 'red', 'green', 'blue' or 'alpha'
+	 */
+	async load_channel(channel) {
+		const layer = this.get_image_layer();
+		if (layer == null) {
+			return;
+		}
+		if (!config.TOOL.keep_selection) {
+			await app.State.do_action(new app.Actions.Activate_tool_action(this.Selection.name));
+		}
+		this.set_mask(channel_mask(this.layer_on_canvas(layer), channel, false), true);
+	}
+
+	/**
 	 * Select > Selection to New Layer - the selection as a black and white picture on a new layer
 	 */
 	mask_to_layer() {

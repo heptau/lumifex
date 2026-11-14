@@ -14,6 +14,7 @@ import GUI_layers_class from './gui/gui-layers.js';
 import GUI_information_class from './gui/gui-information.js';
 import GUI_history_class from './gui/gui-history.js';
 import GUI_histogram_class from './gui/gui-histogram.js';
+import GUI_channels_class from './gui/gui-channels.js';
 import GUI_documents_class from './gui/gui-documents.js';
 import GUI_context_menu_class, { CANVAS_MENU, LAYER_MENU } from './gui/gui-context-menu.js';
 import { restore_panels } from './../libs/panels.js';
@@ -99,6 +100,7 @@ class Base_gui_class {
 		this.GUI_transform_bar = new GUI_transform_bar_class();
 		this.GUI_history = new GUI_history_class();
 		this.GUI_histogram = new GUI_histogram_class();
+		this.GUI_channels = new GUI_channels_class();
 		this.GUI_documents = new GUI_documents_class();
 		this.GUI_menu = new GUI_menu_class();
 		this.Tools_translate = new Tools_translate_class();
@@ -184,6 +186,7 @@ class Base_gui_class {
 		this.GUI_details.render_main_details();
 		this.GUI_history.render_main_history();
 		this.GUI_histogram.render_main_histogram();
+		this.GUI_channels.render_main_channels();
 		this.GUI_documents.render_main_documents();
 		this.GUI_menu.render_main();
 		this.load_saved_changes();
@@ -297,6 +300,9 @@ class Base_gui_class {
 					}
 					if (event.currentTarget.dataset.target == 'toggle_histogram') {
 						this.GUI_histogram.render();
+					}
+					if (event.currentTarget.dataset.target == 'toggle_channels') {
+						this.GUI_channels.render();
 					}
 				}
 				else
@@ -500,7 +506,7 @@ class Base_gui_class {
 			const target = document.getElementById(targets[i].dataset.target);
 			const saved = this.Helper.getCookie(targets[i].dataset.target);
 			//layer details are collapsed by default, so the Layers panel has enough space
-			const collapsed = saved === 0 || ((saved === null || saved === undefined) && (target.id == 'toggle_details' || target.id == 'toggle_history' || target.id == 'toggle_histogram'));
+			const collapsed = saved === 0 || ((saved === null || saved === undefined) && (target.id == 'toggle_details' || target.id == 'toggle_history' || target.id == 'toggle_histogram' || target.id == 'toggle_channels'));
 			if (collapsed) {
 				targets[i].classList.toggle('toggled');
 				target.classList.add('hidden');

@@ -2014,3 +2014,80 @@ html.large_ui input[type="number"] {
 	opacity: 1;
 	color: var(--accent);
 }
+
+/* Channels panel */
+.channels-content {
+	padding: 0 6px 8px;
+}
+.channel_row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 4px;
+	border-radius: 5px;
+}
+.channel_row.current {
+	background: var(--accent-soft, var(--surface-pressed));
+}
+.channel_eye,
+.channel_select {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	background: none;
+	border: 0;
+	box-shadow: none;
+	color: inherit;
+}
+.channel_eye::before {
+	content: "";
+	display: block;
+	width: 12px;
+	height: 12px;
+	margin: auto;
+	border: 1.5px solid currentColor;
+	border-radius: 50%;
+	background: currentColor;
+}
+.channel_eye.off::before {
+	background: none;
+	opacity: .45;
+}
+.channel_eye.placeholder::before {
+	display: none;
+}
+.channel_thumb {
+	flex: none;
+	width: 40px;
+	height: 30px;
+	background: var(--field-background);
+	border: 0.5px solid var(--separator);
+	border-radius: 3px;
+}
+.channel_name {
+	flex: 1;
+	min-width: 0;
+	height: 22px;
+	padding: 0 4px;
+	overflow: hidden;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	background: none;
+	border: 0;
+	box-shadow: none;
+}
+.channel_select {
+	opacity: .7;
+}
+.channel_select:hover,
+.channel_eye:hover {
+	opacity: 1;
+}
+.channel_name:focus-visible,
+.channel_eye:focus-visible,
+.channel_select:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}

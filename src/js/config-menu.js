@@ -2101,6 +2101,7 @@ const menuDefinition = [
 			{ name: 'Preview', panel: 'preview', target: 'view/panels.toggle', parameter: 'preview' },
 			{ name: 'Histogram', panel: 'histogram', target: 'view/panels.toggle', parameter: 'histogram' },
 			{ name: 'Colors', panel: 'colors', target: 'view/panels.toggle', parameter: 'colors' },
+			{ name: 'Channels', panel: 'channels', target: 'view/panels.toggle', parameter: 'channels' },
 			{ name: 'Layer details', panel: 'details', target: 'view/panels.toggle', parameter: 'details' },
 			{ name: 'History', panel: 'history', target: 'view/panels.toggle', parameter: 'history' },
 			{ name: 'Layers', panel: 'layers', target: 'view/panels.toggle', parameter: 'layers' },

@@ -9,6 +9,7 @@ export const PANELS = {
 	options: '.submenu',
 	preview: '.sidebar_right .preview.block',
 	histogram: '#histogram_base',
+	channels: '#channels_base',
 	colors: '.sidebar_right .colors.block',
 	details: '#details_base',
 	history: '#history_base',
@@ -75,9 +76,9 @@ export function toggle_all_panels() {
 
 //panels that are visible in a workspace (all others are hidden)
 export const WORKSPACES = {
-	essentials: ['tools', 'options', 'preview', 'colors', 'details', 'history', 'layers', 'status'],
+	essentials: ['tools', 'options', 'preview', 'colors', 'details', 'channels', 'history', 'layers', 'status'],
 	painting: ['tools', 'options', 'colors', 'layers', 'status'],
-	photography: ['tools', 'options', 'histogram', 'history', 'layers', 'status'],
+	photography: ['tools', 'options', 'histogram', 'channels', 'history', 'layers', 'status'],
 	minimal: ['tools', 'options', 'layers'],
 };
 
