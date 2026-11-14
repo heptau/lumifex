@@ -38,7 +38,11 @@ class Layer_duplicate_class {
 		return this.duplicate();
 	}
 
-	duplicate() {
+	/**
+	 * @param {boolean} [offset] a copy of a smaller layer is shifted by 10 px so it can be seen (default), false = in place
+	 * @returns {Promise|undefined} the history step
+	 */
+	duplicate(offset = true) {
 		const params = JSON.parse(JSON.stringify(config.layer));
 		delete params.id;
 		delete params.order;
@@ -55,7 +59,7 @@ class Layer_duplicate_class {
 			params.name = `${name_number[1]  } #${  parseInt(name_number[2]) + 1}`
 		}
 
-		if(params.x != 0 || params.y != 0 || params.width != config.WIDTH || params.height != config.HEIGHT){
+		if(offset !== false && (params.x != 0 || params.y != 0 || params.width != config.WIDTH || params.height != config.HEIGHT)){
 			params.x += 10;
 			params.y += 10;
 		}
@@ -71,7 +75,7 @@ class Layer_duplicate_class {
 			params.link = config.layer.link.cloneNode(true);
 		}
 
-		app.State.do_action(
+		return app.State.do_action(
 			new app.Actions.Bundle_action('duplicate_layer', 'Duplicate Layer', [
 				new app.Actions.Insert_layer_action(params)
 			])

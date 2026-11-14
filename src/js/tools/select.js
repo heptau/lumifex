@@ -1,5 +1,6 @@
 import { pick_layer } from './../libs/auto-select.js';
 import Edit_selection_move_class from './../modules/edit/selection_move.js';
+import Layer_duplicate_class from './../modules/layer/duplicate.js';
 import Selection_mask_class from './../core/selection-mask-state.js';
 import { draw_mask_ants, draw_rect_ants, ant_phase } from './../libs/marching-ants.js';
 import { schedule_ants_redraw } from './../core/base-selection.js';
@@ -215,7 +216,14 @@ class Select_tool_class extends Base_tools_class {
 		}
 		else {
 			this.moving = true;
+			this.alt_copy = false;
 			await this.auto_select_object(e);
+			if (e.altKey === true && config.layer && config.layer.type != null && config.layer.locked !== true) {
+				//Alt + drag (Photoshop): a copy stays in place, the original layer is the one that is dragged away.
+				//The copy is dragged instead, which looks the same and keeps the original where it was.
+				this.alt_copy = true;
+				await new Layer_duplicate_class().duplicate(false);
+			}
 			this.Base_selection.find_settings().keep_ratio = config.layer.type === 'image';
 			this.saved = false;
 		}
@@ -426,11 +434,14 @@ class Select_tool_class extends Base_tools_class {
 							x: new_x,
 							y: new_y
 						})
-					].concat(linked_updates))
+					].concat(linked_updates)),
+					//Alt + drag is one history step together with the copy
+					this.alt_copy ? {merge_with_history: 'duplicate_layer'} : {}
 				);
 			}
 		}
 		this.moving = false;
+		this.alt_copy = false;
 		this.resizing = false;
 	}
 
