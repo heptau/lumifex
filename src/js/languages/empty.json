@@ -1527,5 +1527,13 @@
     "X:": "",
     "Horizontal position of the center": "",
     "Vertical position of the center": "",
-    "Rotation in degrees": ""
+    "Rotation in degrees": "",
+    "Save Brush Preset": "",
+    "Load Brush Preset": "",
+    "Delete this preset instead:": "",
+    "My brush": "",
+    "Brush presets could not be saved.": "",
+    "Enter a name for the preset.": "",
+    "Brush preset saved.": "",
+    "There are no brush presets yet. Use Edit > Save Brush Preset.": ""
 }

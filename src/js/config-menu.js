@@ -353,6 +353,16 @@ const menuDefinition = [
 				target: 'edit/define_brush.define_brush'
 			},
 			{
+				name: 'Save Brush Preset',
+				ellipsis: true,
+				target: 'edit/brush_presets.save'
+			},
+			{
+				name: 'Load Brush Preset',
+				ellipsis: true,
+				target: 'edit/brush_presets.load'
+			},
+			{
 				name: 'Define Pattern',
 				target: 'edit/fill.define_pattern'
 			}
