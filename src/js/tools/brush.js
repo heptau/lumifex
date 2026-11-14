@@ -8,6 +8,7 @@ import { load_stored_tip } from './../libs/brush-tip.js';
 import { symmetry_transforms } from './../libs/symmetry.js';
 import { stamps_along } from './../libs/brush-tip.js';
 import { has_dynamics, apply_dynamics } from './../libs/brush-dynamics.js';
+import { soft_blur_radius } from './../libs/brush-hardness.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
@@ -467,6 +468,13 @@ class Brush_class extends Base_tools_class {
 		//the layer was resized with the handles: the strokes are stretched with it
 		const scale = stroke_scale(layer);
 		ctx.scale(scale.x, scale.y);
+
+		//a soft brush: the strokes are blurred (the radius of a CSS filter ignores the transformation, so it is scaled by hand)
+		const matrix = ctx.getTransform();
+		const blur = soft_blur_radius(size, params.hardness) * Math.hypot(matrix.a, matrix.b);
+		if (blur > 0.01) {
+			ctx.filter = `${ctx.filter && ctx.filter != 'none' ? `${ctx.filter} ` : ''}blur(${blur.toFixed(2)}px)`;
+		}
 
 		//check for legacy format
 		const data = this.check_legacy_format(layer.data);

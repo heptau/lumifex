@@ -215,6 +215,11 @@ config.TOOLS = [
 				min: 0,
 				max: 95,
 			},
+			hardness: {
+				value: 100,
+				min: 0,
+				max: 100,
+			},
 			tip: {
 				value: 'Round',
 				values: ['Round', 'Custom'],
