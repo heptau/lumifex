@@ -4,6 +4,7 @@ import Helper_class from './../../libs/helpers.js';
 import Base_layers_class from './../../core/base-layers.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Tools_settings_class from './../tools/settings.js';
+import { guides_for_layout } from './../../libs/guide-layout.js';
 import { t } from '../tools/translate.js';
 
 class View_guides_class {
@@ -134,6 +135,38 @@ class View_guides_class {
 		}
 
 		config.need_render = true;
+	}
+
+	/**
+	 * View > Guides > New Guide Layout - margins, columns and rows with a gutter (in pixels)
+	 */
+	layout() {
+		this.POP.show({
+			title: 'New Guide Layout',
+			params: [
+				{name: 'columns', title: 'Columns:', value: 3, range: [0, 100]},
+				{name: 'rows', title: 'Rows:', value: 0, range: [0, 100]},
+				{name: 'gutter', title: 'Gutter (px):', value: 20},
+				{name: 'margin_top', title: 'Margin top (px):', value: 0},
+				{name: 'margin_left', title: 'Margin left (px):', value: 0},
+				{name: 'margin_bottom', title: 'Margin bottom (px):', value: 0},
+				{name: 'margin_right', title: 'Margin right (px):', value: 0},
+				{name: 'clear', title: 'Remove the existing guides:', value: true},
+			],
+			on_finish: (params) => {
+				const guides = guides_for_layout(config.WIDTH, config.HEIGHT, params);
+				if (guides.length == 0) {
+					alertify.warning(t('The layout has no guides.'));
+					return;
+				}
+				config.guides = (params.clear === false ? config.guides : []).concat(guides);
+				if (config.guides_enabled == false) {
+					config.guides_enabled = true;
+					this.Helper.setCookie('guides', 1);
+				}
+				config.need_render = true;
+			},
+		});
 	}
 
 	/**

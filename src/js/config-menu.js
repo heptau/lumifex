@@ -2009,6 +2009,11 @@ const menuDefinition = [
 						target: 'view/guides.update'
 					},
 					{
+						name: 'New Guide Layout',
+						ellipsis: true,
+						target: 'view/guides.layout'
+					},
+					{
 						name: 'Remove all',
 						target: 'view/guides.remove'
 					}

@@ -1537,5 +1537,14 @@
     "Brush preset saved.": "",
     "There are no brush presets yet. Use Edit > Save Brush Preset.": "",
     "Transparency": "",
-    "Channel as Selection": ""
+    "Channel as Selection": "",
+    "New Guide Layout": "",
+    "Rows:": "",
+    "Gutter (px):": "",
+    "Margin top (px):": "",
+    "Margin left (px):": "",
+    "Margin bottom (px):": "",
+    "Margin right (px):": "",
+    "Remove the existing guides:": "",
+    "The layout has no guides.": ""
 }
