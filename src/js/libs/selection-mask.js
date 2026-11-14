@@ -1179,6 +1179,32 @@ export function luminosity_mask(image, kind, strength) {
 }
 
 /**
+ * Channel as a selection (Photoshop's Load Channel as Selection): the brightness of the red, green or blue channel, or
+ * the transparency, becomes the strength of the selection. The color channels are multiplied by the alpha, so a
+ * transparent place is not selected.
+ *
+ * @param {{data: Uint8ClampedArray, width: number, height: number}} image canvas-size image data
+ * @param {'red'|'green'|'blue'|'alpha'} channel anything else means red
+ * @param {boolean} [invert] select where the channel is dark
+ * @returns {Mask}
+ */
+export function channel_mask(image, channel, invert) {
+	const offset = channel == 'green' ? 1 : (channel == 'blue' ? 2 : (channel == 'alpha' ? 3 : 0));
+	const mask = create_mask(image.width, image.height);
+	const data = image.data;
+	for (let p = 0; p < mask.data.length; p++) {
+		const i = p * 4;
+		const alpha = data[i + 3];
+		let value = offset == 3 ? alpha : data[i + offset] * alpha / 255;
+		if (invert === true) {
+			value = offset == 3 ? 255 - alpha : (alpha == 0 ? 0 : alpha - value);
+		}
+		mask.data[p] = Math.round(clamp(value, 0, 255));
+	}
+	return mask;
+}
+
+/**
  * Edges - selects the places where the picture changes quickly (Sobel filter).
  *
  * @param {{data: Uint8ClampedArray, width: number, height: number}} image canvas-size image data

@@ -1535,5 +1535,7 @@
     "Brush presets could not be saved.": "",
     "Enter a name for the preset.": "",
     "Brush preset saved.": "",
-    "There are no brush presets yet. Use Edit > Save Brush Preset.": ""
+    "There are no brush presets yet. Use Edit > Save Brush Preset.": "",
+    "Transparency": "",
+    "Channel as Selection": ""
 }

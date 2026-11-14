@@ -512,7 +512,7 @@ describe('select_subject_mask', () => {
 	});
 });
 
-import { luminosity_mask, edges_mask, select_sky_mask } from '../src/js/libs/selection-mask.js';
+import { luminosity_mask, channel_mask, edges_mask, select_sky_mask } from '../src/js/libs/selection-mask.js';
 
 function gradient_image(width: number, height: number, value: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -555,5 +555,34 @@ describe('luminosity, edges and sky masks', () => {
 		const mask = select_sky_mask(scene, 30);
 		expect(mask.data[3 * 30 + 15]).toBe(255);
 		expect(mask.data[25 * 30 + 15]).toBe(0);
+	});
+});
+
+describe('channel_mask', () => {
+	const image = {
+		width: 4, height: 1,
+		//red, green, blue, half transparent white
+		data: new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 128]),
+	};
+
+	it('uses the brightness of the chosen color channel', () => {
+		expect(Array.from(channel_mask(image, 'red').data)).toEqual([255, 0, 0, 128]);
+		expect(Array.from(channel_mask(image, 'green').data)).toEqual([0, 255, 0, 128]);
+		expect(Array.from(channel_mask(image, 'blue').data)).toEqual([0, 0, 255, 128]);
+	});
+
+	it('uses the transparency for alpha', () => {
+		expect(Array.from(channel_mask(image, 'alpha').data)).toEqual([255, 255, 255, 128]);
+		expect(Array.from(channel_mask(image, 'alpha', true).data)).toEqual([0, 0, 0, 127]);
+	});
+
+	it('inverts a color channel only inside the opaque part', () => {
+		expect(Array.from(channel_mask(image, 'red', true).data)).toEqual([0, 255, 255, 0]);
+		const empty = { width: 1, height: 1, data: new Uint8ClampedArray([0, 0, 0, 0]) };
+		expect(Array.from(channel_mask(empty, 'red', true).data)).toEqual([0]);
+	});
+
+	it('falls back to red for an unknown channel', () => {
+		expect(Array.from(channel_mask(image, 'x' as any).data)).toEqual([255, 0, 0, 128]);
 	});
 });

@@ -1295,6 +1295,11 @@ const menuDefinition = [
 				target: 'edit/selection.luminosity'
 			},
 			{
+				name: 'Channel as Selection',
+				ellipsis: true,
+				target: 'edit/selection.channel'
+			},
+			{
 				name: 'Layer Transparency',
 				target: 'edit/selection.layer_transparency'
 			},

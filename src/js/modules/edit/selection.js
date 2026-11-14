@@ -5,7 +5,7 @@ import Dialog_class from './../../libs/popup.js';
 import Helper_class from './../../libs/helpers.js';
 import { grow_rect } from './../../libs/selection-area.js';
 import {
-	invert_mask, ellipse_mask, feather_mask, morph_mask, mask_bounds, color_range_mask, alpha_mask, keep_with_mask, resize_mask, combine_masks, select_similar_mask, select_subject_mask, luminosity_mask, edges_mask, select_sky_mask, rect_mask, rounded_rect_mask, transform_mask, smooth_mask, border_mask, refine_mask, stroke_mask, translate_mask
+	invert_mask, ellipse_mask, feather_mask, morph_mask, mask_bounds, color_range_mask, alpha_mask, keep_with_mask, resize_mask, combine_masks, select_similar_mask, select_subject_mask, luminosity_mask, channel_mask, edges_mask, select_sky_mask, rect_mask, rounded_rect_mask, transform_mask, smooth_mask, border_mask, refine_mask, stroke_mask, translate_mask
 } from './../../libs/selection-mask.js';
 import { selection_to_layer_rect } from './../../libs/selection-area.js';
 import { deserialize_layer_mask, apply_layer_mask } from './../../libs/layer-mask.js';
@@ -335,6 +335,19 @@ class Edit_selection_class {
 			{name: "range", title: "Range:", type: 'select', values: ['Lights', 'Midtones', 'Darks'], value: 'Lights'},
 			{name: "narrow", title: "Narrow:", value: 1, range: [1, 4]},
 		], (image, params) => luminosity_mask(image, String(params.range).toLowerCase(), params.narrow));
+	}
+
+	/**
+	 * Select > Channel as Selection - the red, green or blue channel or the transparency as the strength of the selection
+	 */
+	channel() {
+		return this.image_mask_dialog('Channel as Selection', [
+			{name: "channel", title: "Channel:", type: 'select', values: ['Red', 'Green', 'Blue', 'Transparency'], value: 'Red'},
+			{name: "invert", title: "Invert:", value: false},
+		], (image, params) => {
+			const names = {Red: 'red', Green: 'green', Blue: 'blue', Transparency: 'alpha'};
+			return channel_mask(image, names[String(params.channel)] || 'red', params.invert === true);
+		});
 	}
 
 	/**

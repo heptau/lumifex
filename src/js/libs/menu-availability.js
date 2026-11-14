@@ -18,7 +18,7 @@ const IMAGE_TARGETS = [
 	'edit/warp.warp', 'edit/transform.skew', 'edit/transform.perspective', 'edit/transform.distort',
 	'layer/mask.remove_background', 'layer/mask.apply', 'layer/lock.toggle_alpha',
 	'edit/selection.color_range', 'edit/selection.select_subject', 'edit/selection.select_sky',
-	'edit/selection.select_edges', 'edit/selection.luminosity', 'edit/selection.layer_transparency',
+	'edit/selection.select_edges', 'edit/selection.luminosity', 'edit/selection.channel', 'edit/selection.layer_transparency',
 	'edit/selection.select_similar', 'edit/selection.grow_similar',
 ];
 

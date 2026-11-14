@@ -150,6 +150,7 @@ A quick overview of what is already done (so that it is not added twice) and whe
 | Quick Mask - painting the selection with a brush (size, softness, Subtract, Alt = opposite); with the target "Layer Mask" it paints directly into the mask of the active layer (live, one undo action) | `tools/quick_mask.js`, `paint_mask_line` | Q |
 | Color Range, Layer Transparency (also Ctrl+click on a layer in the layers panel), Grow (contiguous) and Similar | Select, `select_similar_mask` | Ctrl+click |
 | Modify: Expand, Contract, Feather, Smooth, Border, Offset, Rectangle to Ellipse; Refine Edge including "Snap to edges" (guided filter `guided_refine_mask` by the image of the active layer; works when the rough edge is at most a few pixels from the real edge - solve larger gaps with Grow) | Select, `libs/selection-mask.js` | – |
+| Select > Channel as Selection… (red / green / blue channel or transparency as the strength of the selection, Invert; `channel_mask`, colors multiplied by alpha) | `edit/selection.js`, `libs/selection-mask.js` | – |
 | Live preview of the mask on the canvas in the dialogs above | `Edit_selection.preview_dialog` | – |
 | Save / Load / Delete Saved Selection (IndexedDB `minipaint_selections`, RLE) | `libs/selection-store.js` | – |
 | Import / export of selections: JSON (`minipaint-selections`) and greyscale PNG | `libs/selection-file.js` | – |
