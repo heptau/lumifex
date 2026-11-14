@@ -1045,6 +1045,14 @@ const menuDefinition = [
 					{
 						name: 'Down',
 						target: 'layer/move.down'
+					},
+					{
+						name: 'To Front',
+						target: 'layer/move.top'
+					},
+					{
+						name: 'To Back',
+						target: 'layer/move.bottom'
 					}
 				]
 			},

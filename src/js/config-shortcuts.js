@@ -158,6 +158,7 @@ export const EXTRA_SHORTCUTS = [
 	{id: 'view/documents.close_active', group: 'File', name: 'Close Document', target: 'view/documents.close_active', spec: 'Mod+Alt+W'},
 	{id: 'tools/search.search|f', group: 'Other', name: 'Search (alternative)', target: 'tools/search.search', spec: 'Mod+F'},
 	{id: 'tools/search.search|k', group: 'Other', name: 'Search (second alternative)', target: 'tools/search.search', spec: 'Mod+K'},
+	{id: 'edit/undo.undo|step_backward', group: 'Edit', name: 'Step Backward', target: 'edit/undo.undo', spec: 'Mod+Alt+Z'},
 	{id: 'edit/redo.redo|alternative', group: 'Edit', name: 'Redo (alternative)', target: 'edit/redo.redo', spec: 'Mod+Shift+Z'},
 
 	//layer
@@ -165,6 +166,8 @@ export const EXTRA_SHORTCUTS = [
 	{id: 'layer/group.clear_group', group: 'Layer', name: 'Clear Group', target: 'layer/group.clear_group', spec: 'Mod+Shift+G'},
 	{id: 'layer/move.up', group: 'Layer', name: 'Move Layer Up', target: 'layer/move.up', spec: 'Mod+]'},
 	{id: 'layer/move.down', group: 'Layer', name: 'Move Layer Down', target: 'layer/move.down', spec: 'Mod+['},
+	{id: 'layer/move.top', group: 'Layer', name: 'Bring Layer to Front', target: 'layer/move.top', spec: 'Mod+Shift+]'},
+	{id: 'layer/move.bottom', group: 'Layer', name: 'Send Layer to Back', target: 'layer/move.bottom', spec: 'Mod+Shift+['},
 	{id: 'layer/visibility.toggle', group: 'Layer', name: 'Show / Hide Layer', target: 'layer/visibility.toggle', spec: ''},
 	//Shift is not told apart for + and -, so Alt+Shift++ of Photoshop is Alt++ here
 	{id: 'layer/blend_cycle.next', group: 'Layer', name: 'Next Blend Mode', target: 'layer/blend_cycle.next', spec: 'Alt++'},

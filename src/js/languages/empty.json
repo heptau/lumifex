@@ -1551,5 +1551,10 @@
     "Top Left": "",
     "Top Right": "",
     "Bottom Left": "",
-    "Bottom Right": ""
+    "Bottom Right": "",
+    "To Front": "",
+    "To Back": "",
+    "Step Backward": "",
+    "Bring Layer to Front": "",
+    "Send Layer to Back": ""
 }

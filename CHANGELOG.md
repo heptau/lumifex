@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Photoshop shortcuts: Step Backward (Alt+Ctrl+Z), Bring Layer to Front (Shift+Ctrl+]) and Send Layer to Back (Shift+Ctrl+[); the last two are also in Layer > Move.
 - Image > Canvas Size has an Anchor (nine positions): when the canvas grows or shrinks, the content stays at the chosen corner, edge or center instead of always at the top left (the default is still Top Left).
 - View > Guides > New Guide Layout…: guides for margins, columns and rows with a gutter, as in Photoshop (`libs/guide-layout.js`).
 - Select > Channel as Selection…: the red, green or blue channel, or the transparency, of the active layer becomes the selection (with Invert and a live preview).
