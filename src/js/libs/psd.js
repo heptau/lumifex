@@ -1,13 +1,14 @@
 /**
  * Reader of Photoshop files (.psd): the size, the layers (pixels, place, opacity, visibility, blend mode, name) and the
  * flattened picture. 8 and 16 bits per channel, RGB and grayscale, raw and RLE data. Groups (also inside groups) are
- * read with their opacity and blend mode. Layer effects, masks, text and smart objects are not read (they are only
+ * read with their opacity and blend mode. Layer masks are read; layer effects, text and smart objects are not read (they are only
  * skipped).
  * Pure functions, no DOM. Every length from the file is checked, a broken file throws an Error.
  *
  * @typedef {{name: string, x: number, y: number, width: number, height: number, opacity: number, visible: boolean,
- *   composition: string, data: Uint8ClampedArray, group?: string|null}} Psd_layer pixels are RGBA, opacity 0-100,
- *   group = path of the group ('Faces/Eyes') or null
+ *   composition: string, data: Uint8ClampedArray, group?: string|null, mask?: Uint8ClampedArray|null,
+ *   mask_enabled?: boolean}} Psd_layer pixels are RGBA, opacity 0-100,
+ *   group = path of the group ('Faces/Eyes') or null, mask = the layer mask in the pixels of the layer (255 = visible)
  * @typedef {{opacity: number, composition: string}} Psd_group opacity 0-100
  * @typedef {{width: number, height: number, layers: Psd_layer[], groups: Object<string, Psd_group>, composite: Uint8ClampedArray|null}} Psd_file
  *   groups = the settings of every group by its path
@@ -177,6 +178,34 @@ function read_channel(reader, width, height, depth, end) {
 }
 
 /**
+ * The layer mask of a PSD layer in the pixels of the layer: inside the rectangle of the mask its values, outside it the
+ * default value of the mask.
+ *
+ * @param {{x: number, y: number, width: number, height: number}} layer
+ * @param {{x: number, y: number, width: number, height: number, default: number, plane?: Uint8Array}|null} mask
+ * @returns {Uint8ClampedArray|null} width * height values (255 = visible), null when the layer has no useful mask
+ */
+export function layer_mask_values(layer, mask) {
+	if (!mask || !mask.plane || layer.width <= 0 || layer.height <= 0) {
+		return null;
+	}
+	const out = new Uint8ClampedArray(layer.width * layer.height).fill(mask.default);
+	for (let y = 0; y < layer.height; y++) {
+		const my = layer.y + y - mask.y;
+		if (my < 0 || my >= mask.height) {
+			continue;
+		}
+		for (let x = 0; x < layer.width; x++) {
+			const mx = layer.x + x - mask.x;
+			if (mx >= 0 && mx < mask.width) {
+				out[y * layer.width + x] = mask.plane[my * mask.width + mx];
+			}
+		}
+	}
+	return out;
+}
+
+/**
  * RGBA from separate channels
  *
  * @param {Object<number, Uint8Array>} channels by channel id: 0 red, 1 green, 2 blue, -1 transparency
@@ -266,7 +295,21 @@ export function parse_psd(buffer) {
 				const extra = reader.u32();
 				const extra_end = reader.pos + extra;
 				reader.need(extra);
-				reader.skip(reader.u32()); //layer mask
+				//the layer mask: its own rectangle, the value outside it and the flags (a longer record has more, it is skipped)
+				const mask_length = reader.u32();
+				const mask_end = reader.pos + mask_length;
+				reader.need(mask_length);
+				let mask_info = null;
+				if (mask_length >= 20) {
+					const mask_top = reader.i32();
+					const mask_left = reader.i32();
+					const mask_bottom = reader.i32();
+					const mask_right = reader.i32();
+					const mask_default = reader.u8() >= 128 ? 255 : 0;
+					const mask_flags = reader.u8();
+					mask_info = {x: mask_left, y: mask_top, width: mask_right - mask_left, height: mask_bottom - mask_top, default: mask_default, disabled: (mask_flags & 2) != 0};
+				}
+				reader.pos = mask_end;
 				reader.skip(reader.u32()); //blending ranges
 				const name_start = reader.pos;
 				const name_length = reader.u8();
@@ -302,7 +345,7 @@ export function parse_psd(buffer) {
 					x: left, y: top, width: right - left, height: bottom - top, channels: list,
 					opacity: Math.round(opacity / 255 * 100), visible: (flags & 2) == 0, composition: blend_mode(key),
 					name: Array.from(name).filter((c) => c.charCodeAt(0) >= 32).join('').slice(0, 100) || 'Layer',
-					section,
+					section, mask: mask_info,
 				});
 			}
 			//groups: the end of a group comes first (a divider), then its layers, then the record with its name and settings
@@ -317,6 +360,17 @@ export function parse_psd(buffer) {
 				const planes = {};
 				record.channels.forEach((channel) => {
 					const end = reader.pos + channel.length;
+					if (channel.id == -2 && record.mask && channel.length >= 2) {
+						//the user mask has its own size; a bad one is dropped, not fatal
+						const mask = record.mask;
+						if (mask.width > 0 && mask.height > 0 && mask.width <= MAX_SIDE && mask.height <= MAX_SIDE && mask.width * mask.height <= MAX_PIXELS) {
+							mask.plane = read_channel(reader, mask.width, mask.height, depth, end);
+						}
+						else {
+							reader.skip(channel.length);
+						}
+						return;
+					}
 					if (empty || channel.id < -1 || channel.length < 2) {
 						reader.skip(channel.length);
 						return;
@@ -345,6 +399,7 @@ export function parse_psd(buffer) {
 					name: record.name, x: record.x, y: record.y, width: record.width, height: record.height,
 					opacity: record.opacity, visible: record.visible, composition: record.composition,
 					data: to_rgba(planes, record.width * record.height, mode), group: null, chain: [],
+					mask: layer_mask_values(record, record.mask), mask_enabled: !(record.mask && record.mask.disabled),
 				};
 				layers.push(layer);
 				if (open_groups.length > 0) {

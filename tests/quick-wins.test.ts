@@ -1773,7 +1773,7 @@ describe('pen paths', () => {
 	});
 });
 
-import { parse_psd, unpack_bits, blend_mode } from '../src/js/libs/psd.js';
+import { parse_psd, unpack_bits, blend_mode, layer_mask_values } from '../src/js/libs/psd.js';
 
 describe('Photoshop files', () => {
 	const be = (value: number, bytes: number) => Array.from({ length: bytes }, (_, i) => (value >> (8 * (bytes - 1 - i))) & 255);
@@ -1964,19 +1964,32 @@ describe('writing Photoshop files', () => {
 		expect(again.layers.map((l) => l.name)).toEqual(['A', 'B']);
 	});
 
-	it('writes a layer mask as an extra channel and the reader still reads the layers', () => {
+	it('writes a layer mask as an extra channel and reads it back', () => {
 		const masked: any = layer('M', 0, 0, 2, 1, { composition: 'source-over', opacity: 100 });
 		masked.mask = new Uint8Array([255, 0]);
 		const plain = layer('P', 0, 0, 1, 1, { composition: 'source-over', opacity: 100 });
 		const bytes = build_psd(2, 1, [masked, plain], new Uint8ClampedArray(8));
 		const read = parse_psd(bytes.buffer as ArrayBuffer);
 		expect(read.layers.map((l) => l.name)).toEqual(['M', 'P']);
+		//the mask comes back in the pixels of the layer, a layer without a mask has none
+		expect(Array.from(read.layers[0].mask as Uint8ClampedArray)).toEqual([255, 0]);
+		expect(read.layers[0].mask_enabled).toBe(true);
+		expect(read.layers[1].mask).toBeNull();
 		//a mask of the wrong size is ignored
 		const wrong: any = layer('W', 0, 0, 2, 1, { composition: 'source-over', opacity: 100 });
 		wrong.mask = new Uint8Array(3);
 		const small = build_psd(2, 1, [wrong], new Uint8ClampedArray(8));
 		expect(bytes.length - small.length).toBeGreaterThan(0);
 		expect(parse_psd(small.buffer as ArrayBuffer).layers[0].name).toBe('W');
+	});
+
+	it('places a mask that covers only a part of the layer, the rest gets the default value', () => {
+		const layer_box = { x: 10, y: 20, width: 4, height: 2 };
+		const mask = { x: 11, y: 20, width: 2, height: 1, default: 255, plane: new Uint8Array([0, 128]) };
+		expect(Array.from(layer_mask_values(layer_box, mask) as Uint8ClampedArray)).toEqual([255, 0, 128, 255, 255, 255, 255, 255]);
+		expect(layer_mask_values(layer_box, null)).toBeNull();
+		expect(layer_mask_values(layer_box, { ...mask, plane: undefined })).toBeNull();
+		expect(Array.from(layer_mask_values({ x: 0, y: 0, width: 1, height: 1 }, { x: 5, y: 5, width: 1, height: 1, default: 0, plane: new Uint8Array([200]) }) as Uint8ClampedArray)).toEqual([0]);
 	});
 
 	it('the group names with a slash are turned into dashes so they stay one level', () => {

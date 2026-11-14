@@ -10,6 +10,7 @@ import EXIF from './../../../../node_modules/exif-js/exif.js';
 import GUI_tools_class from "../../core/gui/gui-tools";
 import { parse_psd } from './../../libs/psd.js';
 import { group_ancestors, is_isolated } from './../../libs/layer-groups.js';
+import { serialize_layer_mask } from './../../libs/layer-mask.js';
 import { validate_file, validate_json_file, validate_data_url, sanitize_filename } from './../../libs/input-validator.js';
 import { t } from '../tools/translate.js';
 import Tools_settings_class from './../tools/settings.js';
@@ -491,6 +492,8 @@ class File_open_class {
 				composition: layer.composition,
 				group: layer.group || null,
 				group_props: group_props_of_layer(layer),
+				mask: layer.mask ? serialize_layer_mask({width: layer.width, height: layer.height, data: layer.mask}) : null,
+				mask_enabled: layer.mask_enabled !== false,
 			}, layers.indexOf(layer) > 0 || actions.length > 0 ? false : true));
 		});
 		await app.State.do_action(new app.Actions.Bundle_action('open_psd', 'Open Image', actions));
