@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Brush and Pencil: Shift + click draws a straight line from the end of the last stroke, as in Photoshop.
 - Move tool: Alt + drag duplicates the layer and drags the copy (one undo step), as in Photoshop.
 - Photoshop shortcuts: Step Backward (Alt+Ctrl+Z), Bring Layer to Front (Shift+Ctrl+]) and Send Layer to Back (Shift+Ctrl+[); the last two are also in Layer > Move.
 - Image > Canvas Size has an Anchor (nine positions): when the canvas grows or shrinks, the content stays at the chosen corner, edge or center instead of always at the top left (the default is still Top Left).

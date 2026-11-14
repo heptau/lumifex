@@ -235,6 +235,7 @@ class Brush_class extends Base_tools_class {
 				])
 			);
 			this.params_hash = params_hash;
+			this.last_point = null; //a new layer has no previous stroke to continue from
 
 			//reset event links index
 			this.data_index = 0;
@@ -289,6 +290,12 @@ class Brush_class extends Base_tools_class {
 
 		//the stabilizer follows the stroke from its first point
 		this.smooth_last = {x: mouse_x, y: mouse_y};
+
+		//Shift + click (Photoshop): a straight line from the end of the last stroke of this layer
+		const last = this.last_point;
+		if (e.shiftKey === true && last && last.layer_id == config.layer.id) {
+			current_group.push([last.x - config.layer.x, last.y - config.layer.y, new_size]);
+		}
 
 		current_group.push([mouse_x - config.layer.x, mouse_y - config.layer.y, new_size]);
 		this.Base_layers.render();
@@ -348,6 +355,15 @@ class Brush_class extends Base_tools_class {
 		}
 
 		config.layer.status = null;
+
+		//where the next Shift + click continues from
+		const groups = config.layer.type == this.name ? config.layer.data : [];
+		const group = groups.length > 0 ? groups[groups.length - 1] : null;
+		if (group && group.length > 0) {
+			const point = group[group.length - 1];
+			//in the coordinates of the document: check_dimensions below moves the origin of the layer
+			this.last_point = {layer_id: config.layer.id, x: point[0] + config.layer.x, y: point[1] + config.layer.y};
+		}
 
 		this.check_dimensions();
 		this.Base_layers.render();

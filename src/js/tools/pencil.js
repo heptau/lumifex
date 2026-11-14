@@ -92,6 +92,9 @@ class Pencil_class extends Base_tools_class {
 			);
 			this.params_hash = params_hash;
 		}
+		else if (e.shiftKey === true && config.layer.data.length > 0 && config.layer.data[config.layer.data.length - 1] !== null) {
+			//Shift + click (Photoshop): no break, so the stroke goes on as a straight line from the end of the last one
+		}
 		else {
 			//continue adding layer data, just register break
 			const new_data = JSON.parse(JSON.stringify(config.layer.data));
