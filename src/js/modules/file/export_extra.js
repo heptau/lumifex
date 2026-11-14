@@ -192,17 +192,37 @@ class File_export_extra_class {
 				ctx.clearRect(0, 0, width, height);
 				ctx.globalAlpha = 1;
 				ctx.globalCompositeOperation = 'source-over';
-				this.Base_layers.render_object(ctx, layer);
+				//a layer with a mask is written as pixels + a real layer mask (so it stays editable in Photoshop)
+				const masked = !!layer.mask && layer.mask_enabled !== false && this.Base_layers.get_mask_canvas(layer) != null;
+				this.Base_layers.render_object(ctx, masked ? Object.assign({}, layer, {mask: null}) : layer);
 				const image = ctx.getImageData(0, 0, width, height);
 				const box = content_bounds(image.data, width, height);
 				if (box == null) {
 					continue;
 				}
 				const part = ctx.getImageData(box.x, box.y, box.width, box.height);
+				let mask = null;
+				if (masked) {
+					//the mask in the pixels of the document: a white layer of the same place, cut by the mask
+					const white = document.createElement('canvas');
+					white.width = white.height = 1;
+					const white_ctx = white.getContext('2d');
+					white_ctx.fillStyle = '#fff';
+					white_ctx.fillRect(0, 0, 1, 1);
+					ctx.clearRect(0, 0, width, height);
+					this.Base_layers.render_object(ctx, Object.assign({}, layer, {
+						type: 'image', link: white, filters: [], opacity: 100, fill_opacity: 100, composition: 'source-over',
+					}));
+					const shape = ctx.getImageData(box.x, box.y, box.width, box.height).data;
+					mask = new Uint8Array(box.width * box.height);
+					for (let i = 0; i < mask.length; i++) {
+						mask[i] = shape[i * 4 + 3];
+					}
+				}
 				records.set(layer, {
 					name: String(layer.name), x: box.x, y: box.y, width: box.width, height: box.height,
 					opacity: Math.round(effective_alpha(layer) * 100), visible: layer.visible !== false,
-					composition: layer.composition, data: part.data,
+					composition: layer.composition, data: part.data, mask,
 				});
 			}
 			if (records.size == 0) {

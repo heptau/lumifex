@@ -1964,6 +1964,21 @@ describe('writing Photoshop files', () => {
 		expect(again.layers.map((l) => l.name)).toEqual(['A', 'B']);
 	});
 
+	it('writes a layer mask as an extra channel and the reader still reads the layers', () => {
+		const masked: any = layer('M', 0, 0, 2, 1, { composition: 'source-over', opacity: 100 });
+		masked.mask = new Uint8Array([255, 0]);
+		const plain = layer('P', 0, 0, 1, 1, { composition: 'source-over', opacity: 100 });
+		const bytes = build_psd(2, 1, [masked, plain], new Uint8ClampedArray(8));
+		const read = parse_psd(bytes.buffer as ArrayBuffer);
+		expect(read.layers.map((l) => l.name)).toEqual(['M', 'P']);
+		//a mask of the wrong size is ignored
+		const wrong: any = layer('W', 0, 0, 2, 1, { composition: 'source-over', opacity: 100 });
+		wrong.mask = new Uint8Array(3);
+		const small = build_psd(2, 1, [wrong], new Uint8ClampedArray(8));
+		expect(bytes.length - small.length).toBeGreaterThan(0);
+		expect(parse_psd(small.buffer as ArrayBuffer).layers[0].name).toBe('W');
+	});
+
 	it('the group names with a slash are turned into dashes so they stay one level', () => {
 		const entries: any[] = [{ section: 'end' }, layer('P', 0, 0, 1, 1), { section: 'start', name: 'a/b', opacity: 100, visible: true, composition: 'source-over' }];
 		const read = parse_psd(build_psd(1, 1, entries, new Uint8ClampedArray(4)).buffer as ArrayBuffer);

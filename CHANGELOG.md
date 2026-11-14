@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- File > Export as PSD writes layer masks as real Photoshop layer masks (the pixels of the layer stay complete, so the mask can still be edited in Photoshop) instead of baking them into the transparency.
 - Numeric transform bar in the options bar of the Move tool (also what Edit > Free Transform chooses): X, Y (center), W, H and Angle of the active layer, with a chain that keeps the proportions (on by default for pictures). A change is one undo step; the values follow the layer while it is dragged (`libs/transform-bar.js`, `core/gui/gui-transform-bar.js`).
 - Layer > Smart Filter: Unsharp Mask, High Pass, Clarity, Motion/Smart/Surface Blur, Median, Pixelate, Emboss, Find Edges, Add Noise and the color adjustments (Levels, Hue/Saturation, …) can be applied as non-destructive filters. The layer keeps its original picture and the settings; a click on the filter name in the Layers panel edits it, the dot next to it switches it off, the cross deletes it (`libs/smart-filters.js`, `modules/layer/smart_filter.js`).
 

@@ -1,9 +1,10 @@
 /**
  * Writer of Photoshop files (.psd): layers with pixels, place, opacity, visibility, blend mode and name, and the
- * flattened picture. 8 bits, RGB, no compression. No effects, masks or groups. Pure functions, no DOM.
+ * flattened picture. 8 bits, RGB, no compression. Groups and layer masks are written, no effects. Pure functions, no DOM.
  *
  * @typedef {{name: string, x: number, y: number, width: number, height: number, opacity: number, visible: boolean,
- *   composition: string, data: Uint8ClampedArray}} Psd_out_layer pixels are RGBA (not premultiplied), opacity 0-100
+ *   composition: string, data: Uint8ClampedArray, mask?: Uint8Array|null}} Psd_out_layer pixels are RGBA (not premultiplied),
+ *   opacity 0-100; mask = a layer mask over the same rectangle as the pixels (width * height bytes, 255 = visible)
  * @typedef {{section: 'end'}} Psd_group_end the divider that starts a group (the layers of the group follow it)
  * @typedef {{section: 'start', name: string, opacity: number, visible: boolean, composition: string, pass?: boolean}} Psd_group_start
  *   the record that closes a group, with its name and settings (it comes after the layers of the group)
@@ -111,6 +112,14 @@ function unicode_name_block(name) {
 }
 
 /**
+ * @param {object} layer
+ * @returns {boolean} the layer has a mask of the right size
+ */
+function has_mask(layer) {
+	return !!layer.mask && layer.mask.length == layer.width * layer.height && layer.width > 0;
+}
+
+/**
  * @param {number} width
  * @param {number} height
  * @param {(Psd_out_layer|Psd_group_end|Psd_group_start)[]} layers from the bottom to the top, with the records of groups
@@ -139,7 +148,11 @@ export function build_psd(width, height, layers, composite) {
 		if (layer.section) {
 			return [empty_plane, empty_plane, empty_plane, empty_plane];
 		}
-		return [plane(layer.data, 3), plane(layer.data, 0), plane(layer.data, 1), plane(layer.data, 2)];
+		const list = [plane(layer.data, 3), plane(layer.data, 0), plane(layer.data, 1), plane(layer.data, 2)];
+		if (has_mask(layer)) {
+			list.push(layer.mask);
+		}
+		return list;
 	});
 	layers.forEach((layer, index) => {
 		const marker = layer.section ? layer : null;
@@ -148,10 +161,12 @@ export function build_psd(width, height, layers, composite) {
 		info.u32(box.x);
 		info.u32(box.y + box.height);
 		info.u32(box.x + box.width);
-		info.u16(4);
-		channel_ids.forEach((id) => {
+		const masked = !marker && has_mask(layer);
+		const ids = masked ? channel_ids.concat([-2]) : channel_ids;
+		info.u16(ids.length);
+		ids.forEach((id, n) => {
 			info.u16(id & 0xffff);
-			info.u32(2 + planes[index][0].length);
+			info.u32(2 + planes[index][n].length);
 		});
 		info.text('8BIM');
 		info.text(marker && marker.section == 'start' ? (marker.pass ? 'pass' : blend_key(marker.composition)) : blend_key(marker ? 'source-over' : layer.composition));
@@ -171,8 +186,20 @@ export function build_psd(width, height, layers, composite) {
 			const key = marker.section == 'start' ? (marker.pass ? 'pass' : blend_key(marker.composition)) : 'norm';
 			section.push(key.charCodeAt(0), key.charCodeAt(1), key.charCodeAt(2), key.charCodeAt(3));
 		}
-		info.u32(4 + 4 + name.length + unicode.length + section.length);
-		info.u32(0); //layer mask
+		info.u32((masked ? 24 : 4) + 4 + name.length + unicode.length + section.length);
+		if (masked) {
+			info.u32(20); //layer mask: the rectangle (the same as the layer), the color outside it, flags, padding
+			info.u32(box.y);
+			info.u32(box.x);
+			info.u32(box.y + box.height);
+			info.u32(box.x + box.width);
+			info.u8(0);
+			info.u8(0);
+			info.u16(0);
+		}
+		else {
+			info.u32(0); //no layer mask
+		}
 		info.u32(0); //blending ranges
 		info.append(name);
 		info.append(unicode);
