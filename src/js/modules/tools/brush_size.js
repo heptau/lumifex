@@ -19,6 +19,35 @@ class Tools_brush_size_class {
 	}
 
 	/**
+	 * Shift + ] (Photoshop): a harder brush (only tools with the option "hardness")
+	 */
+	increase_hardness() {
+		this.change_hardness(1);
+	}
+
+	/**
+	 * Shift + [ (Photoshop): a softer brush
+	 */
+	decrease_hardness() {
+		this.change_hardness(-1);
+	}
+
+	/**
+	 * @param {int} direction 1 or -1
+	 */
+	change_hardness(direction) {
+		const attribute = config.TOOL && config.TOOL.attributes ? config.TOOL.attributes.hardness : null;
+		if (attribute == null || typeof attribute != 'object') {
+			return;
+		}
+		const min = attribute.min != null ? attribute.min : 0;
+		const max = attribute.max != null ? attribute.max : 100;
+		const current = parseFloat(attribute.value);
+		attribute.value = Math.min(max, Math.max(min, Math.round(((isFinite(current) ? current : max) + direction * 10) / 10) * 10));
+		this.GUI_tools.show_action_attributes();
+	}
+
+	/**
 	 * @param {int} direction 1 or -1
 	 */
 	change(direction) {

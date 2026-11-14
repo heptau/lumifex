@@ -2452,7 +2452,7 @@ describe('keyboard shortcut registry', () => {
 
 		it('does not use a plain letter of the menu for anything else than a tool any more', () => {
 			const plain = registry.filter((entry) => !entry.tool && entry.spec !== '' && !has_modifier_or_function_key(entry.spec) && !entry.fixed);
-			expect(plain.map((entry) => entry.id).sort()).toEqual(['edit/selection.quick_mask', 'tools/brush_size.decrease', 'tools/brush_size.increase', 'tools/colors.reset', 'tools/colors.swap'].sort());
+			expect(plain.map((entry) => entry.id).sort()).toEqual(['edit/selection.quick_mask', 'tools/brush_size.decrease', 'tools/brush_size.increase', 'tools/brush_size.decrease_hardness', 'tools/brush_size.increase_hardness', 'tools/colors.reset', 'tools/colors.swap'].sort());
 		});
 	});
 });

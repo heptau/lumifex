@@ -158,6 +158,8 @@ export const EXTRA_SHORTCUTS = [
 	{id: 'view/documents.close_active', group: 'File', name: 'Close Document', target: 'view/documents.close_active', spec: 'Mod+Alt+W'},
 	{id: 'tools/search.search|f', group: 'Other', name: 'Search (alternative)', target: 'tools/search.search', spec: 'Mod+F'},
 	{id: 'tools/search.search|k', group: 'Other', name: 'Search (second alternative)', target: 'tools/search.search', spec: 'Mod+K'},
+	{id: 'tools/brush_size.decrease_hardness', group: 'Tools', name: 'Softer brush', target: 'tools/brush_size.decrease_hardness', spec: 'Shift+['},
+	{id: 'tools/brush_size.increase_hardness', group: 'Tools', name: 'Harder brush', target: 'tools/brush_size.increase_hardness', spec: 'Shift+]'},
 	{id: 'edit/undo.undo|step_backward', group: 'Edit', name: 'Step Backward', target: 'edit/undo.undo', spec: 'Mod+Alt+Z'},
 	{id: 'edit/redo.redo|alternative', group: 'Edit', name: 'Redo (alternative)', target: 'edit/redo.redo', spec: 'Mod+Shift+Z'},
 
