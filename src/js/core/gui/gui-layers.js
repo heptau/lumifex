@@ -546,6 +546,9 @@ class GUI_layers_class {
 		}
 
 		this.sync_layer_props();
+		if (app.GUI && app.GUI.GUI_transform_bar) {
+			app.GUI.GUI_transform_bar.sync(); //the layer was added, selected or changed
+		}
 
 		//register
 		document.getElementById(target_id).innerHTML = html;

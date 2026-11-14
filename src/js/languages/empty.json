@@ -1517,5 +1517,15 @@
     "Restart": "",
     "Lumifex {new} is available. Click here to update.": "",
     "Smart Filter": "",
-    "Select a layer with a smart filter first.": ""
+    "Select a layer with a smart filter first.": "",
+    "Transform": "",
+    "Keep proportions": "",
+    "Width": "",
+    "Height": "",
+    "W:": "",
+    "H:": "",
+    "X:": "",
+    "Horizontal position of the center": "",
+    "Vertical position of the center": "",
+    "Rotation in degrees": ""
 }

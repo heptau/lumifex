@@ -512,6 +512,11 @@ class GUI_tools_class {
 			}
 		}
 
+		//the Move tool also shows the numeric transform bar (X, Y, W, H, angle)
+		if (app.GUI && app.GUI.GUI_transform_bar) {
+			app.GUI.GUI_transform_bar.render();
+		}
+
 		if (config.LANG != 'en') {
 			//retranslate
 			this.Tools_translate.translate(config.LANG);

@@ -214,6 +214,7 @@ class Base_layers_class {
 			this.last_zoom = config.ZOOM;
 
 			this.Base_gui.GUI_details.render_details();
+			this.Base_gui.GUI_transform_bar.sync();
 			this.View_ruler.render_ruler();
 
 			if (this.render_success === false) {

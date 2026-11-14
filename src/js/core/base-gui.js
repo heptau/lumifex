@@ -18,6 +18,7 @@ import GUI_documents_class from './gui/gui-documents.js';
 import GUI_context_menu_class, { CANVAS_MENU, LAYER_MENU } from './gui/gui-context-menu.js';
 import { restore_panels } from './../libs/panels.js';
 import GUI_details_class from './gui/gui-details.js';
+import GUI_transform_bar_class from './gui/gui-transform-bar.js';
 import GUI_menu_class from './gui/gui-menu.js';
 import Tools_translate_class, { t } from './../modules/tools/translate.js';
 import Tools_settings_class from './../modules/tools/settings.js';
@@ -95,6 +96,7 @@ class Base_gui_class {
 		this.GUI_layers = new GUI_layers_class(this);
 		this.GUI_information = new GUI_information_class(this);
 		this.GUI_details = new GUI_details_class(this);
+		this.GUI_transform_bar = new GUI_transform_bar_class();
 		this.GUI_history = new GUI_history_class();
 		this.GUI_histogram = new GUI_histogram_class();
 		this.GUI_documents = new GUI_documents_class();

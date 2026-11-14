@@ -1990,3 +1990,27 @@ html.large_ui input[type="number"] {
 	margin: 4px 0 0;
 	padding-left: 2px;
 }
+
+/* ========== numeric transform bar in the options bar (Move tool) =========== */
+
+.attributes .transform_bar {
+	gap: 4px;
+}
+.attributes .transform_bar {
+	flex: none;
+}
+.attributes .transform_bar label {
+	margin-right: 3px;
+}
+.attributes .transform_bar input[type="number"] {
+	width: 56px;
+	margin-right: 4px;
+}
+.attributes .transform_bar #transform_bar_link {
+	margin-right: 6px;
+	opacity: .55;
+}
+.attributes .transform_bar #transform_bar_link[aria-pressed="true"] {
+	opacity: 1;
+	color: var(--accent);
+}
