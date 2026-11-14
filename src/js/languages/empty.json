@@ -1546,5 +1546,10 @@
     "Margin bottom (px):": "",
     "Margin right (px):": "",
     "Remove the existing guides:": "",
-    "The layout has no guides.": ""
+    "The layout has no guides.": "",
+    "Anchor:": "",
+    "Top Left": "",
+    "Top Right": "",
+    "Bottom Left": "",
+    "Bottom Right": ""
 }

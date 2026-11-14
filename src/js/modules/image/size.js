@@ -7,6 +7,7 @@ import Dialog_class from './../../libs/popup.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Tools_settings_class from './../tools/settings.js';
 import Helper_class from './../../libs/helpers.js';
+import { ANCHORS, anchor_offset } from './../../libs/canvas-anchor.js';
 import { t } from '../tools/translate.js';
 
 class Image_size_class {
@@ -46,6 +47,7 @@ class Image_size_class {
 				{name: "layout", title: "Layout:", value: "Custom", values: ["Custom", "Landscape", "Portrait"]},
 				{name: "enable_autoresize", title: "Enable autoresize:", value: enable_autoresize},
 				{name: "in_proportion", title: "In proportion:", value: false},
+				{name: "anchor", title: "Anchor:", values: ANCHORS, value: ANCHORS[0]},
 			],
 			on_finish: (params) => {
 				this.size_handler(params);
@@ -133,6 +135,18 @@ class Image_size_class {
 						height: Math.round(layer.height / ratio),
 					};
 					actions.push(new app.Actions.Update_layer_action(layer.id, data_new));
+				}
+			}
+		}
+
+		else {
+			//the anchor: the content moves with the chosen edge or corner (Top Left leaves it where it is)
+			const offset = anchor_offset(config.WIDTH, config.HEIGHT, parseInt(width), parseInt(height), data.anchor);
+			if (offset.x != 0 || offset.y != 0) {
+				for (const layer of config.layers) {
+					if (typeof layer.x == 'number' && typeof layer.y == 'number') {
+						actions.push(new app.Actions.Update_layer_action(layer.id, {x: layer.x + offset.x, y: layer.y + offset.y}));
+					}
 				}
 			}
 		}

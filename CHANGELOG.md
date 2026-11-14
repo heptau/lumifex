@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Image > Canvas Size has an Anchor (nine positions): when the canvas grows or shrinks, the content stays at the chosen corner, edge or center instead of always at the top left (the default is still Top Left).
 - View > Guides > New Guide Layout…: guides for margins, columns and rows with a gutter, as in Photoshop (`libs/guide-layout.js`).
 - Select > Channel as Selection…: the red, green or blue channel, or the transparency, of the active layer becomes the selection (with Invert and a live preview).
 - Edit > Save Brush Preset… / Load Brush Preset…: the options of the Brush (size, hardness, spacing, scatter, jitter, symmetry…) can be saved under a name and chosen later; the Load dialog also deletes a preset (`libs/brush-presets.js`, `modules/edit/brush_presets.js`).
