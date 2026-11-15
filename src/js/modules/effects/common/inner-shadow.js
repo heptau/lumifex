@@ -37,7 +37,8 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 	 * @param {CanvasImageSource} source
 	 * @param {number} width
 	 * @param {number} height
-	 * @param {object} params x, y, blur, color, choke (0-100, hardens the edge of the shadow)
+	 * @param {object} params x, y, blur, color, choke (0-100, hardens the edge of the shadow), center (true: the glow grows
+	 *  from the center of the shape instead of the edge)
 	 * @returns {HTMLCanvasElement}
 	 */
 	build_shadow(source, width, height, params) {
@@ -56,7 +57,8 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 		ctx.fillStyle = safe_color(params.color);
 		ctx.fillRect(0, 0, work.width, work.height);
 
-		ctx.globalCompositeOperation = 'destination-out';
+		//a glow from the center keeps the color where the blurred picture is strong, the usual one where it is weak
+		ctx.globalCompositeOperation = params.center === true ? 'destination-in' : 'destination-out';
 		ctx.filter = blur > 0 ? `blur(${blur}px)` : 'none';
 		ctx.drawImage(source, pad + x, pad + y, width, height);
 		ctx.filter = 'none';
@@ -85,6 +87,7 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 			blur: params.blur * ratio,
 			color: params.color,
 			choke: params.choke,
+			center: params.source === 'Center',
 		};
 		ctx.drawImage(source, x, y, width, height);
 		ctx.save();
@@ -107,8 +110,8 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 		if (!layer || layer.type != 'image') {
 			return;
 		}
-		const params = {x: data.params.x, y: data.params.y, blur: data.params.blur, color: safe_color(data.params.color), choke: data.params.choke};
-		const key = [params.x, params.y, params.blur, params.color, params.choke].join('|');
+		const params = {x: data.params.x, y: data.params.y, blur: data.params.blur, color: safe_color(data.params.color), choke: data.params.choke, center: data.params.source === 'Center'};
+		const key = [params.x, params.y, params.blur, params.color, params.choke, params.center].join('|');
 		const shadow = this.cached(layer, key, (source) => this.build_shadow(source, layer.width, layer.height, params));
 
 		const previous_filter = ctx.filter;
