@@ -10,6 +10,7 @@ import { format_shortcut_mac, is_mac_platform } from './../../libs/shortcuts.js'
 import { is_panel_visible } from './../../libs/panels.js';
 import { menu_icon } from './../../libs/menu-icons.js';
 import { is_menu_item_disabled } from './../../libs/menu-availability.js';
+import { are_edges_hidden } from './../../libs/marching-ants.js';
 import Helper_class from './../../libs/helpers.js';
 
 /**
@@ -32,6 +33,8 @@ function get_check_state(definition) {
 			return (helper.getCookie('theme') || 'auto') == parameter;
 		case 'view/guides.toggle':
 			return config.guides_enabled !== false;
+		case 'view/selection_edges.toggle':
+			return !are_edges_hidden();
 		case 'view/guides.snap_to':
 			return !config.snap_to || config.snap_to[parameter] !== false;
 		case 'view/guides.toggle_lock':

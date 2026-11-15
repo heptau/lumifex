@@ -2241,6 +2241,11 @@ const menuDefinition = [
 				target: 'view/grid.settings'
 			},
 			{
+				name: 'Selection Edges',
+				shortcut: 'Alt+Ctrl+H',
+				target: 'view/selection_edges.toggle'
+			},
+			{
 				name: 'Show Guides',
 				shortcut: 'Ctrl+;',
 				target: 'view/guides.toggle'

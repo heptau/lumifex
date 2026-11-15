@@ -5,6 +5,19 @@
 
 const cache = new WeakMap();
 
+//View > Selection Edges (Photoshop's Show / Hide Selection Edges): the selection stays, only its outline is not drawn
+let edges_hidden = false;
+
+/** @param {boolean} hidden */
+export function set_edges_hidden(hidden) {
+	edges_hidden = hidden === true;
+}
+
+/** @returns {boolean} the outline of selections is not drawn */
+export function are_edges_hidden() {
+	return edges_hidden;
+}
+
 //above this number of outline pixels the outline is drawn without animation (it would be too slow)
 export const MAX_ANIMATED_PIXELS = 60000;
 
@@ -67,6 +80,9 @@ export function ant_phase(now) {
  * @param {number} [phase]
  */
 export function draw_mask_ants(ctx, mask, phase) {
+	if (edges_hidden) {
+		return;
+	}
 	const outline = mask_outline(mask);
 	if (outline.length == 0) {
 		return;
@@ -103,6 +119,9 @@ export function draw_mask_ants(ctx, mask, phase) {
  * @param {number} [phase]
  */
 export function draw_rect_ants(ctx, x, y, w, h, zoom, phase) {
+	if (edges_hidden) {
+		return;
+	}
 	const unit = 1 / (zoom || 1);
 	ctx.save();
 	ctx.globalAlpha = 1;
