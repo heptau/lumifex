@@ -220,4 +220,10 @@ describe('Smart blur', () => {
 		const empty = image(2, 1, () => [9, 9, 9, 0]);
 		expect(Array.from(average(empty).data)).toEqual([9, 9, 9, 0, 9, 9, 9, 0]);
 	});
+
+	it('average with weights takes the mean only from the weighted pixels', () => {
+		const img = image(3, 1, (x) => [[200, 0, 0, 255], [0, 0, 200, 255], [0, 200, 0, 255]][x]);
+		const out = average(img, new Uint8Array([255, 255, 0]));
+		expect(Array.from(out.data)).toEqual([100, 0, 100, 255, 100, 0, 100, 255, 100, 0, 100, 255]);
+	});
 });

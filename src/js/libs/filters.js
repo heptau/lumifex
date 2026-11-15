@@ -174,13 +174,15 @@ export function tiles(image, params) {
  * (the mean is weighted by alpha); alpha itself is kept. A fully transparent image does not change.
  *
  * @param {Image_data} image
+ * @param {Uint8Array|Uint8ClampedArray|null} [weights] optional strength of every pixel 0-255 (a selection mask);
+ *   only the weighted pixels contribute to the mean, but all pixels are filled
  * @returns {Image_data}
  */
-export function average(image) {
+export function average(image, weights = null) {
 	const data = image.data;
 	let r = 0, g = 0, b = 0, total = 0;
 	for (let i = 0; i < data.length; i += 4) {
-		const a = data[i + 3];
+		const a = weights ? data[i + 3] * weights[i / 4] / 255 : data[i + 3];
 		r += data[i] * a;
 		g += data[i + 1] * a;
 		b += data[i + 2] * a;

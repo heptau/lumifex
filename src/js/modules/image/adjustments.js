@@ -4,7 +4,7 @@ import Dialog_class from './../../libs/popup.js';
 import Base_layers_class from './../../core/base-layers.js';
 import Edit_selection_class from './../edit/selection.js';
 import { selection_to_layer_rect } from './../../libs/selection-area.js';
-import { blend_with_mask } from './../../libs/selection-mask.js';
+import { blend_with_mask, sample_mask_for_layer } from './../../libs/selection-mask.js';
 import * as Adjustments from './../../libs/adjustments.js';
 import { match_color } from './../../libs/color-match.js';
 import { smudgeBlend } from './../../libs/adjustments.js';
@@ -82,7 +82,10 @@ class Image_adjustments_class {
 	}
 
 	average() {
-		this.apply_direct((img) => Filters.average(img));
+		//with a soft or shaped selection only the selected pixels count into the mean
+		const selection = this.Edit_selection.get_mask();
+		const shaped = selection != null && selection.kind != 'rect';
+		this.apply_direct((img) => Filters.average(img, shaped ? sample_mask_for_layer(selection.mask, config.layer, img.width, img.height) : null));
 	}
 
 	desaturate() {

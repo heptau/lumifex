@@ -35,7 +35,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Oil Paint (Kuwahara filter): flat painted areas with sharp edges; the radius does not change the speed.
 - Effects > Stylize > Tiles (Photoshop): the image is cut into tiles and each is shifted by a random distance over a copy of the original (number of tiles, maximum offset, seed).
 - Effects > Distort > Zigzag (Photoshop): rings of waves around the center (styles Around Center, Out From Center, Pond Ripples; amount, ridges).
-- Effects > Blur > Average (Photoshop): fills the layer (or the selection) with its average color; the mean is weighted by alpha.
+- Effects > Blur > Average (Photoshop): fills the layer (or the selection) with its average color; the mean is weighted by alpha and, with a shaped selection, by the selection.
 - View > Guides > New Guide Layout…: guides for margins, columns and rows with a gutter, as in Photoshop (`libs/guide-layout.js`).
 - Select > Channel as Selection…: the red, green or blue channel, or the transparency, of the active layer becomes the selection (with Invert and a live preview).
 - Edit > Save Brush Preset… / Load Brush Preset…: the options of the Brush (size, hardness, spacing, scatter, jitter, symmetry…) can be saved under a name and chosen later; the Load dialog also deletes a preset (`libs/brush-presets.js`, `modules/edit/brush_presets.js`).
