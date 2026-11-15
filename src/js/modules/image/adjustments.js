@@ -81,6 +81,10 @@ class Image_adjustments_class {
 		this.apply_direct((img) => Adjustments.invert(img));
 	}
 
+	average() {
+		this.apply_direct((img) => Filters.average(img));
+	}
+
 	desaturate() {
 		this.apply_direct((img) => Adjustments.desaturate(img));
 	}

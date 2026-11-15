@@ -1617,6 +1617,10 @@ const menuDefinition = [
 				name: 'Blur',
 				children: [
 					{
+						name: 'Average',
+						target: 'image/adjustments.average'
+					},
+					{
 						name: 'Blur Background',
 						ellipsis: true,
 						target: 'image/photo_effects.blur_background'

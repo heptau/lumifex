@@ -170,6 +170,37 @@ export function tiles(image, params) {
 }
 
 /**
+ * Average (Photoshop, Blur) - fills the image with its average color. Transparent pixels count less
+ * (the mean is weighted by alpha); alpha itself is kept. A fully transparent image does not change.
+ *
+ * @param {Image_data} image
+ * @returns {Image_data}
+ */
+export function average(image) {
+	const data = image.data;
+	let r = 0, g = 0, b = 0, total = 0;
+	for (let i = 0; i < data.length; i += 4) {
+		const a = data[i + 3];
+		r += data[i] * a;
+		g += data[i + 1] * a;
+		b += data[i + 2] * a;
+		total += a;
+	}
+	if (total == 0) {
+		return image;
+	}
+	r = Math.round(r / total);
+	g = Math.round(g / total);
+	b = Math.round(b / total);
+	for (let i = 0; i < data.length; i += 4) {
+		data[i] = r;
+		data[i + 1] = g;
+		data[i + 2] = b;
+	}
+	return image;
+}
+
+/**
  * Pixelate (Mosaic) - replaces each block with its average color
  *
  * @param {Image_data} image

@@ -1,4 +1,4 @@
-import { tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -211,5 +211,13 @@ describe('Smart blur', () => {
 			expect(a.data[i] % 10).toBe(0);
 			expect(a.data[i + 3]).toBe(255);
 		}
+	});
+
+	it('average fills with the alpha weighted mean color and keeps alpha', () => {
+		//a red pixel with full alpha and a blue one with a quarter of it: the mean leans to red
+		const img = average(image(2, 1, (x) => (x == 0 ? [200, 0, 0, 200] : [0, 0, 200, 100])));
+		expect(Array.from(img.data)).toEqual([133, 0, 67, 200, 133, 0, 67, 100]);
+		const empty = image(2, 1, () => [9, 9, 9, 0]);
+		expect(Array.from(average(empty).data)).toEqual([9, 9, 9, 0, 9, 9, 9, 0]);
 	});
 });
