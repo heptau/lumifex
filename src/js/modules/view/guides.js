@@ -5,6 +5,7 @@ import Base_layers_class from './../../core/base-layers.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Tools_settings_class from './../tools/settings.js';
 import { guides_for_layout } from './../../libs/guide-layout.js';
+import { toggle_snap_to } from './../../libs/snap-targets.js';
 import { t } from '../tools/translate.js';
 
 class View_guides_class {
@@ -184,6 +185,21 @@ class View_guides_class {
 	toggle_lock() {
 		config.guides_locked = config.guides_locked !== true;
 		alertify.warning(t(config.guides_locked ? 'Guides locked.' : 'Guides unlocked.'));
+	}
+
+	/**
+	 * View > Snap To > Guides / Layers / Document Bounds - what the tools snap to; the choice is kept in localStorage
+	 *
+	 * @param {string} key guides, layers or bounds
+	 */
+	snap_to(key) {
+		config.snap_to = toggle_snap_to(config.snap_to, key);
+		try {
+			localStorage.setItem('lumifex_snap_to', JSON.stringify(config.snap_to));
+		}
+		catch {
+			//storage can be blocked, the choice then lasts until the page is closed
+		}
 	}
 
 	/**

@@ -2256,6 +2256,14 @@ const menuDefinition = [
 				target: 'view/guides.toggle_lock'
 			},
 			{
+				name: 'Snap To',
+				children: [
+					{ name: 'Guides', target: 'view/guides.snap_to', parameter: 'guides' },
+					{ name: 'Layers', target: 'view/guides.snap_to', parameter: 'layers' },
+					{ name: 'Document Bounds', target: 'view/guides.snap_to', parameter: 'bounds' }
+				]
+			},
+			{
 				name: 'Snap',
 				shortcut: 'Shift+Ctrl+;',
 				target: 'view/guides.toggle_snap'

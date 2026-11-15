@@ -1,4 +1,5 @@
 //main config file
+import { default_snap_to, parse_snap_to } from "./libs/snap-targets.js";
 
 const config = {};
 
@@ -18,6 +19,14 @@ config.ZOOM = 1;
 //Rotate View / Flip View: only the way the picture is shown (see libs/view-transform.js)
 config.view = {rotate: 0, flip: false};
 config.SNAP = true;
+config.snap_to = default_snap_to();
+try {
+	//the choice of View > Snap To, validated on reading
+	config.snap_to = parse_snap_to(localStorage.getItem('lumifex_snap_to'));
+}
+catch {
+	//storage can be blocked: everything stays on
+}
 // API keys should be configured via environment variables or a separate config file
 // For security, these are not hardcoded. Set them via:
 // window.Google_Webfonts_API_Key = 'your-key-here';

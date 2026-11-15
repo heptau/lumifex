@@ -584,19 +584,13 @@ class Base_tools_class {
 
 	get_snap_positions(exclude_id) {
 		let i;
-		const snap_positions = {
-			x: [
-				0,
-				config.WIDTH/2,
-				config.WIDTH,
-			],
-			y: [
-				0,
-				config.HEIGHT/2,
-				config.HEIGHT,
-			],
-		};
-		if(config.guides_enabled == true){
+		const snap_to = config.snap_to || {};
+		const snap_positions = {x: [], y: []};
+		if(snap_to.bounds !== false){
+			snap_positions.x.push(0, config.WIDTH/2, config.WIDTH);
+			snap_positions.y.push(0, config.HEIGHT/2, config.HEIGHT);
+		}
+		if(config.guides_enabled == true && snap_to.guides !== false){
 			//use guides
 			for(i in config.guides){
 				const guide = config.guides[i];
@@ -607,6 +601,9 @@ class Base_tools_class {
 			}
 		}
 		for(i in config.layers){
+			if(snap_to.layers === false){
+				break;
+			}
 			if(exclude_id != null && exclude_id == config.layers[i].id){
 				continue;
 			}
