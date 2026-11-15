@@ -819,6 +819,11 @@ const menuDefinition = [
 						target: 'effects/common/inner-glow.inner_glow'
 					},
 					{
+						name: 'Satin',
+						ellipsis: true,
+						target: 'effects/common/satin.satin'
+					},
+					{
 						name: 'Bevel & Emboss',
 						ellipsis: true,
 						target: 'effects/common/bevel.bevel'
