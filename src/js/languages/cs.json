@@ -1322,6 +1322,8 @@
     "Spherize": "Koule",
     "Diffuse": "Rozptýlit",
     "Wind": "Vítr",
+    "Merge Visible": "Sloučit viditelné",
+    "There are fewer than two visible layers.": "Viditelné jsou méně než dvě vrstvy.",
     "Shear": "Zkosení",
     "Undefined areas:": "Nedefinované oblasti:",
     "Repeat Edge Pixels": "Opakovat okrajové pixely",

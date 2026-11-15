@@ -1651,5 +1651,7 @@
     "Shear": "",
     "Undefined areas:": "",
     "Repeat Edge Pixels": "",
-    "Wrap Around": ""
+    "Wrap Around": "",
+    "Merge Visible": "",
+    "There are fewer than two visible layers.": ""
 }

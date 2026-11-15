@@ -1218,6 +1218,10 @@ const menuDefinition = [
 				target: 'layer/merge.merge'
 			},
 			{
+				name: 'Merge Visible',
+				target: 'layer/stamp.merge_visible'
+			},
+			{
 				name: 'Stamp Visible',
 				shortcut: 'Alt+Shift+Ctrl+E',
 				target: 'layer/stamp.stamp_visible'

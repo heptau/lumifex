@@ -172,7 +172,7 @@ A quick overview of what is already done (so that it is not added twice) and whe
 | Align / Distribute (to the selection or the canvas; equal gaps between layers) | `libs/layer-align.js`, `modules/layer/align.js` | – |
 | Canvas Rotation (the whole canvas), Image Rotation, Mirror | `libs/canvas-rotate.js` | – |
 | Edit > History (jump to any step of the undo history), Edit > Purge Undo History (`Edit_history.purge`: shifts and frees the undo part of `action_history`, redo stays), Edit > Fade (weakening the last adjustment from `apply_direct`, only while it is the last history step) | `modules/edit/history.js`, `image/adjustments.js` | Shift+Ctrl+F |
-| Merge Down / Flatten / New layer, Zoom, Grid, Brush size | Layer, View, Tools | Ctrl+E / Shift+Ctrl+E / Shift+Ctrl+N, Ctrl +/-/0/1, `[` `]` |
+| Merge Down / Merge Visible (`layer/stamp.merge_visible`: `get_merged_canvas` + one `Bundle_action` that inserts the result and deletes the visible layers) / Flatten / New layer, Zoom, Grid, Brush size | Layer, View, Tools | Ctrl+E / Shift+Ctrl+E / Shift+Ctrl+N, Ctrl +/-/0/1, `[` `]` |
 
 ### Image adjustments and effects
 

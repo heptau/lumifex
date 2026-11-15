@@ -41,6 +41,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Pixelate > Fragment (Photoshop): the mean of four diagonally shifted copies of the image (distance).
 - Effects > Pixelate > Mezzotint (Photoshop, simplified): a random threshold dither to black and white dots, per channel or by brightness (mode, seed).
 - Effects > Distort > Shear (Photoshop, simplified): bends the image sideways along a half-sine curve (amount, repeat edge pixels or wrap around).
+- Layer > Merge Visible (Photoshop): the visible layers are replaced by one layer with their merged picture; hidden layers stay (one undo step).
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.
 - Effects > Render > Fibers (Photoshop): replaces the image with long vertical fibers between two colors (variance, strength, seed).
 - Effects > Noise > Despeckle (Photoshop): blurs everything except edges, so speckles vanish and outlines stay sharp (edge threshold, passes).
