@@ -2021,6 +2021,11 @@ const menuDefinition = [
 						target: 'image/adjustments.wind'
 					},
 					{
+						name: 'Dry Brush',
+						ellipsis: true,
+						target: 'image/adjustments.dry_brush'
+					},
+					{
 						name: 'Oil Paint',
 						ellipsis: true,
 						target: 'image/adjustments.oil_paint'

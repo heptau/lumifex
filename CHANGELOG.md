@@ -67,6 +67,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Wind (Photoshop): streaks trail from brightness edges (methods Wind / Blast / Stagger, from the left or right, edge strength, seed); deterministic.
 - Effects > Stylize > Diffuse (Photoshop): every pixel is replaced by one from a random place nearby (amount, seed), like frosted glass; the same input always gives the same result.
 - Effects > Stylize > Oil Paint (Kuwahara filter): flat painted areas with sharp edges; the radius does not change the speed.
+- Effects > Stylize > Dry Brush (Photoshop, simplified): Oil Paint followed by a reduction to a few levels per channel (brush size, levels).
 - Effects > Stylize > Tiles (Photoshop): the image is cut into tiles and each is shifted by a random distance over a copy of the original (number of tiles, maximum offset, seed).
 - Effects > Distort > Zigzag (Photoshop): rings of waves around the center (styles Around Center, Out From Center, Pond Ripples; amount, ridges).
 - Effects > Blur > Average (Photoshop): fills the layer (or the selection) with its average color; the mean is weighted by alpha and, with a shaped selection, by the selection.

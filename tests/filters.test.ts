@@ -1,4 +1,4 @@
-import { patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -580,5 +580,25 @@ describe('patchwork', () => {
 		expect(Array.from(a.data)).toEqual(Array.from(b.data));
 		expect(a.data[0]).toBeGreaterThanOrEqual(a.data[(3 * 8 + 3) * 4]);
 		expect(a.data[(7 * 8 + 7) * 4]).toBeLessThanOrEqual(a.data[(3 * 8 + 3) * 4]);
+	});
+});
+
+describe('dryBrush', () => {
+	it('keeps alpha, reduces colors to the levels and keeps a flat picture flat', () => {
+		const out = dryBrush(image(6, 6, (x) => [x * 40, 90, 200, 120]), {size: 1, levels: 2});
+		for (let i = 0; i < out.data.length; i += 4) {
+			for (let c = 0; c < 3; c++) {
+				expect([0, 255]).toContain(out.data[i + c]);
+			}
+			expect(out.data[i + 3]).toBe(120);
+		}
+		const flat = dryBrush(image(5, 5, () => [255, 0, 255, 255]), {size: 2, levels: 4});
+		expect(Array.from(flat.data.slice(0, 3))).toEqual([255, 0, 255]);
+	});
+
+	it('flattens a noisy area into one color like Oil Paint', () => {
+		const noisy = image(9, 9, (x, y) => ((x + y) % 2 ? [120, 120, 120, 255] : [130, 130, 130, 255]));
+		const out = dryBrush(noisy, {size: 2, levels: 16});
+		expect(out.data[(4 * 9 + 4) * 4]).toBe(out.data[(4 * 9 + 5) * 4]);
 	});
 });

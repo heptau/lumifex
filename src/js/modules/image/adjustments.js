@@ -363,6 +363,13 @@ class Image_adjustments_class {
 		], (img, params) => Filters.oilPaint(img, params));
 	}
 
+	dry_brush() {
+		this.show_dialog('Dry Brush', [
+			{name: "size", title: "Brush size:", value: 3, range: [1, 10]},
+			{name: "levels", title: "Levels:", value: 8, range: [2, 16]},
+		], (img, params) => Filters.dryBrush(img, params));
+	}
+
 	tiles() {
 		this.show_dialog('Tiles', [
 			{name: "count", title: "Number of tiles:", value: 10, range: [2, 100]},

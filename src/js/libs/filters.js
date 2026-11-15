@@ -972,6 +972,28 @@ export function patchwork(image, params) {
 }
 
 /**
+ * Dry Brush (Photoshop, Artistic, simplified) - a painting made with a dry brush: Oil Paint flattens the areas and
+ * the colors are then reduced to a limited palette, so the strokes stay flat with sharp edges. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params size (1-10 px, the brush radius, default 3), levels (2-16 levels per channel, default 8)
+ * @returns {Image_data}
+ */
+export function dryBrush(image, params) {
+	const size = clamp(Math.round(parseFloat(params.size ?? 3)) || 1, 1, 10);
+	const levels = clamp(Math.round(parseFloat(params.levels ?? 8)) || 2, 2, 16);
+	oilPaint(image, {radius: size});
+	const data = image.data;
+	const step = 255 / (levels - 1);
+	for (let i = 0; i < data.length; i += 4) {
+		for (let c = 0; c < 3; c++) {
+			data[i + c] = Math.round(Math.round(data[i + c] / step) * step);
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image
