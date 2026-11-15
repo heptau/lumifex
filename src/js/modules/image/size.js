@@ -7,7 +7,7 @@ import Dialog_class from './../../libs/popup.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Tools_settings_class from './../tools/settings.js';
 import Helper_class from './../../libs/helpers.js';
-import { ANCHORS, anchor_offset } from './../../libs/canvas-anchor.js';
+import { ANCHORS, anchor_offset, relative_size } from './../../libs/canvas-anchor.js';
 import { t } from '../tools/translate.js';
 
 class Image_size_class {
@@ -42,6 +42,7 @@ class Image_size_class {
 				{name: "h", title: "Height:", value: height, placeholder: height},
 				{name: "units", title: "Units:", type: "select", values: UNIT_NAMES, value: units},
 				{name: "dpi", title: "Resolution (dpi):", value: parseInt(resolution, 10) || 96},
+				{name: "relative", title: "Relative:", value: false},
 				{title: "Pixels:", html: '<span id="size_pixels">-</span>'},
 				{name: "resolution", title: "Preset:", values: resolutions},
 				{name: "layout", title: "Layout:", value: "Custom", values: ["Custom", "Landscape", "Portrait"]},
@@ -54,7 +55,20 @@ class Image_size_class {
 			},
 		};
 		this.POP.show(settings);
-		link_unit_fields({width: 'w', height: 'h', units: 'units', dpi: 'dpi'}, 'size_pixels');
+		const fields = link_unit_fields({width: 'w', height: 'h', units: 'units', dpi: 'dpi'}, 'size_pixels');
+
+		//Relative: the fields hold the change (starting at 0) instead of the new size
+		const relative = document.getElementById('pop_data_relative');
+		if (relative) {
+			relative.addEventListener('change', () => {
+				if (relative.checked) {
+					fields.set_pixels(0, 0);
+				}
+				else {
+					fields.set_pixels(config.WIDTH, config.HEIGHT);
+				}
+			});
+		}
 	}
 
 	size_handler(data) {
@@ -64,10 +78,12 @@ class Image_size_class {
 		const units = is_unit(data.units) ? data.units : this.Tools_settings.get_setting('default_units');
 		const resolution = clamp_dpi(data.dpi);
 
-		if (width < 0){
+		const relative = data.relative == true;
+
+		if (!relative && width < 0){
 			width = 1;
 		}
-		if (height < 0){
+		if (!relative && height < 0){
 			height = 1;
 		}
 
@@ -78,14 +94,19 @@ class Image_size_class {
 			alertify.error(t('Wrong dimensions'));
 			return;
 		}
-		if (isNaN(width)){
+		if (!relative && isNaN(width)){
 			width = height * ratio;
 		}
-		if (isNaN(height)){
+		if (!relative && isNaN(height)){
 			height = width / ratio;
 		}
 
-		if (data.resolution != 'Custom') {
+		if (relative) {
+			//the numbers are changes of the current size; an empty field means no change
+			width = relative_size(config.WIDTH, to_pixels(isNaN(width) ? 0 : width, units, resolution));
+			height = relative_size(config.HEIGHT, to_pixels(isNaN(height) ? 0 : height, units, resolution));
+		}
+		else if (data.resolution != 'Custom') {
 			let dim = data.resolution.split(" ");
 			dim = dim[0].split("x");
 			width = parseInt(dim[0]);

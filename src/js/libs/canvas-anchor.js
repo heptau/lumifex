@@ -19,6 +19,19 @@ export function anchor_shares(anchor) {
 }
 
 /**
+ * Relative Canvas Size (Photoshop): the entered numbers are added to the current size (negative ones shrink it)
+ *
+ * @param {number} current current size in pixels
+ * @param {number} delta the change in pixels (anything but a finite number means no change)
+ * @param {number} [max] the largest allowed size
+ * @returns {number} whole pixels, at least 1
+ */
+export function relative_size(current, delta, max = 100000) {
+	const change = isFinite(delta) ? delta : 0;
+	return Math.min(max, Math.max(1, Math.round(current + change)));
+}
+
+/**
  * How far the layers move when the canvas changes its size
  *
  * @param {number} old_width
