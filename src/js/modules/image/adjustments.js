@@ -115,6 +115,16 @@ class Image_adjustments_class {
 		], (img, params) => Filters.neonGlow(img, params));
 	}
 
+	bas_relief() {
+		this.show_dialog('Bas Relief', [
+			{name: "detail", title: "Detail:", value: 5, range: [1, 15]},
+			{name: "smoothness", title: "Smoothness:", value: 2, range: [0, 10]},
+			{name: "light", title: "Light angle:", value: 135, range: [0, 359]},
+			{name: "dark", title: "Dark:", value: '#000000', type: 'color'},
+			{name: "light_color", title: "Light:", value: '#ffffff', type: 'color'},
+		], (img, params) => Filters.basRelief(img, params));
+	}
+
 	cutout() {
 		this.show_dialog('Cutout', [
 			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},

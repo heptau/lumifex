@@ -1976,6 +1976,11 @@ const menuDefinition = [
 						target: 'image/adjustments.neon_glow'
 					},
 					{
+						name: 'Bas Relief',
+						ellipsis: true,
+						target: 'image/adjustments.bas_relief'
+					},
+					{
 						name: 'Cutout',
 						ellipsis: true,
 						target: 'image/adjustments.cutout'

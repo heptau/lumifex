@@ -1,4 +1,4 @@
-import { neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -518,5 +518,30 @@ describe('neonGlow', () => {
 		const out = neonGlow(make(), {size: 2, brightness: 100, darken: 100, color: 'nope'});
 		expect(out.data[5 * 4]).toBe(0);
 		expect(out.data[5 * 4 + 2]).toBeGreaterThan(100);
+	});
+});
+
+describe('basRelief', () => {
+	//brightness grows to the right: a slope that faces left
+	const ramp = () => image(9, 3, (x) => [x * 25, x * 25, x * 25, 80]);
+
+	it('flat areas are the middle color and alpha is kept', () => {
+		const out = basRelief(image(4, 4, () => [90, 90, 90, 80]), {smoothness: 0, dark: '#000000', light_color: '#fefefe'});
+		expect(out.data[0]).toBe(127);
+		expect(out.data[3]).toBe(80);
+	});
+
+	it('the side of a slope facing the light is brighter than the side facing away', () => {
+		const from_left = basRelief(ramp(), {smoothness: 0, detail: 5, light: 180});
+		const from_right = basRelief(ramp(), {smoothness: 0, detail: 5, light: 0});
+		expect(from_left.data[4 * 4]).toBeGreaterThan(from_right.data[4 * 4]);
+	});
+
+	it('a bad color falls back and the result stays within the two colors', () => {
+		const out = basRelief(ramp(), {smoothness: 0, detail: 15, light: 0, dark: '#202020', light_color: 'x'});
+		for (let i = 0; i < out.data.length; i += 4) {
+			expect(out.data[i]).toBeGreaterThanOrEqual(32);
+			expect(out.data[i]).toBeLessThanOrEqual(255);
+		}
 	});
 });

@@ -852,6 +852,53 @@ export function neonGlow(image, params) {
 }
 
 /**
+ * Bas Relief (Photoshop, Sketch, simplified) - the brightness of the picture is carved into a low relief lit from a
+ * direction: the slope of the smoothed brightness along the light decides how much of the light and the dark color
+ * is mixed (flat areas are the middle between them). Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params detail (1-15, how much the slope is amplified, default 5), smoothness (0-10 px blur radius,
+ *  default 2), light (angle in degrees the light comes from, 0 = from the right, 90 = from the top, default 135),
+ *  dark and light_color (#rrggbb, default black and white)
+ * @returns {Image_data}
+ */
+export function basRelief(image, params) {
+	const detail = clamp(parseFloat(params.detail ?? 5) || 1, 1, 15);
+	const radius = clamp(Math.round(parseFloat(params.smoothness ?? 2)) || 0, 0, 10);
+	const angle = (parseFloat(params.light ?? 135) || 0) * Math.PI / 180;
+	const hex = (value, fallback) => {
+		const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(value || '');
+		return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : fallback;
+	};
+	const dark = hex(params.dark, [0, 0, 0]);
+	const bright = hex(params.light_color, [255, 255, 255]);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const smooth = radius > 0 ? box_blur(image, radius) : data;
+	const luma = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		luma[p] = smooth[p * 4] * 0.299 + smooth[p * 4 + 1] * 0.587 + smooth[p * 4 + 2] * 0.114;
+	}
+	const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	//the light comes from (cos, -sin) in screen coordinates (y points down)
+	const dx = Math.round(Math.cos(angle));
+	const dy = Math.round(-Math.sin(angle));
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			//a slope facing the light is bright: the brightness drops away from the light
+			const slope = at(x - dx, y - dy) - at(x + dx, y + dy);
+			const t = clamp(0.5 + slope * detail / 255 / 2, 0, 1);
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				data[i + c] = Math.round(dark[c] + (bright[c] - dark[c]) * t);
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image
