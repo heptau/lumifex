@@ -1066,6 +1066,14 @@ const menuDefinition = [
 				target: 'layer/visibility.toggle'
 			},
 			{
+				name: 'Show All Layers',
+				target: 'layer/visibility.show_all'
+			},
+			{
+				name: 'Hide Other Layers',
+				target: 'layer/visibility.hide_others'
+			},
+			{
 				name: 'Select Layer',
 				children: [
 					{ name: 'Next Layer', target: 'layer/select.next' },

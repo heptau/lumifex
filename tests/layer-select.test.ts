@@ -1,4 +1,4 @@
-import { layer_to_select } from '../src/js/libs/layer-select.js';
+import { layer_to_select, visibility_toggles } from '../src/js/libs/layer-select.js';
 
 const layers = [{ id: 7, order: 0 }, { id: 3, order: 2 }, { id: 9, order: 1 }];
 
@@ -23,5 +23,26 @@ describe('layer to select', () => {
 		expect(layer_to_select(layers, 999, 'next')).toBeNull();
 		expect(layer_to_select(layers, 7, 'sideways')).toBeNull();
 		expect(layer_to_select(null as any, 7, 'next')).toBeNull();
+	});
+});
+
+describe('visibility toggles', () => {
+	const stack = [{ id: 1, visible: true }, { id: 2, visible: false }, { id: 3 }, { id: 4, visible: false }];
+
+	it('show all toggles only the hidden layers', () => {
+		expect(visibility_toggles(stack, 1, 'show_all')).toEqual([2, 4]);
+		expect(visibility_toggles([{ id: 1 }], 1, 'show_all')).toEqual([]);
+	});
+
+	it('hide others keeps only the active layer visible, also showing it when hidden', () => {
+		expect(visibility_toggles(stack, 1, 'hide_others')).toEqual([3]);
+		expect(visibility_toggles(stack, 2, 'hide_others')).toEqual([1, 2, 3]);
+		expect(visibility_toggles([{ id: 1, visible: true }], 1, 'hide_others')).toEqual([]);
+	});
+
+	it('survives bad input', () => {
+		expect(visibility_toggles(null as any, 1, 'show_all')).toEqual([]);
+		expect(visibility_toggles([null as any, { id: 5, visible: false }], 1, 'show_all')).toEqual([5]);
+		expect(visibility_toggles(stack, 1, 'other')).toEqual([]);
 	});
 });
