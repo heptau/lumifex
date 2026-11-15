@@ -392,6 +392,12 @@ class Image_adjustments_class {
 		], (img, params) => Distort.spherize(img, params));
 	}
 
+	polar_coordinates() {
+		this.show_dialog('Polar Coordinates', [
+			{name: "mode", title: "Mode:", values: Distort.POLAR_MODES, value: Distort.POLAR_MODES[0]},
+		], (img, params) => Distort.polar_coordinates(img, params));
+	}
+
 	ripple() {
 		this.show_dialog('Ripple', [
 			{name: "amplitude", title: "Amplitude:", value: 2, range: [0, 10], step: 0.1},

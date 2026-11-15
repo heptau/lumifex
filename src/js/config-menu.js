@@ -1682,6 +1682,11 @@ const menuDefinition = [
 						target: 'image/adjustments.ripple'
 					},
 					{
+						name: 'Polar Coordinates',
+						ellipsis: true,
+						target: 'image/adjustments.polar_coordinates'
+					},
+					{
 						name: 'Kaleidoscope',
 						ellipsis: true,
 						target: 'image/adjustments.kaleidoscope'

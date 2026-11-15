@@ -327,6 +327,47 @@ export function spherize(image, params) {
 	});
 }
 
+/** The two directions of Polar Coordinates */
+export const POLAR_MODES = ['Rectangular to Polar', 'Polar to Rectangular'];
+
+/**
+ * Polar Coordinates (Photoshop) - bends the image around its center or unrolls it back.
+ * Rectangular to Polar: the top edge goes to the center, the bottom edge to the circle, the left and right edge
+ * meet at the top. Polar to Rectangular is the opposite. Outside the circle the edge of the image is stretched.
+ *
+ * @param {Image_data} image
+ * @param {object} params mode (one of POLAR_MODES, anything else means Rectangular to Polar)
+ * @returns {Image_data}
+ */
+export function polar_coordinates(image, params) {
+	const width = image.width;
+	const height = image.height;
+	const cx = width / 2;
+	const cy = height / 2;
+	const radius = Math.min(width, height) / 2;
+	const to_rect = params && params.mode == POLAR_MODES[1];
+	const full = Math.PI * 2;
+	return remap(image, (x, y, position) => {
+		if (to_rect) {
+			//x is the angle (clockwise from the top), y is the distance from the center
+			const angle = x / width * full;
+			const r = y / height * radius;
+			position[0] = cx + Math.sin(angle) * r;
+			position[1] = cy - Math.cos(angle) * r;
+		}
+		else {
+			const dx = x - cx;
+			const dy = y - cy;
+			let angle = Math.atan2(dx, -dy);
+			if (angle < 0) {
+				angle += full;
+			}
+			position[0] = angle / full * width;
+			position[1] = Math.min(1, Math.sqrt(dx * dx + dy * dy) / radius) * height;
+		}
+	});
+}
+
 /**
  * Ripple - circles spreading from the center, like a stone dropped in water
  *

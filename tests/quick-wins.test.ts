@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -446,6 +446,29 @@ describe('distort and blur filters', () => {
 		expect(bulge.data[i]).toBeLessThan(base.data[i]);
 		//the corner is outside the circle
 		expect(bulge.data[0]).toBe(base.data[0]);
+	});
+
+	it('polar coordinates bend the top edge into the center and unroll it back', () => {
+		const size = 41;
+		const image = { data: new Uint8ClampedArray(size * size * 4), width: size, height: size };
+		for (let y = 0; y < size; y++) {
+			for (let x = 0; x < size; x++) {
+				const i = (y * size + x) * 4;
+				//top rows red, bottom rows blue
+				image.data[i] = y < size / 2 ? 255 : 0;
+				image.data[i + 2] = y < size / 2 ? 0 : 255;
+				image.data[i + 3] = 255;
+			}
+		}
+		const polar = polar_coordinates({ data: new Uint8ClampedArray(image.data), width: size, height: size }, { mode: 'Rectangular to Polar' });
+		const center = (20 * size + 20) * 4;
+		const edge = (20 * size + 38) * 4;
+		expect(polar.data[center]).toBe(255);
+		expect(polar.data[edge + 2]).toBe(255);
+		const back = polar_coordinates({ data: new Uint8ClampedArray(polar.data), width: size, height: size }, { mode: 'Polar to Rectangular' });
+		expect(back.data[(5 * size + 20) * 4]).toBe(255);
+		expect(back.data[(35 * size + 20) * 4 + 2]).toBe(255);
+		expect(back.data[3]).toBe(255);
 	});
 
 	it('ripple, kaleidoscope and radial blur keep the size and alpha', () => {
