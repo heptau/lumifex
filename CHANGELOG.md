@@ -44,6 +44,7 @@ Only changes since version 5.0.0 are listed here.
 - Layer > Merge Visible (Photoshop): the visible layers are replaced by one layer with their merged picture; hidden layers stay (one undo step).
 - Effects > Stylize > Glowing Edges (Photoshop, simplified): the edges of every channel glow on black (edge brightness, threshold).
 - Layer > Layer Style > Scale Effects (Photoshop): multiplies the pixel sizes of the layer styles (offsets, radii, widths) by a percentage in one undo step.
+- Effects > Blur > Blur More and Effects > Sharpen > Sharpen More (Photoshop): one-click stronger blur / sharpening (they respect the selection).
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.
 - Effects > Render > Fibers (Photoshop): replaces the image with long vertical fibers between two colors (variance, strength, seed).
 - Effects > Noise > Despeckle (Photoshop): blurs everything except edges, so speckles vanish and outlines stay sharp (edge threshold, passes).

@@ -1,4 +1,4 @@
-import { glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -383,5 +383,27 @@ describe('glowingEdges', () => {
 		const bright = glowingEdges(step(), {brightness: 40}).data[3 * 4];
 		expect(bright).toBeGreaterThan(dim);
 		expect(glowingEdges(step(), {threshold: 200}).data[3 * 4]).toBe(0);
+	});
+});
+
+describe('blurMore / sharpenMore', () => {
+	const step = () => image(8, 1, (x) => (x < 4 ? [0, 0, 0, 90] : [240, 240, 240, 90]));
+
+	it('Blur More softens an edge more than one pass of a box blur and keeps alpha and flat areas', () => {
+		const out = blurMore(step());
+		expect(out.data[3 * 4]).toBeGreaterThan(0);
+		expect(out.data[4 * 4]).toBeLessThan(240);
+		expect(out.data[0]).toBe(0);
+		expect(out.data[3]).toBe(90);
+		const flat = blurMore(image(4, 4, () => [77, 77, 77, 255]));
+		expect(flat.data[5 * 4]).toBe(77);
+	});
+
+	it('Sharpen More exaggerates an edge and leaves flat areas alone', () => {
+		const out = sharpenMore(step());
+		expect(out.data[3 * 4]).toBe(0);
+		expect(out.data[4 * 4]).toBe(255);
+		const flat = sharpenMore(image(4, 4, () => [77, 77, 77, 255]));
+		expect(flat.data[5 * 4]).toBe(77);
 	});
 });

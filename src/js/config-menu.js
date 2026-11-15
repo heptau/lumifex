@@ -1700,6 +1700,10 @@ const menuDefinition = [
 						target: 'image/adjustments.surface_blur'
 					},
 					{
+						name: 'Blur More',
+						target: 'image/adjustments.blur_more'
+					},
+					{
 						name: 'Box Blur',
 						ellipsis: true,
 						target: 'effects/box_blur.box_blur'
@@ -1913,6 +1917,10 @@ const menuDefinition = [
 						name: 'Sharpen',
 						ellipsis: true,
 						target: 'effects/sharpen.sharpen'
+					},
+					{
+						name: 'Sharpen More',
+						target: 'image/adjustments.sharpen_more'
 					},
 					{
 						name: 'Clarity',

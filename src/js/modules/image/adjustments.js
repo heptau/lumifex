@@ -88,6 +88,14 @@ class Image_adjustments_class {
 		this.apply_direct((img) => Filters.average(img, shaped ? sample_mask_for_layer(selection.mask, config.layer, img.width, img.height) : null));
 	}
 
+	blur_more() {
+		this.apply_direct((img) => Filters.blurMore(img));
+	}
+
+	sharpen_more() {
+		this.apply_direct((img) => Filters.sharpenMore(img));
+	}
+
 	desaturate() {
 		this.apply_direct((img) => Adjustments.desaturate(img));
 	}

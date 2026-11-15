@@ -243,6 +243,27 @@ export function customKernel(image, params) {
 }
 
 /**
+ * Blur More (Photoshop) - a 3x3 mean applied twice (stronger than one pass); alpha is kept
+ *
+ * @param {Image_data} image
+ * @returns {Image_data}
+ */
+export function blurMore(image) {
+	const box = {k0: 1, k1: 1, k2: 1, k3: 1, k4: 1, k5: 1, k6: 1, k7: 1, k8: 1, scale: 9, offset: 0};
+	return customKernel(customKernel(image, box), box);
+}
+
+/**
+ * Sharpen More (Photoshop) - the 8-neighbour sharpening kernel (centre 9, neighbours -1); alpha is kept
+ *
+ * @param {Image_data} image
+ * @returns {Image_data}
+ */
+export function sharpenMore(image) {
+	return customKernel(image, {k0: -1, k1: -1, k2: -1, k3: -1, k4: 9, k5: -1, k6: -1, k7: -1, k8: -1, scale: 1, offset: 0});
+}
+
+/**
  * Trace Contour (Photoshop) - thin colored lines along the places where a channel crosses the chosen level,
  * on a white (or transparent-kept) background. Alpha is kept.
  *
