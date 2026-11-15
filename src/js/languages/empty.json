@@ -1702,5 +1702,7 @@
     "Document Bounds": "",
     "Snap To": "",
     "Remove White Matte": "",
-    "Remove Black Matte": ""
+    "Remove Black Matte": "",
+    "The image is too large for Content-Aware Scale.": "",
+    "Content-Aware Scale": ""
 }

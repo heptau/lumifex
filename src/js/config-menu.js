@@ -652,6 +652,11 @@ const menuDefinition = [
 				target: 'image/resize.resize'
 			},
 			{
+				name: 'Content-Aware Scale',
+				ellipsis: true,
+				target: 'image/content_aware_scale.scale'
+			},
+			{
 				name: 'Canvas Size',
 				ellipsis: true,
 				target: 'image/size.size'

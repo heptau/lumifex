@@ -7,7 +7,7 @@
 //whole modules: every method of them needs an image layer
 const IMAGE_MODULES = [
 	'image/adjustments', 'image/photo_effects', 'image/quick_edit', 'image/auto_adjust', 'image/color_corrections',
-	'image/decrease_colors', 'image/palette', 'image/flip',
+	'image/decrease_colors', 'image/palette', 'image/flip', 'image/content_aware_scale',
 	'tools/color_zoom', 'tools/replace_color', 'tools/restore_alpha', 'tools/keypoints', 'tools/content_fill',
 	'effects/browser', 'layer/smart_filter',
 ];
