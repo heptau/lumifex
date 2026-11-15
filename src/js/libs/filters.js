@@ -1035,6 +1035,41 @@ export function diffuseGlow(image, params) {
 }
 
 /**
+ * Smart Sharpen (Photoshop, simplified) - Unsharp Mask that can leave noise alone and spare shadows and highlights:
+ * a difference to the blurred copy smaller than the noise limit is not sharpened, and the sharpening fades out in
+ * the darkest and the brightest tones. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params amount (0-500 %, default 100), radius (1-50 px, default 2), reduce_noise (0-100 %, how large
+ *  a difference counts as noise: up to 25 levels, default 0), fade_shadows and fade_highlights (0-100 %, how far the
+ *  sharpening fades towards black / white, default 0)
+ * @returns {Image_data}
+ */
+export function smartSharpen(image, params) {
+	const amount = clamp(parseFloat(params.amount ?? 100) || 0, 0, 500) / 100;
+	const radius = clamp(parseInt(params.radius ?? 2) || 1, 1, 50);
+	const noise = clamp(parseFloat(params.reduce_noise ?? 0) || 0, 0, 100) / 100 * 25;
+	const shadows = clamp(parseFloat(params.fade_shadows ?? 0) || 0, 0, 100) / 100 * 128;
+	const highlights = clamp(parseFloat(params.fade_highlights ?? 0) || 0, 0, 100) / 100 * 128;
+	const blurred = box_blur(image, radius);
+	const data = image.data;
+	for (let i = 0; i < data.length; i += 4) {
+		const luma = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+		//1 in the middle tones, falling to 0 at black / white over the faded range
+		const dark = shadows > 0 ? clamp(luma / shadows, 0, 1) : 1;
+		const bright = highlights > 0 ? clamp((255 - luma) / highlights, 0, 1) : 1;
+		const weight = amount * dark * bright;
+		for (let c = 0; c < 3; c++) {
+			const diff = data[i + c] - blurred[i + c];
+			if (Math.abs(diff) > noise) {
+				data[i + c] += diff * weight;
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

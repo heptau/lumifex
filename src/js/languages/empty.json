@@ -1709,5 +1709,9 @@
     "Glow amount:": "",
     "Graininess:": "",
     "Diffuse Glow": "",
-    "Selection Edges": ""
+    "Selection Edges": "",
+    "Fade highlights:": "",
+    "Fade shadows:": "",
+    "Reduce noise:": "",
+    "Smart Sharpen": ""
 }

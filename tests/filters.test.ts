@@ -1,4 +1,4 @@
-import { diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { smartSharpen, diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -630,5 +630,37 @@ describe('diffuseGlow', () => {
 		const red = diffuseGlow(image(4, 4, () => [100, 100, 100, 255]), {graininess: 0, glow: 20, size: 1, color: '#ff0000'});
 		expect(red.data[0]).toBeGreaterThan(red.data[1]);
 		expect(red.data[1]).toBe(100);
+	});
+});
+
+describe('smartSharpen', () => {
+	const edge = () => image(10, 1, (x) => (x < 5 ? [100, 100, 100, 66] : [140, 140, 140, 66]));
+
+	it('sharpens an edge like Unsharp Mask and keeps alpha', () => {
+		const out = smartSharpen(edge(), {amount: 200, radius: 2, reduce_noise: 0});
+		expect(out.data[4 * 4]).toBeLessThan(100);
+		expect(out.data[5 * 4]).toBeGreaterThan(140);
+		expect(out.data[3]).toBe(66);
+		const plain = unsharpMask(edge(), {amount: 200, radius: 2, threshold: 0});
+		expect(Array.from(out.data)).toEqual(Array.from(plain.data));
+	});
+
+	it('leaves a small difference alone when it counts as noise', () => {
+		const slight = () => image(10, 1, (x) => (x < 5 ? [100, 100, 100, 255] : [104, 104, 104, 255]));
+		const untouched = smartSharpen(slight(), {amount: 300, radius: 2, reduce_noise: 100});
+		expect(Array.from(untouched.data)).toEqual(Array.from(slight().data));
+	});
+
+	it('fading shadows spares dark pixels and fading highlights spares bright ones', () => {
+		const dark = () => image(10, 1, (x) => (x < 5 ? [10, 10, 10, 255] : [50, 50, 50, 255]));
+		const change = (out: {data: Uint8ClampedArray}, source: {data: Uint8ClampedArray}) => Math.abs(out.data[4 * 4] - source.data[4 * 4]);
+		const full = change(smartSharpen(dark(), {amount: 300, fade_shadows: 0}), dark());
+		const faded = change(smartSharpen(dark(), {amount: 300, fade_shadows: 100}), dark());
+		expect(full).toBeGreaterThan(0);
+		expect(faded).toBeLessThan(full);
+		const bright = () => image(10, 1, (x) => (x < 5 ? [210, 210, 210, 255] : [250, 250, 250, 255]));
+		const bright_full = change(smartSharpen(bright(), {amount: 300}), bright());
+		const bright_faded = change(smartSharpen(bright(), {amount: 300, fade_highlights: 100}), bright());
+		expect(bright_faded).toBeLessThan(bright_full);
 	});
 });

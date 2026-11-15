@@ -56,6 +56,17 @@ Object.assign(SMART_FILTERS, {
 		],
 		apply: (img, s) => Filters.unsharpMask(img, s),
 	},
+	smart_sharpen: {
+		title: 'Smart Sharpen',
+		params: [
+			{name: 'amount', title: 'Amount:', value: 100, range: [0, 500]},
+			{name: 'radius', title: 'Radius:', value: 2, range: [1, 50]},
+			{name: 'reduce_noise', title: 'Reduce noise:', value: 10, range: [0, 100]},
+			{name: 'fade_shadows', title: 'Fade shadows:', value: 0, range: [0, 100]},
+			{name: 'fade_highlights', title: 'Fade highlights:', value: 0, range: [0, 100]},
+		],
+		apply: (img, s) => Filters.smartSharpen(img, s),
+	},
 	high_pass: {
 		title: 'High Pass',
 		params: [{name: 'radius', title: 'Radius:', value: 5, range: [1, 100]}],

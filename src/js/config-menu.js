@@ -913,6 +913,7 @@ const menuDefinition = [
 					{ name: 'Invert', target: 'layer/smart_filter.add', parameter: 'invert' },
 					{ divider: true },
 					{ name: 'Unsharp Mask', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'unsharp_mask' },
+					{ name: 'Smart Sharpen', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'smart_sharpen' },
 					{ name: 'High Pass', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'high_pass' },
 					{ name: 'Clarity', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'clarity' },
 					{ name: 'Motion Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'motion_blur' },
@@ -1948,6 +1949,11 @@ const menuDefinition = [
 						name: 'Unsharp Mask',
 						ellipsis: true,
 						target: 'image/adjustments.unsharp_mask'
+					},
+					{
+						name: 'Smart Sharpen',
+						ellipsis: true,
+						target: 'image/adjustments.smart_sharpen'
 					},
 					{
 						name: 'Sharpen Edges',

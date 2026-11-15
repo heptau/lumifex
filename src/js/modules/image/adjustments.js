@@ -400,6 +400,16 @@ class Image_adjustments_class {
 		], (img, params) => Filters.unsharpMask(img, params));
 	}
 
+	smart_sharpen() {
+		this.show_dialog('Smart Sharpen', [
+			{name: "amount", title: "Amount:", value: 100, range: [0, 500]},
+			{name: "radius", title: "Radius:", value: 2, range: [1, 50]},
+			{name: "reduce_noise", title: "Reduce noise:", value: 10, range: [0, 100]},
+			{name: "fade_shadows", title: "Fade shadows:", value: 0, range: [0, 100]},
+			{name: "fade_highlights", title: "Fade highlights:", value: 0, range: [0, 100]},
+		], (img, params) => Filters.smartSharpen(img, params));
+	}
+
 	high_pass() {
 		this.show_dialog('High Pass', [
 			{name: "radius", title: "Radius:", value: 5, range: [1, 100]},
