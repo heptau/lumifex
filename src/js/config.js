@@ -199,7 +199,7 @@ config.TOOLS = [
 			subtract: false,
 			target: {
 				value: 'Selection',
-				values: ['Selection', 'Layer mask'],
+				values: ['Selection', 'Layer mask', 'Filter mask'],
 			},
 		},
 		on_leave: 'on_leave',

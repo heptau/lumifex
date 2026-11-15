@@ -4,6 +4,7 @@ import Edit_selection_class from './../modules/edit/selection.js';
 import app from './../app.js';
 import { create_mask, mask_bounds, paint_mask_line } from './../libs/selection-mask.js';
 import { serialize_layer_mask, deserialize_layer_mask, uniform_layer_mask } from './../libs/layer-mask.js';
+import { is_smart_entry } from './../libs/smart-filters.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
@@ -49,7 +50,16 @@ class Quick_mask_class extends Base_mask_tool_class {
 
 	is_layer_mask_target(params) {
 		const target = params.target && params.target.value !== undefined ? params.target.value : params.target;
-		return target === 'Layer mask';
+		return target === 'Layer mask' || target === 'Filter mask';
+	}
+
+	/**
+	 * @param {object} params
+	 * @returns {{mask: string, enabled: string}} the layer properties that hold the mask being painted
+	 */
+	mask_keys(params) {
+		const target = params.target && params.target.value !== undefined ? params.target.value : params.target;
+		return target === 'Filter mask' ? {mask: 'smart_mask', enabled: 'smart_mask_enabled'} : {mask: 'mask', enabled: 'mask_enabled'};
 	}
 
 	mousedown(e) {
@@ -136,10 +146,15 @@ class Quick_mask_class extends Base_mask_tool_class {
 			return;
 		}
 		const params = this.getParams();
+		this.keys = this.mask_keys(params);
+		if (this.keys.mask == 'smart_mask' && (layer.type != 'image' || !(layer.filters || []).some(is_smart_entry))) {
+			alertify.error(t('Select a layer with a smart filter first.'));
+			return;
+		}
 		this.layer_target = layer;
-		this.original_mask = layer.mask;
-		this.original_enabled = layer.mask_enabled;
-		this.work = deserialize_layer_mask(layer.mask) || uniform_layer_mask(layer, 255);
+		this.original_mask = layer[this.keys.mask];
+		this.original_enabled = layer[this.keys.enabled];
+		this.work = deserialize_layer_mask(layer[this.keys.mask]) || uniform_layer_mask(layer, 255);
 		this.mode = (Boolean(params.subtract) != Boolean(e.altKey)) ? 'hide' : 'reveal';
 		this.painting = true;
 		this.last = this.to_layer_position(mouse, layer);
@@ -166,8 +181,13 @@ class Quick_mask_class extends Base_mask_tool_class {
 		this.last = to;
 
 		//live result: the layer is shown through the mask being painted
-		layer.mask = serialize_layer_mask(this.work);
-		layer.mask_enabled = true;
+		const now = Date.now();
+		if (this.keys.mask == 'smart_mask' && !first && now - (this.last_live || 0) < 100) {
+			return; //a smart filter mask recomputes the filters, so the live picture is refreshed at most every 100 ms
+		}
+		this.last_live = now;
+		layer[this.keys.mask] = serialize_layer_mask(this.work);
+		layer[this.keys.enabled] = true;
 		config.need_render = true;
 	}
 
@@ -181,11 +201,11 @@ class Quick_mask_class extends Base_mask_tool_class {
 
 		//put the original mask back, so undo returns to it
 		const painted = serialize_layer_mask(work);
-		layer.mask = this.original_mask;
-		layer.mask_enabled = this.original_enabled;
+		layer[this.keys.mask] = this.original_mask;
+		layer[this.keys.enabled] = this.original_enabled;
 		app.State.do_action(
-			new app.Actions.Bundle_action('layer_mask', 'Paint Layer Mask', [
-				new app.Actions.Update_layer_action(layer.id, {mask: painted, mask_enabled: true}),
+			new app.Actions.Bundle_action('layer_mask', this.keys.mask == 'smart_mask' ? 'Paint Filter Mask' : 'Paint Layer Mask', [
+				new app.Actions.Update_layer_action(layer.id, {[this.keys.mask]: painted, [this.keys.enabled]: true}),
 			])
 		);
 	}
@@ -247,8 +267,8 @@ class Quick_mask_class extends Base_mask_tool_class {
 
 	on_switch_keep_selection() {
 		if (this.layer_target) {
-			this.layer_target.mask = this.original_mask;
-			this.layer_target.mask_enabled = this.original_enabled;
+			this.layer_target[this.keys.mask] = this.original_mask;
+			this.layer_target[this.keys.enabled] = this.original_enabled;
 			this.layer_target = null;
 		}
 		this.painting = false;
