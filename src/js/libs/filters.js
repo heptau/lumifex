@@ -49,6 +49,44 @@ export function diffuse(image, params) {
 	return image;
 }
 
+/**
+ * Trace Contour (Photoshop) - thin colored lines along the places where a channel crosses the chosen level,
+ * on a white (or transparent-kept) background. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params level (0-255, the brightness the contour follows), edge ('Lower' | 'Upper': which side of
+ *  the level the line is drawn on)
+ * @returns {Image_data}
+ */
+export function traceContour(image, params) {
+	const level = clamp(Math.round(parseFloat(params.level)), 0, 255) || 0;
+	const upper = params.edge == 'Upper';
+	const w = image.width;
+	const h = image.height;
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const above = (i, c) => src[i + c] >= level;
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				const here = above(i, c);
+				//a pixel is on the contour when it is on the chosen side and a neighbour is on the other side
+				let edge = false;
+				if (here == upper) {
+					const right = x + 1 < w ? above(i + 4, c) : here;
+					const down = y + 1 < h ? above(i + w * 4, c) : here;
+					const left = x > 0 ? above(i - 4, c) : here;
+					const up = y > 0 ? above(i - w * 4, c) : here;
+					edge = right != here || down != here || left != here || up != here;
+				}
+				data[i + c] = edge ? src[i + c] : 255;
+			}
+		}
+	}
+	return image;
+}
+
 /** Wind (Photoshop): the methods and how long their streaks are (pixels) */
 export const WIND_METHODS = {Wind: 12, Blast: 30, Stagger: 12};
 

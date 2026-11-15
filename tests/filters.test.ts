@@ -1,4 +1,4 @@
-import { wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -254,5 +254,24 @@ describe('wind', () => {
 
 	it('ignores an unknown method', () => {
 		expect(() => wind(make(), {method: '__proto__'})).not.toThrow();
+	});
+});
+
+describe('traceContour', () => {
+	const make = () => image(6, 3, (x) => (x < 3 ? [0, 0, 0, 200] : [255, 255, 255, 200]));
+
+	it('draws only the pixels next to the level crossing and whitens the rest', () => {
+		const lower = traceContour(make(), {level: 128, edge: 'Lower'});
+		expect(lower.data[2 * 4]).toBe(0);   //dark pixel at the edge keeps its value
+		expect(lower.data[0]).toBe(255);     //dark pixel far from the edge becomes white
+		expect(lower.data[4 * 4]).toBe(255); //bright side is not drawn
+		const upper = traceContour(make(), {level: 128, edge: 'Upper'});
+		expect(upper.data[3 * 4]).toBe(255); //bright pixel at the edge keeps its value
+		expect(upper.data[5 * 4]).toBe(255);
+	});
+
+	it('keeps alpha and tolerates bad parameters', () => {
+		const img = traceContour(make(), {level: 'x', edge: 5});
+		expect(img.data[3]).toBe(200);
 	});
 });

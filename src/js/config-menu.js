@@ -1888,6 +1888,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Trace Contour',
+						ellipsis: true,
+						target: 'image/adjustments.trace_contour'
+					},
+					{
 						name: 'Wind',
 						ellipsis: true,
 						target: 'image/adjustments.wind'

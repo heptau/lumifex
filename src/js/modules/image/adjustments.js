@@ -227,6 +227,13 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	trace_contour() {
+		this.show_dialog('Trace Contour', [
+			{name: "level", title: "Level:", value: 128, range: [0, 255]},
+			{name: "edge", title: "Edge:", value: 'Lower', values: ['Lower', 'Upper']},
+		], (img, params) => Filters.traceContour(img, params));
+	}
+
 	wind() {
 		this.show_dialog('Wind', [
 			{name: "method", title: "Method:", value: 'Wind', values: Object.keys(Filters.WIND_METHODS)},
