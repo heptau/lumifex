@@ -880,6 +880,8 @@ const menuDefinition = [
 					{ name: 'Black and White', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'black_white' },
 					{ name: 'Gradient Map', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'gradient_map' },
 					{ name: 'Selective Color', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'selective_color' },
+					{ name: 'Channel Mixer', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'channel_mixer' },
+					{ name: 'Shadows/Highlights', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'shadows_highlights' },
 					{ name: 'Threshold', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'threshold' },
 					{ name: 'Posterize', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'posterize' },
 					{ name: 'Invert', target: 'layer/smart_filter.add', parameter: 'invert' },
