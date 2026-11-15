@@ -1,6 +1,8 @@
 import app from './../../app.js';
 import config from './../../config.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
+import Dialog_class from './../../libs/popup.js';
+import { scale_style_params } from './../../libs/layer-styles.js';
 import { t } from '../tools/translate.js';
 
 /**
@@ -38,6 +40,35 @@ class Layer_style_class {
 		return app.State.do_action(
 			new app.Actions.Bundle_action('clear_layer_style', 'Clear Layer Style', actions)
 		);
+	}
+
+	/**
+	 * Layer > Layer Style > Scale Effects - multiplies the pixel sizes of the styles (offsets, radii, widths) by a
+	 * percentage, for example after the layer was resized; one undo step
+	 */
+	scale() {
+		const layer = config.layer;
+		const styles = layer && layer.filters ? layer.filters.filter((filter) => scale_style_params(filter.name, filter.params, 100)) : [];
+		if (styles.length == 0) {
+			alertify.warning(t('This layer has no layer style.'));
+			return;
+		}
+		new Dialog_class().show({
+			title: 'Scale Effects',
+			params: [
+				{name: 'percent', title: 'Scale:', value: 100, range: [1, 1000]},
+			],
+			on_finish: (params) => {
+				//a new array through Update_layer_action: undo restores the old one (Add_layer_filter_action's undo only pops the last filter)
+				const filters = layer.filters.map((filter) => {
+					const scaled = scale_style_params(filter.name, filter.params, params.percent);
+					return scaled ? {...filter, params: scaled} : filter;
+				});
+				return app.State.do_action(
+					new app.Actions.Update_layer_action(layer.id, {filters})
+				);
+			},
+		});
 	}
 
 	paste() {

@@ -863,6 +863,11 @@ const menuDefinition = [
 				target: 'layer/style.paste'
 			},
 			{
+				name: 'Scale Effects',
+				ellipsis: true,
+				target: 'layer/style.scale'
+			},
+			{
 				name: 'Clear Layer Style',
 				target: 'layer/style.clear'
 			},

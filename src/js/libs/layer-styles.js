@@ -249,3 +249,39 @@ export function parse_gradient_stops(text) {
 	}
 	return stops.sort((a, b) => { return a.position - b.position; });
 }
+
+/** Layer > Layer Style > Scale Effects: which numbers of every style are sizes in pixels (the rest are not scaled) */
+export const SCALABLE_PARAMS = {
+	shadow: ['x', 'y', 'value'],
+	glow: ['size'],
+	stroke: ['size'],
+	'inner-shadow': ['x', 'y', 'blur'],
+	'inner-glow': ['blur'],
+	satin: ['distance', 'blur'],
+	bevel: ['size', 'soften'],
+};
+
+/**
+ * The params of a style with its pixel sizes multiplied (Photoshop's Scale Effects)
+ *
+ * @param {string} name name of the style (a key of SCALABLE_PARAMS, anything else cannot be scaled)
+ * @param {object} params the current params
+ * @param {number} percent 1-1000
+ * @returns {object|null} a copy with the scaled whole numbers, or null when nothing in the style is scalable
+ */
+export function scale_style_params(name, params, percent) {
+	if (!Object.prototype.hasOwnProperty.call(SCALABLE_PARAMS, name) || params == null || typeof params != 'object') {
+		return null;
+	}
+	const factor = Math.min(1000, Math.max(1, parseFloat(percent) || 100)) / 100;
+	const result = {...params};
+	let changed = false;
+	SCALABLE_PARAMS[name].forEach((key) => {
+		const value = parseFloat(params[key]);
+		if (isFinite(value)) {
+			result[key] = Math.round(value * factor);
+			changed = true;
+		}
+	});
+	return changed ? result : null;
+}

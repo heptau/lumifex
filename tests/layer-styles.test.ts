@@ -218,3 +218,27 @@ describe('parse_gradient_stops', () => {
 		expect(parse_gradient_stops(many)!.length).toBe(20);
 	});
 });
+
+import { scale_style_params } from '../src/js/libs/layer-styles.js';
+
+describe('scale_style_params', () => {
+	it('scales only the pixel sizes of a style and rounds them', () => {
+		const out = scale_style_params('shadow', {x: 10, y: -4, value: 5, color: '#000000', opacity: 50}, 150);
+		expect(out).toEqual({x: 15, y: -6, value: 8, color: '#000000', opacity: 50});
+	});
+
+	it('returns null for styles without sizes, unknown names and bad params, and does not change the input', () => {
+		expect(scale_style_params('sepia', {value: 5}, 200)).toBeNull();
+		expect(scale_style_params('__proto__', {x: 1}, 200)).toBeNull();
+		expect(scale_style_params('glow', null as any, 200)).toBeNull();
+		expect(scale_style_params('glow', {color: '#fff'}, 200)).toBeNull();
+		const input = {size: 4};
+		scale_style_params('stroke', input, 300);
+		expect(input.size).toBe(4);
+	});
+
+	it('limits the percentage', () => {
+		expect(scale_style_params('stroke', {size: 10}, 100000)).toEqual({size: 100});
+		expect((scale_style_params('stroke', {size: 100}, 0) as any)?.size).toBe(100);
+	});
+});
