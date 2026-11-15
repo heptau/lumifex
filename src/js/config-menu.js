@@ -710,6 +710,10 @@ const menuDefinition = [
 				target: 'image/crop_selection.crop'
 			},
 			{
+				name: 'Reveal All',
+				target: 'image/reveal_all.reveal'
+			},
+			{
 				name: 'Trim',
 				ellipsis: true,
 				shortcut: 'T',
