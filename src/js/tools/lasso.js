@@ -63,7 +63,7 @@ class Lasso_class extends Base_mask_tool_class {
 	}
 
 	/**
-	 * Magnetic path: the edges of the visible picture and the cheapest paths from a click (a window of 150 px around it)
+	 * Magnetic path: the edges of the visible picture and the cheapest paths from a click (a window around it, `reach` px to every side, 150 by default)
 	 *
 	 * @param {{x: number, y: number}} point
 	 */
@@ -76,7 +76,7 @@ class Lasso_class extends Base_mask_tool_class {
 			this.Base_layers.convert_layers_to_canvas(ctx);
 			this.edges = edge_strength(ctx.getImageData(0, 0, canvas.width, canvas.height));
 		}
-		this.tree = build_path_tree(this.edges, config.WIDTH, config.HEIGHT, point.x, point.y, 150);
+		this.tree = build_path_tree(this.edges, config.WIDTH, config.HEIGHT, point.x, point.y, Math.min(300, Math.max(30, parseInt(this.getParams().reach, 10) || 150)));
 		this.live = null;
 	}
 

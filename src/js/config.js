@@ -146,6 +146,11 @@ config.TOOLS = [
 		attributes: {
 			polygonal: false,
 			magnetic: false,
+			reach: {
+				value: 150,
+				min: 30,
+				max: 300,
+			},
 			feather: {
 				value: 0,
 				min: 0,
