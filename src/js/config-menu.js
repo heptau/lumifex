@@ -949,6 +949,8 @@ const menuDefinition = [
 					{ name: 'Black and White', target: 'layer/adjustment.new', parameter: 'black_white' },
 					{ name: 'Gradient Map', target: 'layer/adjustment.new', parameter: 'gradient_map' },
 					{ name: 'Selective Color', target: 'layer/adjustment.new', parameter: 'selective_color' },
+					{ name: 'Channel Mixer', target: 'layer/adjustment.new', parameter: 'channel_mixer' },
+					{ name: 'Shadows/Highlights', target: 'layer/adjustment.new', parameter: 'shadows_highlights' },
 					{ name: 'Threshold', target: 'layer/adjustment.new', parameter: 'threshold' },
 					{ name: 'Posterize', target: 'layer/adjustment.new', parameter: 'posterize' },
 					{ name: 'Invert', target: 'layer/adjustment.new', parameter: 'invert' }

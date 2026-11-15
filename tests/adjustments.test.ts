@@ -460,3 +460,24 @@ describe('histograms', () => {
 		expect(h.rgb.every((v) => v === 0)).toBe(true);
 	});
 });
+
+import { ADJUSTMENTS, default_settings } from '../src/js/libs/adjustment-layers.js';
+
+describe('adjustment layers: Channel Mixer and Shadows/Highlights', () => {
+	const px = () => ({data: new Uint8ClampedArray([200, 100, 50, 255, 20, 20, 20, 255]), width: 2, height: 1});
+
+	it('default settings of Channel Mixer leave the picture unchanged', () => {
+		const settings = default_settings('channel_mixer');
+		expect(Array.from(ADJUSTMENTS.channel_mixer.apply(px(), settings).data)).toEqual(Array.from(px().data));
+	});
+
+	it('Channel Mixer in monochrome gives gray and Shadows/Highlights lifts the shadows', () => {
+		const settings = {...default_settings('channel_mixer'), monochrome: true};
+		const gray = ADJUSTMENTS.channel_mixer.apply(px(), settings).data;
+		expect(gray[0]).toBe(gray[1]);
+		expect(gray[1]).toBe(gray[2]);
+		const lifted = ADJUSTMENTS.shadows_highlights.apply(px(), default_settings('shadows_highlights')).data;
+		expect(lifted[4]).toBeGreaterThan(20);
+		expect(lifted[3]).toBe(255);
+	});
+});

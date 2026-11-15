@@ -172,6 +172,30 @@ export const ADJUSTMENTS = {
 		state: {name: 'curves', create: default_curves, clean: clean_curves},
 		apply: (img, s) => Adjustments.curvesFromPoints(img, s.curves),
 	},
+	channel_mixer: {
+		title: 'Channel Mixer',
+		params: [
+			{name: 'r_r', title: 'Red from red:', value: 100, range: [-200, 200]},
+			{name: 'r_g', title: 'Red from green:', value: 0, range: [-200, 200]},
+			{name: 'r_b', title: 'Red from blue:', value: 0, range: [-200, 200]},
+			{name: 'g_r', title: 'Green from red:', value: 0, range: [-200, 200]},
+			{name: 'g_g', title: 'Green from green:', value: 100, range: [-200, 200]},
+			{name: 'g_b', title: 'Green from blue:', value: 0, range: [-200, 200]},
+			{name: 'b_r', title: 'Blue from red:', value: 0, range: [-200, 200]},
+			{name: 'b_g', title: 'Blue from green:', value: 0, range: [-200, 200]},
+			{name: 'b_b', title: 'Blue from blue:', value: 100, range: [-200, 200]},
+			{name: 'monochrome', title: 'Monochrome (red row):', value: false},
+		],
+		apply: (img, s) => Adjustments.channelMixer(img, s),
+	},
+	shadows_highlights: {
+		title: 'Shadows/Highlights',
+		params: [
+			{name: 'shadows', title: 'Shadows:', value: 35, range: [0, 100]},
+			{name: 'highlights', title: 'Highlights:', value: 0, range: [0, 100]},
+		],
+		apply: (img, s) => Adjustments.shadowsHighlights(img, s),
+	},
 	invert: {
 		title: 'Invert',
 		params: [],
