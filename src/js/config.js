@@ -35,6 +35,7 @@ config.swatches = {
 config.user_fonts = {};
 config.guides_enabled = true;
 config.guides = [];
+config.guides_locked = false;
 config.freeze_render = false; //true while the history is replayed
 config.compare = null; //View > Split Compare: {before: canvas, x}
 config.ruler_active = false;

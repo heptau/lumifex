@@ -2251,6 +2251,11 @@ const menuDefinition = [
 				]
 			},
 			{
+				name: 'Lock Guides',
+				shortcut: 'Alt+Ctrl+;',
+				target: 'view/guides.toggle_lock'
+			},
+			{
 				name: 'Snap',
 				shortcut: 'Shift+Ctrl+;',
 				target: 'view/guides.toggle_snap'

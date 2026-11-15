@@ -32,6 +32,8 @@ function get_check_state(definition) {
 			return (helper.getCookie('theme') || 'auto') == parameter;
 		case 'view/guides.toggle':
 			return config.guides_enabled !== false;
+		case 'view/guides.toggle_lock':
+			return config.guides_locked === true;
 		case 'view/guides.toggle_snap':
 			return config.SNAP !== false;
 		case 'view/grid.pixel_grid':

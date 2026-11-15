@@ -179,6 +179,14 @@ class View_guides_class {
 	}
 
 	/**
+	 * View > Lock Guides (Alt+Ctrl+;) - locked guides can not be dragged with the Move tool
+	 */
+	toggle_lock() {
+		config.guides_locked = config.guides_locked !== true;
+		alertify.warning(t(config.guides_locked ? 'Guides locked.' : 'Guides unlocked.'));
+	}
+
+	/**
 	 * View > Snap (Shift+Ctrl+;)
 	 */
 	toggle_snap() {

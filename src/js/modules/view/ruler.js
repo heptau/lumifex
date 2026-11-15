@@ -3,6 +3,7 @@ import Helper_class from './../../libs/helpers.js';
 import Base_gui_class from './../../core/base-gui.js';
 import Base_layers_class from './../../core/base-layers.js';
 import Tools_settings_class from './../tools/settings.js';
+import { find_guide } from './../../libs/guide-hit.js';
 
 let instance = null;
 
@@ -32,6 +33,7 @@ class View_ruler_class {
 		}, false);
 
 		this.set_marker_events();
+		this.set_guide_move_events();
 
 		//drag from a ruler to create a guide (as in Photoshop)
 		const ruler_top = document.getElementById('ruler_top');
@@ -102,6 +104,91 @@ class View_ruler_class {
 		if (inside_y) {
 			this.marker_y.style.transform = `translateY(${Math.round(20 + y)}px)`;
 		}
+	}
+
+	/**
+	 * The Move tool drags an existing guide (as in Photoshop): a press within 4 screen pixels of a guide takes it, so
+	 * the tool does not also move a layer; releasing outside the canvas removes it, Esc puts it back. Locked guides
+	 * (View > Lock Guides) stay where they are.
+	 */
+	set_guide_move_events() {
+		const canvas = document.getElementById('canvas_minipaint');
+		if (!canvas) {
+			return;
+		}
+		const world = (e) => {
+			const rect = canvas.getBoundingClientRect();
+			return this.Base_layers.get_world_coords(e.clientX - rect.left, e.clientY - rect.top);
+		};
+		window.addEventListener('mousedown', (event) => {
+			if (event.button !== 0 || config.TOOL == null || config.TOOL.name != 'select'
+				|| config.guides_enabled == false || config.guides_locked === true || !config.guides.length) {
+				return;
+			}
+			if (!(event.target instanceof Element) || !(event.target === canvas || event.target.closest('#canvas_wrapper'))) {
+				return;
+			}
+			const point = world(event);
+			const index = find_guide(config.guides, point.x, point.y, 4 / (config.ZOOM || 1));
+			if (index < 0) {
+				return;
+			}
+			event.stopImmediatePropagation();
+			event.preventDefault();
+			this.drag_existing_guide(config.guides[index]);
+		}, true);
+	}
+
+	/**
+	 * @param {{x: number|null, y: number|null}} guide
+	 */
+	drag_existing_guide(guide) {
+		const canvas = document.getElementById('canvas_minipaint');
+		const horizontal = guide.x === null;
+		const start = horizontal ? guide.y : guide.x;
+		const position = (e) => {
+			const rect = canvas.getBoundingClientRect();
+			const point = this.Base_layers.get_world_coords(e.clientX - rect.left, e.clientY - rect.top);
+			return Math.round(horizontal ? point.y : point.x);
+		};
+		const set = (value) => {
+			if (horizontal) {
+				guide.y = value;
+			}
+			else {
+				guide.x = value;
+			}
+			config.need_render = true;
+		};
+		let stop = null;
+		const move = (e) => set(position(e));
+		const on_key = (e) => {
+			if (e.key == 'Escape') {
+				set(start);
+				stop();
+			}
+		};
+		const up = (e) => {
+			stop();
+			const value = position(e);
+			const limit = horizontal ? config.HEIGHT : config.WIDTH;
+			if (value <= 0 || value > limit) {
+				//dragged out of the canvas: the guide is removed
+				const index = config.guides.indexOf(guide);
+				if (index >= 0) {
+					config.guides.splice(index, 1);
+				}
+			}
+			config.need_render = true;
+		};
+		stop = () => {
+			document.removeEventListener('mousemove', move);
+			document.removeEventListener('mouseup', up);
+			document.removeEventListener('keydown', on_key);
+		};
+		document.addEventListener('mousemove', move);
+		document.addEventListener('mouseup', up);
+		document.addEventListener('keydown', on_key);
 	}
 
 	/**
