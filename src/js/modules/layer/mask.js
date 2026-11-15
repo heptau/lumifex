@@ -34,14 +34,17 @@ class Layer_mask_class {
 		return layer;
 	}
 
-	set_mask(layer, mask, name) {
+	/**
+	 * @param {boolean} [keep_shape] keep the Density and Feather of the layer (inverting changes the mask only)
+	 */
+	set_mask(layer, mask, name, keep_shape = false) {
 		return app.State.do_action(
 			new app.Actions.Bundle_action('layer_mask', name || 'Layer Mask', [
 				new app.Actions.Update_layer_action(layer.id, {
 					mask: mask ? serialize_layer_mask(mask) : null,
 					mask_enabled: true,
-					mask_density: 100,
-					mask_feather: 0,
+					mask_density: keep_shape && layer.mask_density !== undefined ? layer.mask_density : 100,
+					mask_feather: keep_shape && layer.mask_feather !== undefined ? layer.mask_feather : 0,
 				}),
 			])
 		);
@@ -127,7 +130,7 @@ class Layer_mask_class {
 			alertify.error(t('This layer has no mask.'));
 			return;
 		}
-		return this.set_mask(layer, invert_mask(mask), 'Invert Mask');
+		return this.set_mask(layer, invert_mask(mask), 'Invert Mask', true);
 	}
 
 	/**
