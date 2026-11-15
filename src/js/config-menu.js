@@ -1932,6 +1932,11 @@ const menuDefinition = [
 						target: 'image/adjustments.fibers'
 					},
 					{
+						name: 'Lighting Effects',
+						ellipsis: true,
+						target: 'image/adjustments.lighting_effects'
+					},
+					{
 						name: 'Spotlight',
 						ellipsis: true,
 						target: 'image/adjustments.spotlight'

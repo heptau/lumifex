@@ -1,4 +1,4 @@
-import { displace, glass, remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
+import { lightingEffects, displace, glass, remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -233,5 +233,51 @@ describe('displace', () => {
 		const wide = displace(row(), two, {horizontal: 2, vertical: 0});
 		expect(wide.data[1 * 4]).toBe(30);
 		expect(wide.data[6 * 4]).toBeGreaterThan(6 * 30);
+	});
+});
+
+describe('lightingEffects', () => {
+	//brightness grows to the right: a slope facing left
+	const ramp = () => {
+		const w = 20;
+		const data = new Uint8ClampedArray(w * 4);
+		for (let x = 0; x < w; x++) {
+			data.set([100 + x * 5, 100 + x * 5, 100 + x * 5, 88], x * 4);
+		}
+		return {data, width: w, height: 1};
+	};
+	const flat = (w: number, h: number) => ({data: new Uint8ClampedArray(w * h * 4).map((_, i) => (i % 4 == 3 ? 255 : 200)), width: w, height: h});
+
+	it('keeps alpha and an unlit picture only gets the ambient light', () => {
+		const out = lightingEffects(ramp(), {type: 'Directional', intensity: 0, ambient: 50});
+		for (let x = 0; x < 20; x++) {
+			expect(out.data[x * 4 + 3]).toBe(88);
+		}
+		expect(out.data[10 * 4]).toBe(Math.round((100 + 10 * 5) * 0.5));
+	});
+
+	it('a directional light shades a slope brighter on the side facing it', () => {
+		const from_left = lightingEffects(ramp(), {type: 'Directional', angle: 180, intensity: 100, ambient: 0, relief: 100});
+		const from_right = lightingEffects(ramp(), {type: 'Directional', angle: 0, intensity: 100, ambient: 0, relief: 100});
+		expect(from_left.data[10 * 4]).toBeGreaterThan(from_right.data[10 * 4]);
+	});
+
+	it('a point light is brightest below it and fades with the distance', () => {
+		const out = lightingEffects(flat(21, 21), {type: 'Point', x: 50, y: 50, radius: 50, intensity: 100, ambient: 0, relief: 0});
+		const at = (x: number, y: number) => out.data[(y * 21 + x) * 4];
+		expect(at(10, 10)).toBeGreaterThan(at(15, 10));
+		expect(at(15, 10)).toBeGreaterThan(at(1, 1));
+	});
+
+	it('a spot light reaches less than a point light and bad input falls back', () => {
+		const point = lightingEffects(flat(21, 21), {type: 'Point', x: 50, y: 50, radius: 100, intensity: 100, ambient: 0, relief: 0});
+		const spot = lightingEffects(flat(21, 21), {type: 'Spot', x: 50, y: 50, radius: 100, intensity: 100, ambient: 0, relief: 0});
+		expect(spot.data[(10 * 21 + 18) * 4]).toBeLessThanOrEqual(point.data[(10 * 21 + 18) * 4]);
+		const odd = lightingEffects(flat(5, 5), {type: 'nope', angle: 'x', intensity: 'y', color: 'bad'});
+		for (let i = 0; i < odd.data.length; i += 4) {
+			expect(odd.data[i]).toBeGreaterThanOrEqual(0);
+			expect(odd.data[i]).toBeLessThanOrEqual(255);
+			expect(odd.data[i + 3]).toBe(255);
+		}
 	});
 });

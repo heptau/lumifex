@@ -735,6 +735,20 @@ class Image_adjustments_class {
 		], (img, params) => Distort.differenceClouds(img, params));
 	}
 
+	lighting_effects() {
+		this.show_dialog('Lighting Effects', [
+			{name: "type", title: "Light type:", type: 'select', values: Distort.LIGHT_TYPES, value: 'Directional'},
+			{name: "angle", title: "Angle:", value: 135, range: [0, 359]},
+			{name: "x", title: "Position X:", value: 50, range: [0, 100]},
+			{name: "y", title: "Position Y:", value: 50, range: [0, 100]},
+			{name: "radius", title: "Radius:", value: 60, range: [1, 100]},
+			{name: "intensity", title: "Intensity:", value: 70, range: [0, 100]},
+			{name: "ambient", title: "Ambient light:", value: 30, range: [0, 100]},
+			{name: "relief", title: "Relief:", value: 40, range: [0, 100]},
+			{name: "color", title: "Light color:", value: '#ffffff', type: 'color'},
+		], (img, params) => Distort.lightingEffects(img, params));
+	}
+
 	spotlight() {
 		this.show_dialog('Spotlight', [
 			{name: "x", title: "Position X:", value: 50, range: [0, 100]},

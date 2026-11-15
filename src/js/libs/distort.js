@@ -275,6 +275,81 @@ export function displace(image, map, params) {
 	});
 }
 
+/** Lighting Effects: the kinds of light */
+export const LIGHT_TYPES = ['Directional', 'Point', 'Spot'];
+
+/**
+ * Lighting Effects (Photoshop, Render, simplified) - the picture is lit as a relief: its brightness is the height of
+ * a surface, and a light shades it by the angle between the surface and the light. Directional light comes from an
+ * angle, Point light sits above a position and fades with the distance, Spot light is a point light confined to a cone
+ * pointing at the picture. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params type (one of LIGHT_TYPES, default Directional), angle (degrees the light comes from, 0 = from
+ *  the right, 90 = from the top, default 135), x and y (0-100 %, the position of a point or spot light, default 50),
+ *  radius (1-100 % of the longer side, how far a point or spot light reaches, default 60), intensity (0-100, default 70),
+ *  ambient (0-100, default 30), relief (0-100, how steep the surface is, default 40), color (#rrggbb, default white)
+ * @returns {Image_data}
+ */
+export function lightingEffects(image, params) {
+	const w = image.width;
+	const h = image.height;
+	const type = LIGHT_TYPES.includes(params.type) ? params.type : 'Directional';
+	const angle = (parseFloat(params.angle ?? 135) || 0) * Math.PI / 180;
+	const lx = clamp(parseFloat(params.x ?? 50), 0, 100) / 100 * w;
+	const ly = clamp(parseFloat(params.y ?? 50), 0, 100) / 100 * h;
+	const radius = Math.max(1, clamp(parseFloat(params.radius ?? 60) || 60, 1, 100) / 100 * Math.max(w, h));
+	const intensity = clamp(parseFloat(params.intensity ?? 70), 0, 100) / 100;
+	const ambient = clamp(parseFloat(params.ambient ?? 30), 0, 100) / 100;
+	const relief = clamp(parseFloat(params.relief ?? 40), 0, 100) / 100 * 4;
+	const color = parseHex(params.color || '#ffffff').map((v) => v / 255);
+	const data = image.data;
+	const height = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		height[p] = (data[p * 4] * 0.299 + data[p * 4 + 1] * 0.587 + data[p * 4 + 2] * 0.114) / 255;
+	}
+	const at = (x, y) => height[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	//the direction towards a directional light: 45 degrees above the picture
+	const dir = [Math.cos(angle) * Math.SQRT1_2, -Math.sin(angle) * Math.SQRT1_2, Math.SQRT1_2];
+	const lift = radius * 0.5;
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			//the surface normal from the slope of the brightness
+			const dx = (at(x + 1, y) - at(x - 1, y)) * 0.5 * relief * 8;
+			const dy = (at(x, y + 1) - at(x, y - 1)) * 0.5 * relief * 8;
+			const norm = Math.hypot(dx, dy, 1);
+			const nx = -dx / norm;
+			const ny = -dy / norm;
+			const nz = 1 / norm;
+			let lvx = dir[0];
+			let lvy = dir[1];
+			let lvz = dir[2];
+			let reach = 1;
+			if (type != 'Directional') {
+				const vx = lx - (x + 0.5);
+				const vy = ly - (y + 0.5);
+				const distance = Math.hypot(vx, vy, lift);
+				lvx = vx / distance;
+				lvy = vy / distance;
+				lvz = lift / distance;
+				const t = clamp(1 - Math.hypot(vx, vy) / radius, 0, 1);
+				reach = t * t * (3 - 2 * t);
+				if (type == 'Spot') {
+					//a cone around the axis that points at the picture: the narrower, the closer to the position
+					reach *= clamp(lvz * 1.5, 0, 1);
+				}
+			}
+			const lambert = Math.max(0, nx * lvx + ny * lvy + nz * lvz);
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				const light = ambient + intensity * lambert * reach * color[c] * 1.4;
+				data[i + c] = clamp(Math.round(data[i + c] * light), 0, 255);
+			}
+		}
+	}
+	return image;
+}
+
 /**
  * Clouds - fills the image with clouds between two colors and blends it with the original by opacity
  *

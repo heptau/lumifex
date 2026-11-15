@@ -53,6 +53,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Blur > Blur More and Effects > Sharpen > Sharpen More (Photoshop): one-click stronger blur / sharpening (they respect the selection).
 - Effects > Stylize > Charcoal (Photoshop, simplified): a charcoal drawing of dark tones and bold edges on paper (detail, edge weight, tone weight, colors).
 - Effects > Render > Spotlight (Photoshop Lighting Effects, one spot): a round light with position, radius, intensity, ambient level and color.
+- Effects > Render > Lighting Effects (Photoshop, simplified): the brightness of the picture is lit as a relief by a directional, point or spot light (angle, position, radius, intensity, ambient light, relief, color); Spotlight stays as the flat one.
 - Effects > Stylize > Photocopy (Photoshop, simplified): black and white photocopy of dark areas and edges (detail, edge threshold, darkness).
 - Effects > Stylize > Cutout (Photoshop, simplified): the picture is smoothed and every color channel reduced to a few levels, like flat cut paper (levels, simplicity).
 - Effects > Stylize > Poster Edges (Photoshop, simplified): Cutout-style posterized colors with dark lines along sharp brightness changes (levels, simplicity, edge threshold, intensity).
