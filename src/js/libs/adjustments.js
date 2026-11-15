@@ -1085,6 +1085,31 @@ export function sponge(image, params) {
 }
 
 /**
+ * Remove Black / White Matte (Photoshop, Layer > Matting) - a picture that was cut out and composed over black or
+ * white keeps a dark or light fringe in its half transparent pixels. Every such pixel is turned back into the pure
+ * color: c = (c - matte * (1 - alpha)) / alpha. Fully opaque and fully transparent pixels stay as they are.
+ *
+ * @param {Image_data} image
+ * @param {number} matte the matte level: 0 for black, 255 for white (anything else is limited to 0-255)
+ * @returns {Image_data}
+ */
+export function removeMatte(image, matte) {
+	const level = Math.min(255, Math.max(0, Number(matte) || 0));
+	const data = image.data;
+	for (let i = 0; i < data.length; i += 4) {
+		const alpha = data[i + 3];
+		if (alpha == 0 || alpha == 255) {
+			continue;
+		}
+		const a = alpha / 255;
+		for (let c = 0; c < 3; c++) {
+			data[i + c] = Math.min(255, Math.max(0, Math.round((data[i + c] - level * (1 - a)) / a)));
+		}
+	}
+	return image;
+}
+
+/**
  * Color to Alpha (GIMP) - makes the chosen color transparent. Pixels that are a mix of the color and something
  * else keep only the "something else" with the right amount of transparency, so a white background can be removed
  * without a light halo around the object.

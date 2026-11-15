@@ -234,6 +234,14 @@ class Image_adjustments_class {
 		], (img, params) => Adjustments.solarize(img, params.threshold));
 	}
 
+	remove_black_matte() {
+		this.apply_direct((img) => Adjustments.removeMatte(img, 0));
+	}
+
+	remove_white_matte() {
+		this.apply_direct((img) => Adjustments.removeMatte(img, 255));
+	}
+
 	color_to_alpha() {
 		this.show_dialog('Color to Alpha', [
 			{name: "color", title: "Color:", value: '#ffffff', type: 'color'},

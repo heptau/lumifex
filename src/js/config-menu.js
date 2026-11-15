@@ -556,6 +556,14 @@ const menuDefinition = [
 						target: 'image/adjustments.color_to_alpha'
 					},
 					{
+						name: 'Remove Black Matte',
+						target: 'image/adjustments.remove_black_matte'
+					},
+					{
+						name: 'Remove White Matte',
+						target: 'image/adjustments.remove_white_matte'
+					},
+					{
 						name: 'Swap Channels',
 						ellipsis: true,
 						target: 'image/adjustments.swap_channels'

@@ -1,4 +1,4 @@
-import { invert, desaturate, threshold, posterize, levels, brightnessContrast, hueSaturation, exposure, autoContrast, addNoise, parseHex, colorBalance, photoFilter, gradientMap, channelMixer, shadowsHighlights, equalize, autoColor, temperatureTint, sepia, swapChannels, extractChannel, dodgeBurn, smudgeBlend, selectiveColor, curveLookup, curves, normalizeCurvePoints, curvesFromPoints, histograms } from '../src/js/libs/adjustments.js';
+import { removeMatte, invert, desaturate, threshold, posterize, levels, brightnessContrast, hueSaturation, exposure, autoContrast, addNoise, parseHex, colorBalance, photoFilter, gradientMap, channelMixer, shadowsHighlights, equalize, autoColor, temperatureTint, sepia, swapChannels, extractChannel, dodgeBurn, smudgeBlend, selectiveColor, curveLookup, curves, normalizeCurvePoints, curvesFromPoints, histograms } from '../src/js/libs/adjustments.js';
 
 function image(pixels: number[][]) {
 	return { width: pixels.length, height: 1, data: new Uint8ClampedArray(pixels.flat()) };
@@ -479,5 +479,33 @@ describe('adjustment layers: Channel Mixer and Shadows/Highlights', () => {
 		const lifted = ADJUSTMENTS.shadows_highlights.apply(px(), default_settings('shadows_highlights')).data;
 		expect(lifted[4]).toBeGreaterThan(20);
 		expect(lifted[3]).toBe(255);
+	});
+});
+
+describe('removeMatte', () => {
+	it('restores the pure color of half transparent pixels composed over white or black', () => {
+		//a pure red pixel at 50 % alpha over white is (255, 128, 128); over black (128, 0, 0)
+		const white = {width: 1, height: 1, data: new Uint8ClampedArray([255, 128, 128, 128])};
+		removeMatte(white, 255);
+		//128 / 255 is not exactly one half, so the result is within two levels of the pure color
+		expect(white.data[0]).toBe(255);
+		expect(white.data[1]).toBeLessThanOrEqual(2);
+		expect(white.data[2]).toBeLessThanOrEqual(2);
+		expect(white.data[3]).toBe(128);
+		const black = {width: 1, height: 1, data: new Uint8ClampedArray([128, 0, 0, 128])};
+		removeMatte(black, 0);
+		expect(black.data[0]).toBeGreaterThanOrEqual(254);
+		expect(black.data[1]).toBe(0);
+		expect(black.data[3]).toBe(128);
+	});
+
+	it('leaves opaque and fully transparent pixels and clamps bad levels', () => {
+		const img = {width: 2, height: 1, data: new Uint8ClampedArray([10, 20, 30, 255, 7, 8, 9, 0])};
+		removeMatte(img, 255);
+		expect(Array.from(img.data)).toEqual([10, 20, 30, 255, 7, 8, 9, 0]);
+		const odd = {width: 1, height: 1, data: new Uint8ClampedArray([50, 50, 50, 100])};
+		removeMatte(odd, NaN);
+		expect(odd.data[0]).toBeGreaterThan(50);
+		expect(odd.data[0]).toBeLessThanOrEqual(255);
 	});
 });
