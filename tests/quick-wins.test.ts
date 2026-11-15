@@ -1984,9 +1984,34 @@ describe('writing Photoshop files', () => {
 		const file = build_psd(2, 2, entries, new Uint8ClampedArray(16));
 		const read = parse_psd(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
 		expect(read.layers.map((l) => l.name + ':' + (l.group || '-'))).toEqual(['Below:-', 'Eye:Faces', 'Pupil:Faces/Eyes', 'Mouth:Faces', 'Above:-']);
-		expect(read.groups['Faces/Eyes']).toEqual({ opacity: 60, composition: 'multiply' });
-		expect(read.groups['Faces']).toEqual({ opacity: 100, composition: 'source-over' });
+		expect(read.groups['Faces/Eyes']).toEqual({ opacity: 60, composition: 'multiply', mask: null });
+		expect(read.groups['Faces']).toEqual({ opacity: 100, composition: 'source-over', mask: null });
 		expect(Object.keys(read.groups).sort()).toEqual(['Faces', 'Faces/Eyes']);
+	});
+
+	it('the mask of a group over the document is written and read back', () => {
+		const picture = (name: string) => layer(name, 0, 0, 2, 2, { composition: 'source-over', opacity: 100 });
+		//a 2 x 2 document: only the left column is visible through the mask of the group
+		const mask = new Uint8Array([255, 0, 255, 0]);
+		const entries: any[] = [
+			{ section: 'end' },
+			picture('In'),
+			{ section: 'start', name: 'Masked', opacity: 100, visible: true, composition: 'source-over', mask },
+			{ section: 'end' },
+			picture('Plain'),
+			{ section: 'start', name: 'Open', opacity: 100, visible: true, composition: 'source-over', pass: true },
+		];
+		const read = parse_psd(build_psd(2, 2, entries, new Uint8ClampedArray(16)).buffer as ArrayBuffer);
+		expect(read.layers.map((l) => l.name + ':' + (l.group || '-'))).toEqual(['In:Masked', 'Plain:Open']);
+		expect(Array.from(read.groups['Masked'].mask!)).toEqual([255, 0, 255, 0]);
+		expect(read.groups['Open'].mask).toBeNull();
+	});
+
+	it('a group mask of the wrong size is not written', () => {
+		const picture = layer('In', 0, 0, 1, 1, { composition: 'source-over', opacity: 100 });
+		const entries: any[] = [{ section: 'end' }, picture, { section: 'start', name: 'G', opacity: 100, visible: true, composition: 'source-over', mask: new Uint8Array([255, 0, 255]) }];
+		const read = parse_psd(build_psd(2, 2, entries, new Uint8ClampedArray(16)).buffer as ArrayBuffer);
+		expect(read.groups['G'].mask).toBeNull();
 	});
 
 	it('a hidden group hides its layers and a broken group structure does not break reading', () => {

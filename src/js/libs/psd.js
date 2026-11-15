@@ -1,7 +1,7 @@
 /**
  * Reader of Photoshop files (.psd): the size, the layers (pixels, place, opacity, visibility, blend mode, name) and the
  * flattened picture. 8 and 16 bits per channel, RGB and grayscale, raw and RLE data. Groups (also inside groups) are
- * read with their opacity and blend mode. Layer masks are read; layer effects, text and smart objects are not read (they are only
+ * read with their opacity and blend mode. Layer masks (also the masks of groups) are read; layer effects, text and smart objects are not read (they are only
  * skipped).
  * Pure functions, no DOM. Every length from the file is checked, a broken file throws an Error.
  *
@@ -9,7 +9,8 @@
  *   composition: string, data: Uint8ClampedArray, group?: string|null, mask?: Uint8ClampedArray|null,
  *   mask_enabled?: boolean}} Psd_layer pixels are RGBA, opacity 0-100,
  *   group = path of the group ('Faces/Eyes') or null, mask = the layer mask in the pixels of the layer (255 = visible)
- * @typedef {{opacity: number, composition: string}} Psd_group opacity 0-100
+ * @typedef {{opacity: number, composition: string, mask?: Uint8ClampedArray|null}} Psd_group opacity 0-100, mask = the mask of the
+ *   group over the whole document (width * height values, 255 = visible; null when the group has none or it is disabled)
  * @typedef {{width: number, height: number, layers: Psd_layer[], groups: Object<string, Psd_group>, composite: Uint8ClampedArray|null}} Psd_file
  *   groups = the settings of every group by its path
  */
@@ -384,8 +385,10 @@ export function parse_psd(buffer) {
 				if (record.section == 1 || record.section == 2) {
 					const members = open_groups.pop() || [];
 					const label = Array.from(record.name).map((c) => { return c == '/' ? '-' : c; }).join('').trim() || 'Group';
+					//the mask of the group lies over the whole document (a disabled one is left out)
+					const group_mask = record.mask && !record.mask.disabled ? layer_mask_values({width, height, x: 0, y: 0}, record.mask) : null;
 					members.forEach((member) => {
-						member.chain.push({name: label, opacity: record.opacity, composition: record.composition, visible: record.visible});
+						member.chain.push({name: label, opacity: record.opacity, composition: record.composition, visible: record.visible, mask: group_mask});
 					});
 					if (open_groups.length > 0) {
 						Array.prototype.push.apply(open_groups[open_groups.length - 1], members);
@@ -412,7 +415,7 @@ export function parse_psd(buffer) {
 				const path = [];
 				chain.slice(0, 5).forEach((entry) => {
 					path.push(entry.name.slice(0, 60));
-					groups[path.join('/')] = {opacity: entry.opacity, composition: entry.composition};
+					groups[path.join('/')] = {opacity: entry.opacity, composition: entry.composition, mask: entry.mask || null};
 					if (entry.visible == false) {
 						layer.visible = false; //a hidden group hides its layers
 					}

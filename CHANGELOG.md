@@ -58,6 +58,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Poster Edges (Photoshop, simplified): Cutout-style posterized colors with dark lines along sharp brightness changes (levels, simplicity, edge threshold, intensity).
 - Effects > Stylize > Stamp (Photoshop, simplified): a two-color stamp - the picture is smoothed and every pixel becomes ink or paper by its brightness (balance, smoothness, ink and paper colors).
 - Effects > Distort > Displace (Photoshop): shifts the pixels by the red (horizontal) and green (vertical) channels of another image layer used as the displacement map, 128 meaning no shift (horizontal and vertical scale, up to 200 px).
+- Photoshop files: the mask of a layer group is now written (File > Export as PSD) and read (File > Open) as the user mask of the group, a mask over the whole document.
 - Effects > Stylize > Neon Glow (Photoshop, simplified): the picture is darkened and its edges glow in a chosen color (glow size, brightness, darken, color).
 - Effects > Stylize > Bas Relief (Photoshop, simplified): the brightness is carved into a low relief lit from a chosen angle, mixed between a dark and a light color (detail, smoothness, light angle, colors).
 - File > Revert (Photoshop): jumps back to the oldest step of the undo history; the steps stay available as Redo.

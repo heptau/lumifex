@@ -9,6 +9,7 @@ import Base_layers_class from './../../core/base-layers.js';
 import { save_blob } from './../../libs/file-save.js';
 import { layer_file_names } from './../../libs/export-names.js';
 import { build_psd, content_bounds } from './../../libs/psd-write.js';
+import { deserialize_layer_mask } from './../../libs/layer-mask.js';
 import { effective_alpha, group_props_of, is_isolated, nest_layers } from './../../libs/layer-groups.js';
 import { t } from '../tools/translate.js';
 
@@ -244,7 +245,13 @@ class File_export_extra_class {
 					const props = group_props_of(first, item.name);
 					out.push({section: 'end'});
 					write(item.items);
-					out.push({section: 'start', name: item.label, opacity: props.opacity, visible: true, composition: props.composition, pass: !is_isolated(props)});
+					//the mask of the group, when it has the size of the document
+					let group_mask = null;
+					const stored = props.mask ? deserialize_layer_mask(props.mask) : null;
+					if (stored && stored.width == width && stored.height == height) {
+						group_mask = new Uint8Array(stored.data);
+					}
+					out.push({section: 'start', name: item.label, opacity: props.opacity, visible: true, composition: props.composition, pass: !is_isolated(props), mask: group_mask});
 				}
 			};
 			write(nest_layers(layers.slice().reverse()));

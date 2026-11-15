@@ -453,8 +453,10 @@ class File_open_class {
 			const map = {};
 			group_ancestors(layer.group).forEach((path) => {
 				const group = psd.groups[path];
-				if (group && is_isolated({opacity: group.opacity, composition: group.composition, mask: null})) {
-					map[path] = {opacity: group.opacity, composition: group.composition, mask: null};
+				//the mask of a group lies over the whole document, as the groups of the application keep it
+				const mask = group && group.mask ? serialize_layer_mask({width: psd.width, height: psd.height, data: group.mask}) : null;
+				if (group && is_isolated({opacity: group.opacity, composition: group.composition, mask})) {
+					map[path] = {opacity: group.opacity, composition: group.composition, mask};
 				}
 			});
 			return Object.keys(map).length > 0 ? map : null;

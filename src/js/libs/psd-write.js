@@ -1,12 +1,13 @@
 /**
  * Writer of Photoshop files (.psd): layers with pixels, place, opacity, visibility, blend mode and name, and the
- * flattened picture. 8 bits, RGB, no compression. Groups and layer masks are written, no effects. Pure functions, no DOM.
+ * flattened picture. 8 bits, RGB, no compression. Groups and layer masks (also the masks of groups) are written, no effects. Pure functions, no DOM.
  *
  * @typedef {{name: string, x: number, y: number, width: number, height: number, opacity: number, visible: boolean,
  *   composition: string, data: Uint8ClampedArray, mask?: Uint8Array|null}} Psd_out_layer pixels are RGBA (not premultiplied),
  *   opacity 0-100; mask = a layer mask over the same rectangle as the pixels (width * height bytes, 255 = visible)
  * @typedef {{section: 'end'}} Psd_group_end the divider that starts a group (the layers of the group follow it)
- * @typedef {{section: 'start', name: string, opacity: number, visible: boolean, composition: string, pass?: boolean}} Psd_group_start
+ * @typedef {{section: 'start', name: string, opacity: number, visible: boolean, composition: string, pass?: boolean,
+ *   mask?: Uint8Array|null}} Psd_group_start `mask` = the mask of the group over the whole document (width * height bytes, 255 = visible)
  *   the record that closes a group, with its name and settings (it comes after the layers of the group)
  */
 
@@ -120,6 +121,16 @@ function has_mask(layer) {
 }
 
 /**
+ * @param {object} marker a record of a group
+ * @param {number} width the width of the document
+ * @param {number} height the height of the document
+ * @returns {boolean} the divider that starts the group has a mask over the whole document
+ */
+function has_group_mask(marker, width, height) {
+	return marker.section == 'start' && !!marker.mask && marker.mask.length == width * height && width > 0 && height > 0;
+}
+
+/**
  * @param {number} width
  * @param {number} height
  * @param {(Psd_out_layer|Psd_group_end|Psd_group_start)[]} layers from the bottom to the top, with the records of groups
@@ -146,7 +157,11 @@ export function build_psd(width, height, layers, composite) {
 	const empty_plane = new Uint8Array(0);
 	const planes = layers.map((layer) => {
 		if (layer.section) {
-			return [empty_plane, empty_plane, empty_plane, empty_plane];
+			const empty = [empty_plane, empty_plane, empty_plane, empty_plane];
+			if (has_group_mask(layer, width, height)) {
+				empty.push(layer.mask);
+			}
+			return empty;
 		}
 		const list = [plane(layer.data, 3), plane(layer.data, 0), plane(layer.data, 1), plane(layer.data, 2)];
 		if (has_mask(layer)) {
@@ -161,7 +176,10 @@ export function build_psd(width, height, layers, composite) {
 		info.u32(box.x);
 		info.u32(box.y + box.height);
 		info.u32(box.x + box.width);
-		const masked = !marker && has_mask(layer);
+		const group_masked = !!marker && has_group_mask(marker, width, height);
+		const masked = group_masked || (!marker && has_mask(layer));
+		//the rectangle of the mask: the layer itself, or the whole document for the mask of a group
+		const mask_box = group_masked ? {x: 0, y: 0, width, height} : box;
 		const ids = masked ? channel_ids.concat([-2]) : channel_ids;
 		info.u16(ids.length);
 		ids.forEach((id, n) => {
@@ -189,10 +207,10 @@ export function build_psd(width, height, layers, composite) {
 		info.u32((masked ? 24 : 4) + 4 + name.length + unicode.length + section.length);
 		if (masked) {
 			info.u32(20); //layer mask: the rectangle (the same as the layer), the color outside it, flags, padding
-			info.u32(box.y);
-			info.u32(box.x);
-			info.u32(box.y + box.height);
-			info.u32(box.x + box.width);
+			info.u32(mask_box.y);
+			info.u32(mask_box.x);
+			info.u32(mask_box.y + mask_box.height);
+			info.u32(mask_box.x + mask_box.width);
 			info.u8(0);
 			info.u8(0);
 			info.u16(0);
