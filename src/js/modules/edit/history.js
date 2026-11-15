@@ -53,6 +53,19 @@ class Edit_history_class {
 	 * @returns {{step: number, name: string, active: boolean, undone: boolean}[]}
 	 */
 	/**
+	 * File > Revert - goes back to the oldest step of the undo history (the state the history starts from); the
+	 * steps stay available as redo, so Redo or the History panel brings the work back. Only as far as the history
+	 * reaches (it keeps the last `action_history_max` steps).
+	 */
+	async revert() {
+		if (app.State.action_history_index == 0) {
+			alertify.warning(t('There is nothing to revert.'));
+			return;
+		}
+		await this.go_to(0, null);
+	}
+
+	/**
 	 * Edit > Purge > Undo History - forgets the steps that can be undone to free memory; the image stays as it is,
 	 * the steps that can be redone are kept
 	 */

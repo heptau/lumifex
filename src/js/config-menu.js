@@ -101,6 +101,10 @@ const menuDefinition = [
 				divider: true
 			},
 			{
+				name: 'Revert',
+				target: 'edit/history.revert'
+			},
+			{
 				name: 'Save As',
 				ellipsis: true,
 				shortcut: 'Shift + S',
