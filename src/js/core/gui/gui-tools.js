@@ -11,7 +11,7 @@ import Helper_class from './../../libs/helpers.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Base_gui_class from '../base-gui.js';
-import { pick_shape, is_shape_module, sort_shapes, LAST_SHAPE_KEY } from './../../libs/shape-tools.js';
+import { pick_shape, is_shape_module, sort_shapes, carry_shape_options, LAST_SHAPE_KEY } from './../../libs/shape-tools.js';
 
 //a double click on these tools in the toolbar runs a command (Photoshop: Hand = Fit on Screen, Zoom = 100 %)
 const DOUBLE_CLICK_TARGETS = {hand: 'view/zoom.auto', zoom: 'view/zoom.original'};
@@ -371,7 +371,14 @@ class GUI_tools_class {
 			option.selected = shape.key == this.active_tool;
 			select.appendChild(option);
 		});
-		select.addEventListener('change', () => this.activate_tool(select.value));
+		select.addEventListener('change', () => {
+			//the border and fill follow the user to the next shape
+			const next = config.TOOLS.find((tool) => tool.name == select.value);
+			if (next) {
+				carry_shape_options(this.action_data().attributes, next.attributes);
+			}
+			this.activate_tool(select.value);
+		});
 		const gallery = document.createElement('button');
 		gallery.type = 'button';
 		gallery.className = 'trn';

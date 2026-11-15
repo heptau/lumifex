@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Changing the shape in the Shape picker keeps the border size, border, fill and colors instead of bringing back the defaults of the new shape.
 - One Shape tool as in Photoshop: the Shape button (H) activates the last used shape, the options bar has a Shape picker for all shapes and a button for the gallery with previews. The button stays pressed while any shape is active.
 - Mask properties in the Layer details panel: Density (how much of the hidden area the mask lets through) and Feather (soft edge) of a layer mask, as sliders with live preview. The stored mask is not changed, undo works.
 - Smart filter mask (Layer > Smart Filter > Filter Mask from Selection, Invert, Disable / Enable, Delete): the smart filters of a layer apply only to the selected part, the rest keeps the original look; soft selections give a soft transition. The mask is shown in the Layers panel and stored with the layer (`smart_mask`).

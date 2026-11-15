@@ -38,3 +38,47 @@ export function is_shape_module(full_key) {
 export function sort_shapes(shapes) {
 	return shapes.slice().sort((a, b) => a.title.localeCompare(b.title));
 }
+
+/** Options that every filled shape has; they follow the user from shape to shape */
+export const SHARED_SHAPE_OPTIONS = ['border_size', 'border', 'fill', 'border_color', 'fill_color'];
+
+/**
+ * @param {any} attribute an option of a tool: a plain value or {value, ...}
+ * @returns {any}
+ */
+function option_value(attribute) {
+	return attribute !== null && typeof attribute == 'object' ? attribute.value : attribute;
+}
+
+/**
+ * Copies the shared options (border, fill, colors) from the shape that was used to the one that is chosen, so
+ * changing the shape does not bring back the default colors. Only options that both have and that have the same
+ * type are copied. The target is changed in place.
+ *
+ * @param {Object<string, any>} from attributes of the previous shape
+ * @param {Object<string, any>} to attributes of the next shape
+ * @returns {string[]} names of the options that were copied
+ */
+export function carry_shape_options(from, to) {
+	const copied = [];
+	if (!from || !to) {
+		return copied;
+	}
+	SHARED_SHAPE_OPTIONS.forEach((name) => {
+		if (!(name in from) || !(name in to)) {
+			return;
+		}
+		const value = option_value(from[name]);
+		if (value === undefined || typeof value != typeof option_value(to[name])) {
+			return;
+		}
+		if (to[name] !== null && typeof to[name] == 'object') {
+			to[name].value = value;
+		}
+		else {
+			to[name] = value;
+		}
+		copied.push(name);
+	});
+	return copied;
+}
