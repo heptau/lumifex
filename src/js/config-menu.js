@@ -1966,6 +1966,11 @@ const menuDefinition = [
 						target: 'image/adjustments.poster_edges'
 					},
 					{
+						name: 'Stamp',
+						ellipsis: true,
+						target: 'image/adjustments.stamp'
+					},
+					{
 						name: 'Cutout',
 						ellipsis: true,
 						target: 'image/adjustments.cutout'

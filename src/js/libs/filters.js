@@ -777,6 +777,36 @@ export function posterEdges(image, params) {
 }
 
 /**
+ * Stamp (Photoshop, Sketch) - a two-color stamp: the picture is smoothed by a box blur and every pixel becomes ink
+ * where its brightness is below the balance and paper elsewhere. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params balance (0-100 %, the share of the brightness range that turns into ink, default 50),
+ *  smoothness (0-20 px blur radius, default 5), ink and paper (#rrggbb, default black and white)
+ * @returns {Image_data}
+ */
+export function stamp(image, params) {
+	const balance = clamp(parseFloat(params.balance ?? 50), 0, 100) / 100 * 255;
+	const radius = clamp(Math.round(parseFloat(params.smoothness ?? 5)) || 0, 0, 20);
+	const hex = (value, fallback) => {
+		const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(value || '');
+		return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : fallback;
+	};
+	const ink = hex(params.ink, [0, 0, 0]);
+	const paper = hex(params.paper, [255, 255, 255]);
+	const data = image.data;
+	const source = radius > 0 ? box_blur(image, radius) : data;
+	for (let i = 0; i < data.length; i += 4) {
+		const luma = source[i] * 0.299 + source[i + 1] * 0.587 + source[i + 2] * 0.114;
+		const color = luma < balance ? ink : paper;
+		data[i] = color[0];
+		data[i + 1] = color[1];
+		data[i + 2] = color[2];
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

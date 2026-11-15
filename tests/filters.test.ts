@@ -1,4 +1,4 @@
-import { posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -483,5 +483,21 @@ describe('posterEdges', () => {
 		const plain = cutout(make(), {levels: 8, simplicity: 0}).data[4 * 4];
 		expect(posterEdges(make(), {levels: 8, simplicity: 0, edge: 255}).data[4 * 4]).toBe(plain);
 		expect(posterEdges(make(), {levels: 8, simplicity: 0, edge: 20, intensity: 0}).data[4 * 4]).toBe(plain);
+	});
+});
+
+describe('stamp', () => {
+	const make = () => image(8, 2, (x) => (x < 4 ? [40, 40, 40, 90] : [220, 220, 220, 90]));
+
+	it('gives only ink and paper colors and keeps alpha', () => {
+		const out = stamp(make(), {balance: 50, smoothness: 0, ink: '#102030', paper: '#f0e0d0'});
+		expect(Array.from(out.data.slice(0, 4))).toEqual([16, 32, 48, 90]);
+		expect(Array.from(out.data.slice(7 * 4, 7 * 4 + 4))).toEqual([240, 224, 208, 90]);
+	});
+
+	it('the balance moves the threshold and a bad color falls back to black and white', () => {
+		const mid = image(2, 1, () => [128, 128, 128, 255]);
+		expect(stamp(image(2, 1, () => [128, 128, 128, 255]), {balance: 10, smoothness: 0, ink: 'red'}).data[0]).toBe(255);
+		expect(stamp(mid, {balance: 90, smoothness: 0, ink: 'red'}).data[0]).toBe(0);
 	});
 });

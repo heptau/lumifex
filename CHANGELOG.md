@@ -50,6 +50,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Photocopy (Photoshop, simplified): black and white photocopy of dark areas and edges (detail, edge threshold, darkness).
 - Effects > Stylize > Cutout (Photoshop, simplified): the picture is smoothed and every color channel reduced to a few levels, like flat cut paper (levels, simplicity).
 - Effects > Stylize > Poster Edges (Photoshop, simplified): Cutout-style posterized colors with dark lines along sharp brightness changes (levels, simplicity, edge threshold, intensity).
+- Effects > Stylize > Stamp (Photoshop, simplified): a two-color stamp - the picture is smoothed and every pixel becomes ink or paper by its brightness (balance, smoothness, ink and paper colors).
 - File > Revert (Photoshop): jumps back to the oldest step of the undo history; the steps stay available as Redo.
 - Layer > Layer Style > Hide / Show All Effects (Photoshop): turns the drawing of a layer's styles off and on without losing them (one undo step); a ◌ mark in the Layers panel shows a layer whose effects are hidden.
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.

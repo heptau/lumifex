@@ -97,6 +97,15 @@ class Image_adjustments_class {
 		], (img, params) => Filters.posterEdges(img, params));
 	}
 
+	stamp() {
+		this.show_dialog('Stamp', [
+			{name: "balance", title: "Light/dark balance:", value: 50, range: [0, 100]},
+			{name: "smoothness", title: "Smoothness:", value: 5, range: [0, 20]},
+			{name: "ink", title: "Ink:", value: '#000000', type: 'color'},
+			{name: "paper", title: "Paper:", value: '#ffffff', type: 'color'},
+		], (img, params) => Filters.stamp(img, params));
+	}
+
 	cutout() {
 		this.show_dialog('Cutout', [
 			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},
