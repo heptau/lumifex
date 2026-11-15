@@ -912,6 +912,7 @@ const menuDefinition = [
 					{ name: 'Posterize', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'posterize' },
 					{ name: 'Invert', target: 'layer/smart_filter.add', parameter: 'invert' },
 					{ divider: true },
+					{ name: 'Gaussian Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'gaussian_blur' },
 					{ name: 'Unsharp Mask', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'unsharp_mask' },
 					{ name: 'Smart Sharpen', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'smart_sharpen' },
 					{ name: 'High Pass', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'high_pass' },
@@ -1724,6 +1725,11 @@ const menuDefinition = [
 					{
 						name: 'Blur More',
 						target: 'image/adjustments.blur_more'
+					},
+					{
+						name: 'Gaussian Blur',
+						ellipsis: true,
+						target: 'image/adjustments.gaussian_blur'
 					},
 					{
 						name: 'Box Blur',

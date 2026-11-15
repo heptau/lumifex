@@ -1070,6 +1070,79 @@ export function smartSharpen(image, params) {
 }
 
 /**
+ * Gaussian Blur (Photoshop) - a true Gaussian blur: two passes (horizontal, vertical) with a kernel whose standard
+ * deviation is the radius. The color is blurred premultiplied by alpha, so a transparent area does not bleed its
+ * (invisible) color into the edge, and alpha is blurred too. The kernel reaches three radii; edge pixels are clamped.
+ *
+ * @param {Image_data} image
+ * @param {object} params radius (0-100 px, fractions allowed; 0 changes nothing)
+ * @returns {Image_data}
+ */
+export function gaussianBlur(image, params) {
+	const sigma = clamp(parseFloat(params.radius) || 0, 0, 100);
+	if (sigma < 0.1) {
+		return image;
+	}
+	const reach = Math.max(1, Math.ceil(sigma * 3));
+	const kernel = new Float32Array(reach * 2 + 1);
+	let total = 0;
+	for (let k = -reach; k <= reach; k++) {
+		kernel[k + reach] = Math.exp(-(k * k) / (2 * sigma * sigma));
+		total += kernel[k + reach];
+	}
+	for (let k = 0; k < kernel.length; k++) {
+		kernel[k] /= total;
+	}
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const premultiplied = new Float32Array(w * h * 4);
+	for (let i = 0; i < data.length; i += 4) {
+		const a = data[i + 3] / 255;
+		premultiplied[i] = data[i] * a;
+		premultiplied[i + 1] = data[i + 1] * a;
+		premultiplied[i + 2] = data[i + 2] * a;
+		premultiplied[i + 3] = data[i + 3];
+	}
+	const pass = (source, horizontal) => {
+		const out = new Float32Array(source.length);
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				let r = 0, g = 0, b = 0, a = 0;
+				for (let k = -reach; k <= reach; k++) {
+					const xx = horizontal ? clamp(x + k, 0, w - 1) : x;
+					const yy = horizontal ? y : clamp(y + k, 0, h - 1);
+					const weight = kernel[k + reach];
+					const j = (yy * w + xx) * 4;
+					r += source[j] * weight;
+					g += source[j + 1] * weight;
+					b += source[j + 2] * weight;
+					a += source[j + 3] * weight;
+				}
+				const o = (y * w + x) * 4;
+				out[o] = r;
+				out[o + 1] = g;
+				out[o + 2] = b;
+				out[o + 3] = a;
+			}
+		}
+		return out;
+	};
+	const blurred = pass(pass(premultiplied, true), false);
+	for (let i = 0; i < data.length; i += 4) {
+		const alpha = blurred[i + 3];
+		const a = alpha / 255;
+		if (a > 0) {
+			data[i] = clamp(Math.round(blurred[i] / a), 0, 255);
+			data[i + 1] = clamp(Math.round(blurred[i + 1] / a), 0, 255);
+			data[i + 2] = clamp(Math.round(blurred[i + 2] / a), 0, 255);
+		}
+		data[i + 3] = clamp(Math.round(alpha), 0, 255);
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

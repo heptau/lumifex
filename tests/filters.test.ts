@@ -1,4 +1,4 @@
-import { smartSharpen, diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { gaussianBlur, smartSharpen, diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -662,5 +662,50 @@ describe('smartSharpen', () => {
 		const bright_full = change(smartSharpen(bright(), {amount: 300}), bright());
 		const bright_faded = change(smartSharpen(bright(), {amount: 300, fade_highlights: 100}), bright());
 		expect(bright_faded).toBeLessThan(bright_full);
+	});
+});
+
+describe('gaussianBlur', () => {
+	it('zero radius changes nothing and a flat picture stays flat', () => {
+		const img = image(6, 6, (x) => [x * 40, 10, 20, 90]);
+		const copy = Array.from(img.data);
+		expect(Array.from(gaussianBlur(img, {radius: 0}).data)).toEqual(copy);
+		const flat = gaussianBlur(image(7, 7, () => [90, 120, 30, 200]), {radius: 2});
+		for (let i = 0; i < flat.data.length; i += 4) {
+			expect(Array.from(flat.data.slice(i, i + 4))).toEqual([90, 120, 30, 200]);
+		}
+	});
+
+	it('spreads a bright pixel symmetrically and keeps the total light roughly', () => {
+		const dot = image(9, 9, (x, y) => (x == 4 && y == 4 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
+		const out = gaussianBlur(dot, {radius: 1});
+		const at = (x: number, y: number) => out.data[(y * 9 + x) * 4];
+		expect(at(4, 4)).toBeLessThan(255);
+		expect(at(3, 4)).toBeGreaterThan(0);
+		expect(at(3, 4)).toBe(at(5, 4));
+		expect(at(4, 3)).toBe(at(4, 5));
+		expect(at(3, 4)).toBe(at(4, 3));
+		let sum = 0;
+		for (let i = 0; i < out.data.length; i += 4) {
+			sum += out.data[i];
+		}
+		expect(Math.abs(sum - 255)).toBeLessThan(20);
+	});
+
+	it('a larger radius blurs more', () => {
+		const make = () => image(15, 1, (x) => (x < 7 ? [0, 0, 0, 255] : [255, 255, 255, 255]));
+		const small = gaussianBlur(make(), {radius: 1});
+		const large = gaussianBlur(make(), {radius: 3});
+		expect(large.data[4 * 4]).toBeGreaterThan(small.data[4 * 4]);
+	});
+
+	it('the color of transparent pixels does not bleed into the edge', () => {
+		const img = image(7, 1, (x) => (x < 3 ? [255, 0, 0, 0] : [0, 0, 255, 255]));
+		const out = gaussianBlur(img, {radius: 1.5});
+		//the edge pixel is half transparent but still pure blue, not purple
+		expect(out.data[3 * 4 + 3]).toBeGreaterThan(0);
+		expect(out.data[3 * 4 + 3]).toBeLessThan(255);
+		expect(out.data[3 * 4]).toBe(0);
+		expect(out.data[3 * 4 + 2]).toBe(255);
 	});
 });

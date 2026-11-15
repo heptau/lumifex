@@ -57,6 +57,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Neon Glow (Photoshop, simplified): the picture is darkened and its edges glow in a chosen color (glow size, brightness, darken, color).
 - Effects > Stylize > Bas Relief (Photoshop, simplified): the brightness is carved into a low relief lit from a chosen angle, mixed between a dark and a light color (detail, smoothness, light angle, colors).
 - File > Revert (Photoshop): jumps back to the oldest step of the undo history; the steps stay available as Redo.
+- Effects > Blur > Gaussian Blur (Photoshop; also a smart filter): a true Gaussian blur that changes the pixels (radius up to 100 px, fractions allowed), premultiplied by alpha so transparent areas do not bleed color; the live Gaussian Blur under Common Filters stays.
 - Effects > Sharpen > Smart Sharpen (Photoshop, simplified; also a smart filter): Unsharp Mask that ignores differences below a noise limit and fades the sharpening towards black and white (amount, radius, reduce noise, fade shadows, fade highlights).
 - View > Selection Edges (Alt+Ctrl+H, like Photoshop's Show / Hide Selection Edges): hides the marching ants of the selection without changing the selection (until it is shown again; not saved).
 - Guides can be dragged with the Move tool (Photoshop): a press within 4 screen pixels of a guide takes it instead of moving a layer, dragging it off the canvas removes it, Esc puts it back. View > Lock Guides (Alt+Ctrl+;) keeps the guides where they are.

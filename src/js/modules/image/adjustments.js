@@ -392,6 +392,12 @@ class Image_adjustments_class {
 		], (img, params) => Filters.pixelate(img, params.size));
 	}
 
+	gaussian_blur() {
+		this.show_dialog('Gaussian Blur', [
+			{name: "radius", title: "Radius:", value: 3, range: [0, 100], step: 0.1},
+		], (img, params) => Filters.gaussianBlur(img, params));
+	}
+
 	unsharp_mask() {
 		this.show_dialog('Unsharp Mask', [
 			{name: "amount", title: "Amount:", value: 100, range: [0, 500]},

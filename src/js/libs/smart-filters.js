@@ -47,6 +47,13 @@ Object.keys(ADJUSTMENTS).forEach((key) => {
 });
 
 Object.assign(SMART_FILTERS, {
+	gaussian_blur: {
+		title: 'Gaussian Blur',
+		params: [
+			{name: 'radius', title: 'Radius:', value: 3, range: [0, 100], step: 0.1},
+		],
+		apply: (img, s) => Filters.gaussianBlur(img, s),
+	},
 	unsharp_mask: {
 		title: 'Unsharp Mask',
 		params: [
