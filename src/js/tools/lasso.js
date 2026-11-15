@@ -7,6 +7,10 @@ import Base_layers_class from './../core/base-layers.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
+/** Magnetic lasso with automatic anchors: a stretch of this many pixels is fixed, apart from its last AUTO_ANCHOR_TAIL ones */
+const AUTO_ANCHOR_LENGTH = 70;
+const AUTO_ANCHOR_TAIL = 20;
+
 /**
  * Lasso - freehand, polygonal or magnetic selection (Photoshop style). The magnetic one follows the edges of the picture
  * between the clicks (libs/magnetic-path.js).
@@ -155,6 +159,13 @@ class Lasso_class extends Base_mask_tool_class {
 		this.cursor = point;
 		if (this.is_magnetic() && this.tree) {
 			this.live = trace_path(this.tree, point.x, point.y);
+			if (this.getParams().auto_anchors && this.live.length > AUTO_ANCHOR_LENGTH) {
+				//a long stretch fixes itself: everything but its last pixels becomes part of the path and a new one starts there
+				const keep = this.live.slice(1, this.live.length - AUTO_ANCHOR_TAIL);
+				this.points.push(...keep);
+				this.start_tree(keep[keep.length - 1]);
+				this.live = trace_path(this.tree, point.x, point.y);
+			}
 		}
 
 		if (this.is_polygonal() == false) {

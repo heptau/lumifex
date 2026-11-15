@@ -151,6 +151,7 @@ config.TOOLS = [
 				min: 30,
 				max: 300,
 			},
+			auto_anchors: false,
 			feather: {
 				value: 0,
 				min: 0,
