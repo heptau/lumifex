@@ -57,7 +57,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Bas Relief (Photoshop, simplified): the brightness is carved into a low relief lit from a chosen angle, mixed between a dark and a light color (detail, smoothness, light angle, colors).
 - File > Revert (Photoshop): jumps back to the oldest step of the undo history; the steps stay available as Redo.
 - Guides can be dragged with the Move tool (Photoshop): a press within 4 screen pixels of a guide takes it instead of moving a layer, dragging it off the canvas removes it, Esc puts it back. View > Lock Guides (Alt+Ctrl+;) keeps the guides where they are.
-- View > Snap To > Guides / Layers / Document Bounds (Photoshop): chooses what the tools snap to (all on by default; the choice is kept in the browser).
+- View > Snap To > Guides / Grid / Layers / Document Bounds (Photoshop): chooses what the tools snap to (all on by default; the choice is kept in the browser).
 - Layer > Layer Style > Hide / Show All Effects (Photoshop): turns the drawing of a layer's styles off and on without losing them (one undo step); a ◌ mark in the Layers panel shows a layer whose effects are hidden.
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.
 - Effects > Render > Fibers (Photoshop): replaces the image with long vertical fibers between two colors (variance, strength, seed).

@@ -9,6 +9,7 @@ import Base_layers_class from './base-layers.js';
 import Base_gui_class from './base-gui.js';
 import app from "../app";
 import Helper_class from "../libs/helpers";
+import { grid_lines } from "../libs/snap-targets.js";
 
 /**
  * Base tools class, can be used for extending on tools like brush, provides various helping methods.
@@ -589,6 +590,11 @@ class Base_tools_class {
 		if(snap_to.bounds !== false){
 			snap_positions.x.push(0, config.WIDTH/2, config.WIDTH);
 			snap_positions.y.push(0, config.HEIGHT/2, config.HEIGHT);
+		}
+		if(snap_to.grid !== false && this.Base_gui.grid === true){
+			//the lines of the grid that is shown
+			snap_positions.x.push(...grid_lines(this.Base_gui.grid_size[0], config.WIDTH));
+			snap_positions.y.push(...grid_lines(this.Base_gui.grid_size[1], config.HEIGHT));
 		}
 		if(config.guides_enabled == true && snap_to.guides !== false){
 			//use guides

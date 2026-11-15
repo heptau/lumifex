@@ -2259,6 +2259,7 @@ const menuDefinition = [
 				name: 'Snap To',
 				children: [
 					{ name: 'Guides', target: 'view/guides.snap_to', parameter: 'guides' },
+					{ name: 'Grid', target: 'view/guides.snap_to', parameter: 'grid' },
 					{ name: 'Layers', target: 'view/guides.snap_to', parameter: 'layers' },
 					{ name: 'Document Bounds', target: 'view/guides.snap_to', parameter: 'bounds' }
 				]
