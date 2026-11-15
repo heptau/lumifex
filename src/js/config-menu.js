@@ -859,6 +859,10 @@ const menuDefinition = [
 				target: 'layer/style.paste'
 			},
 			{
+				name: 'Clear Layer Style',
+				target: 'layer/style.clear'
+			},
+			{
 				name: 'Smart Filter',
 				children: [
 					{ name: 'Brightness/Contrast', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'brightness_contrast' },

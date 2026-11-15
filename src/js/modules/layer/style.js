@@ -23,6 +23,23 @@ class Layer_style_class {
 		alertify.success(t('Layer style copied.'));
 	}
 
+	/**
+	 * Layer > Layer Style > Clear Layer Style - removes the live effects (shadows, glows, strokes, overlays, CSS
+	 * filters) in one undo step; smart filters stay, they have their own commands
+	 */
+	clear() {
+		const layer = config.layer;
+		const styles = layer && layer.filters ? layer.filters.filter((filter) => filter.name != 'smart') : [];
+		if (styles.length == 0) {
+			alertify.warning(t('This layer has no layer style.'));
+			return;
+		}
+		const actions = styles.map((filter) => new app.Actions.Delete_layer_filter_action(layer.id, filter.id));
+		return app.State.do_action(
+			new app.Actions.Bundle_action('clear_layer_style', 'Clear Layer Style', actions)
+		);
+	}
+
 	paste() {
 		const layer = config.layer;
 		if (this.copied == null) {
