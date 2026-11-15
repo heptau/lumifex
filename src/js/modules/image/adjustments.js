@@ -227,6 +227,15 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	wind() {
+		this.show_dialog('Wind', [
+			{name: "method", title: "Method:", value: 'Wind', values: Object.keys(Filters.WIND_METHODS)},
+			{name: "direction", title: "Direction:", value: 'From the Left', values: ['From the Left', 'From the Right']},
+			{name: "strength", title: "Edge strength:", value: 20, range: [0, 100]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Filters.wind(img, params));
+	}
+
 	oil_paint() {
 		this.show_dialog('Oil Paint', [
 			{name: "radius", title: "Radius:", value: 4, range: [1, 20]},

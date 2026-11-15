@@ -1,4 +1,4 @@
-import { average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -225,5 +225,34 @@ describe('Smart blur', () => {
 		const img = image(3, 1, (x) => [[200, 0, 0, 255], [0, 0, 200, 255], [0, 200, 0, 255]][x]);
 		const out = average(img, new Uint8Array([255, 255, 0]));
 		expect(Array.from(out.data)).toEqual([100, 0, 100, 255, 100, 0, 100, 255, 100, 0, 100, 255]);
+	});
+});
+
+describe('wind', () => {
+	const make = () => image(20, 1, (x) => (x < 5 ? [0, 0, 0, 255] : [200, 100, 50, 255]));
+
+	it('trails streaks of the bright side away from an edge, in the chosen direction', () => {
+		const right = wind(make(), {method: 'Wind', direction: 'From the Left', strength: 20, seed: 1});
+		expect(Array.from(right.data.slice(5 * 4, 5 * 4 + 3))).toEqual([200, 100, 50]);
+		//the dark part left of the edge is untouched
+		expect(right.data[0]).toBe(0);
+		const left = wind(image(20, 1, (x) => (x >= 15 ? [0, 0, 0, 255] : [200, 100, 50, 255])), {direction: 'From the Right', strength: 20});
+		expect(left.data[14 * 4]).toBe(200);
+		expect(left.data[19 * 4]).toBe(0);
+	});
+
+	it('is deterministic, keeps alpha and does nothing on a flat image or a too high threshold', () => {
+		const a = wind(make(), {method: 'Stagger', seed: 3});
+		const b = wind(make(), {method: 'Stagger', seed: 3});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(a.data[3]).toBe(255);
+		const flat = image(6, 2, () => [9, 9, 9, 77]);
+		expect(Array.from(wind(flat, {strength: 0}).data)).toEqual(Array.from(image(6, 2, () => [9, 9, 9, 77]).data));
+		const soft = () => image(20, 1, (x) => (x < 5 ? [0, 0, 0, 255] : [100, 100, 100, 255]));
+		expect(Array.from(wind(soft(), {strength: 100}).data)).toEqual(Array.from(soft().data));
+	});
+
+	it('ignores an unknown method', () => {
+		expect(() => wind(make(), {method: '__proto__'})).not.toThrow();
 	});
 });

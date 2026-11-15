@@ -49,6 +49,69 @@ export function diffuse(image, params) {
 	return image;
 }
 
+/** Wind (Photoshop): the methods and how long their streaks are (pixels) */
+export const WIND_METHODS = {Wind: 12, Blast: 30, Stagger: 12};
+
+/**
+ * Wind - streaks that start at every brightness edge and trail away from it, like wind blowing the picture.
+ * Deterministic (a hash of the position), so the preview and the result match. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params method (key of WIND_METHODS), direction ('From the Left' | 'From the Right'),
+ *  strength (0-100, how big a brightness step starts a streak: higher = fewer streaks), seed
+ * @returns {Image_data}
+ */
+export function wind(image, params) {
+	const method = Object.prototype.hasOwnProperty.call(WIND_METHODS, params.method) ? params.method : 'Wind';
+	const step = params.direction == 'From the Right' ? -1 : 1;
+	const threshold = 4 + clamp(Math.round(parseFloat(params.strength) || 0), 0, 100) * 1.2;
+	const seed = parseInt(params.seed) || 0;
+	const base = WIND_METHODS[method];
+	const w = image.width;
+	const h = image.height;
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const hash = (x, y, salt) => {
+		let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed + salt, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+	};
+	const luma = (i) => src[i] * 0.299 + src[i + 1] * 0.587 + src[i + 2] * 0.114;
+	for (let y = 0; y < h; y++) {
+		for (let k = 0; k < w; k++) {
+			//walk against the wind so that nearer streaks are painted last
+			const x = step == 1 ? k : w - 1 - k;
+			const px = x - step;
+			if (px < 0 || px >= w) {
+				continue;
+			}
+			const i = (y * w + x) * 4;
+			const j = (y * w + px) * 4;
+			if (Math.abs(luma(i) - luma(j)) < threshold) {
+				continue;
+			}
+			//the streak carries the brighter of the two pixels' side; it starts behind the edge
+			const from = luma(i) > luma(j) ? i : j;
+			let length = Math.round(base * (0.3 + hash(x, y, 3) * 1.4));
+			if (method == 'Blast') {
+				length = Math.round(length * (0.5 + hash(x, y, 4)));
+			}
+			const start = method == 'Stagger' ? Math.round((hash(x, y, 5) - 0.5) * base) : 0;
+			for (let n = 1; n <= length; n++) {
+				const tx = x + step * (n + start);
+				if (tx < 0 || tx >= w) {
+					break;
+				}
+				const t = (y * w + tx) * 4;
+				data[t] = src[from];
+				data[t + 1] = src[from + 1];
+				data[t + 2] = src[from + 2];
+			}
+		}
+	}
+	return image;
+}
+
 /**
  * Oil Paint (Kuwahara filter) - flat painted areas with sharp edges. Every pixel takes the mean color of the
  * calmest (lowest variance of brightness) of the four square quadrants around it. Summed area tables make it

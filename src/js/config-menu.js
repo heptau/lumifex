@@ -1888,6 +1888,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Wind',
+						ellipsis: true,
+						target: 'image/adjustments.wind'
+					},
+					{
 						name: 'Oil Paint',
 						ellipsis: true,
 						target: 'image/adjustments.oil_paint'

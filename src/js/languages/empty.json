@@ -1613,5 +1613,12 @@
     "Select Top Layer": "",
     "Select Bottom Layer": "",
     "Show All Layers": "",
-    "Hide Other Layers": ""
+    "Hide Other Layers": "",
+    "Wind": "",
+    "Method:": "",
+    "Blast": "",
+    "Stagger": "",
+    "From the Left": "",
+    "From the Right": "",
+    "Edge strength:": ""
 }
