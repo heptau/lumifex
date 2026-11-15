@@ -1772,6 +1772,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse_glow'
 					},
 					{
+						name: 'Displace',
+						ellipsis: true,
+						target: 'image/adjustments.displace'
+					},
+					{
 						name: 'Glass',
 						ellipsis: true,
 						target: 'image/adjustments.glass'

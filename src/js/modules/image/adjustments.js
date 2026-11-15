@@ -612,6 +612,35 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuseGlow(img, params));
 	}
 
+	/**
+	 * Effects > Distort > Displace - shifts the pixels by the red and green channels of another image layer
+	 */
+	displace() {
+		if (this.can_apply() == false) {
+			return;
+		}
+		const others = config.layers.filter((layer) => layer.type == 'image' && layer.id != config.layer.id);
+		if (others.length == 0) {
+			alertify.warning(t('Add another image layer first - its colors will be used.'));
+			return;
+		}
+		const names = others.map((layer) => `${layer.name  } #${  layer.id}`);
+		const cache = {};
+		const map_for = (value) => {
+			if (!cache[value]) {
+				const layer = others[names.indexOf(value)] || others[0];
+				const canvas = this.Base_layers.convert_layer_to_canvas(layer.id, true);
+				cache[value] = canvas.getContext('2d', {willReadFrequently: true}).getImageData(0, 0, canvas.width, canvas.height);
+			}
+			return cache[value];
+		};
+		this.show_dialog('Displace', [
+			{name: "map", title: "Map:", type: 'select', values: names, value: names[0]},
+			{name: "horizontal", title: "Horizontal scale:", value: 10, range: [-200, 200]},
+			{name: "vertical", title: "Vertical scale:", value: 10, range: [-200, 200]},
+		], (img, params) => Distort.displace(img, map_for(params.map), params));
+	}
+
 	glass() {
 		this.show_dialog('Glass', [
 			{name: "distortion", title: "Distortion:", value: 8, range: [0, 50]},

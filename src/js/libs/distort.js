@@ -245,6 +245,37 @@ export function glass(image, params) {
 }
 
 /**
+ * Displace (Photoshop, Distort) - every pixel is taken from a place shifted by a displacement map: the red channel
+ * of the map moves it horizontally, the green one vertically; 128 means no shift, 255 shifts by the full scale to
+ * the left / up (the picture is moved the way the map is bright), 0 the other way. The map is stretched to the size
+ * of the picture. Pixels that are taken from outside repeat the edge.
+ *
+ * @param {Image_data} image
+ * @param {Image_data} map the map ({data, width, height}); a missing or empty map changes nothing
+ * @param {object} params horizontal and vertical (-200..200 px, the shift for the extreme values of the map, default 10)
+ * @returns {Image_data}
+ */
+export function displace(image, map, params) {
+	if (!map || !map.data || map.width < 1 || map.height < 1) {
+		return image;
+	}
+	const horizontal = clamp(parseFloat(params.horizontal ?? 10) || 0, -200, 200);
+	const vertical = clamp(parseFloat(params.vertical ?? 10) || 0, -200, 200);
+	if (horizontal == 0 && vertical == 0) {
+		return image;
+	}
+	const w = image.width;
+	const h = image.height;
+	return remap(image, (x, y, position) => {
+		const mx = Math.min(map.width - 1, Math.floor(x / w * map.width));
+		const my = Math.min(map.height - 1, Math.floor(y / h * map.height));
+		const i = (my * map.width + mx) * 4;
+		position[0] = x + (map.data[i] - 128) / 127 * horizontal;
+		position[1] = y + (map.data[i + 1] - 128) / 127 * vertical;
+	});
+}
+
+/**
  * Clouds - fills the image with clouds between two colors and blends it with the original by opacity
  *
  * @param {Image_data} image

@@ -1,4 +1,4 @@
-import { glass, remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
+import { displace, glass, remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -195,5 +195,43 @@ describe('glass', () => {
 				expect(Math.abs(out.data[(y * 16 + x) * 4] - x * 16)).toBeLessThanOrEqual(36);
 			}
 		}
+	});
+});
+
+describe('displace', () => {
+	const row = () => {
+		const data = new Uint8ClampedArray(8 * 4);
+		for (let x = 0; x < 8; x++) {
+			data.set([x * 30, 0, 0, 90], x * 4);
+		}
+		return {data, width: 8, height: 1};
+	};
+	const flat_map = (r: number, g: number) => ({data: new Uint8ClampedArray([r, g, 0, 255]), width: 1, height: 1});
+
+	it('a neutral map (128) or zero scale changes nothing, a missing map too', () => {
+		const copy = Array.from(row().data);
+		expect(Array.from(displace(row(), flat_map(128, 128), {horizontal: 5, vertical: 5}).data)).toEqual(copy);
+		expect(Array.from(displace(row(), flat_map(255, 255), {horizontal: 0, vertical: 0}).data)).toEqual(copy);
+		expect(Array.from(displace(row(), null as any, {horizontal: 5}).data)).toEqual(copy);
+	});
+
+	it('shifts the picture one way for a bright map and the other for a dark one, keeping alpha', () => {
+		const right = displace(row(), flat_map(255, 128), {horizontal: 2, vertical: 0});
+		const left = displace(row(), flat_map(0, 128), {horizontal: 2, vertical: 0});
+		//a bright map takes the pixels from the right: the values grow
+		expect(right.data[3 * 4]).toBeGreaterThan(3 * 30);
+		expect(left.data[3 * 4]).toBeLessThan(3 * 30);
+		expect(right.data[3]).toBe(90);
+	});
+
+	it('the green channel moves vertically and the map is stretched to the picture', () => {
+		const img = {data: new Uint8ClampedArray([0, 0, 0, 255, 0, 0, 0, 255, 200, 0, 0, 255, 200, 0, 0, 255]), width: 2, height: 2};
+		//the bottom row is red; a bright green channel takes pixels from below
+		const out = displace(img, flat_map(128, 255), {horizontal: 0, vertical: 1});
+		expect(out.data[0]).toBeGreaterThan(0);
+		const two = {data: new Uint8ClampedArray([128, 128, 0, 255, 255, 128, 0, 255]), width: 2, height: 1};
+		const wide = displace(row(), two, {horizontal: 2, vertical: 0});
+		expect(wide.data[1 * 4]).toBe(30);
+		expect(wide.data[6 * 4]).toBeGreaterThan(6 * 30);
 	});
 });
