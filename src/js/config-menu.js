@@ -867,7 +867,12 @@ const menuDefinition = [
 					{ name: 'Pixelate', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'pixelate' },
 					{ name: 'Emboss', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'emboss' },
 					{ name: 'Find Edges', target: 'layer/smart_filter.add', parameter: 'find_edges' },
-					{ name: 'Add Noise', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'add_noise' }
+					{ name: 'Add Noise', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'add_noise' },
+					{ divider: true },
+					{ name: 'Filter Mask from Selection', target: 'layer/smart_filter.mask_from_selection' },
+					{ name: 'Invert Filter Mask', target: 'layer/smart_filter.mask_invert' },
+					{ name: 'Disable / Enable Filter Mask', target: 'layer/smart_filter.mask_toggle' },
+					{ name: 'Delete Filter Mask', target: 'layer/smart_filter.mask_remove' }
 				]
 			},
 			{

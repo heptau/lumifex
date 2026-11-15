@@ -15,7 +15,7 @@ import { deserialize_layer_mask } from "./../libs/layer-mask.js";
 import alertify from "./../../../node_modules/alertifyjs/build/alertify.min.js";
 import { t } from '../modules/tools/translate.js';
 import { fill_alpha, split_halo_filters } from "./../libs/layer-fill.js";
-import { active_smart_filters, smart_signature, run_smart_filters, is_smart_entry, MAX_SMART_PIXELS } from "./../libs/smart-filters.js";
+import { active_smart_filters, smart_signature, run_smart_filters, is_smart_entry, has_smart_mask, smart_mask_weights, mix_with_mask, MAX_SMART_PIXELS } from "./../libs/smart-filters.js";
 import { effective_alpha, plan_groups } from "./../libs/layer-groups.js";
 import { make_identity, stack_signature, split_for_cache, preview_scale } from "./../libs/layer-signature.js";
 import { needs_generic_rotation, rotation_pivot } from "./../libs/vector-rotation.js";
@@ -970,7 +970,8 @@ class Base_layers_class {
 		if (!this.smart_cache) {
 			this.smart_cache = new WeakMap();
 		}
-		const signature = smart_signature(list);
+		const masked = has_smart_mask(object);
+		const signature = smart_signature(list) + (masked ? `|${this.smart_mask_id(object.smart_mask)}` : '');
 		const cached = this.smart_cache.get(source);
 		if (cached && cached.signature == signature && cached.width == width && cached.height == height) {
 			return cached.canvas;
@@ -981,7 +982,14 @@ class Base_layers_class {
 		const ctx = canvas.getContext("2d", {willReadFrequently: true});
 		ctx.drawImage(source, 0, 0);
 		try {
-			ctx.putImageData(run_smart_filters(ctx.getImageData(0, 0, width, height), list), 0, 0);
+			const original = ctx.getImageData(0, 0, width, height);
+			const weights = masked ? smart_mask_weights(object.smart_mask, width, height) : null;
+			const kept = weights ? new ImageData(new Uint8ClampedArray(original.data), width, height) : null;
+			let result = run_smart_filters(original, list);
+			if (weights && kept) {
+				result = mix_with_mask(kept, result, weights);
+			}
+			ctx.putImageData(result, 0, 0);
 		}
 		catch (error) {
 			console.error("Error: smart filter failed", error);
@@ -990,6 +998,21 @@ class Base_layers_class {
 		}
 		this.smart_cache.set(source, {signature, width, height, canvas});
 		return canvas;
+	}
+
+	/**
+	 * @param {object} mask the stored smart filter mask (a new object for every change)
+	 * @returns {number} a number that is the same for the same object, a cache key
+	 */
+	smart_mask_id(mask) {
+		if (!this.smart_mask_ids) {
+			this.smart_mask_ids = new WeakMap();
+			this.smart_mask_next = 1;
+		}
+		if (!this.smart_mask_ids.has(mask)) {
+			this.smart_mask_ids.set(mask, this.smart_mask_next++);
+		}
+		return this.smart_mask_ids.get(mask);
 	}
 
 	/**

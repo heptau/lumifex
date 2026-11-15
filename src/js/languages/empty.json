@@ -1564,5 +1564,11 @@
     "Show / hide the channel in the view": "",
     "Show the whole picture": "",
     "Show only this channel": "",
-    "Load channel as selection": ""
+    "Load channel as selection": "",
+    "Filter Mask": "",
+    "Filter Mask from Selection": "",
+    "Invert Filter Mask": "",
+    "Disable / Enable Filter Mask": "",
+    "Delete Filter Mask": "",
+    "This layer has no filter mask.": ""
 }

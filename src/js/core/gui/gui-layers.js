@@ -268,6 +268,12 @@ class GUI_layers_class {
 					new app.Actions.Delete_layer_filter_action(target.dataset.pid, target.dataset.id)
 				);
 			}
+			else if (target.id == 'smart_mask_toggle') {
+				app.GUI.modules['layer/smart_filter'].mask_toggle(target.dataset.pid);
+			}
+			else if (target.id == 'delete_smart_mask') {
+				app.GUI.modules['layer/smart_filter'].mask_remove(target.dataset.pid);
+			}
 			else if (target.id == 'smart_filter_toggle') {
 				app.GUI.modules['layer/smart_filter'].toggle(target.dataset.id, target.dataset.pid);
 			}
@@ -517,6 +523,14 @@ class GUI_layers_class {
 						html += `	<span class="delete" id="delete_mask" data-pid="${layers[i].id}" title="delete"></span>`;
 						html += `	<span class="layer_name" id="mask_name" data-pid="${layers[i].id}" title="Disable / Enable Mask">`
 							+ `<span class="trn">Layer Mask</span>${layers[i].mask_enabled === false ? ' (<span class="trn">off</span>)' : ''}</span>`;
+						html += '	<div class="clear"></div>';
+						html += '</div>';
+					}
+					if (layers[i].smart_mask && layers[i].filters.some(is_smart_entry)) {
+						html += '<div class="filter">';
+						html += `	<span class="delete" id="delete_smart_mask" data-pid="${layers[i].id}" title="delete"></span>`;
+						html += `	<span class="layer_name" id="smart_mask_toggle" data-pid="${layers[i].id}" title="Disable / Enable Mask">`
+							+ `<span class="trn">Filter Mask</span>${layers[i].smart_mask_enabled === false ? ' (<span class="trn">off</span>)' : ''}</span>`;
 						html += '	<div class="clear"></div>';
 						html += '</div>';
 					}

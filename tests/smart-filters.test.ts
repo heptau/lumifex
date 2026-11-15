@@ -1,6 +1,7 @@
 import {
 	SMART_FILTERS, is_smart_filter, default_smart_settings, clean_smart_settings, make_smart_filter,
 	active_smart_filters, smart_signature, run_smart_filters, seeded_random,
+	has_smart_mask, smart_mask_weights, mix_with_mask,
 } from '../src/js/libs/smart-filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
@@ -69,5 +70,33 @@ describe('Smart filters', () => {
 		const value = random();
 		expect(value).toBeGreaterThanOrEqual(0);
 		expect(value).toBeLessThan(1);
+	});
+});
+
+describe('Smart filter mask', () => {
+	const stored = { width: 2, height: 1, values: [255, 0], counts: [1, 1] };
+
+	it('is active only when it exists and is not switched off', () => {
+		expect(has_smart_mask({ smart_mask: stored })).toBe(true);
+		expect(has_smart_mask({ smart_mask: stored, smart_mask_enabled: true })).toBe(true);
+		expect(has_smart_mask({ smart_mask: stored, smart_mask_enabled: false })).toBe(false);
+		expect(has_smart_mask({})).toBe(false);
+		expect(has_smart_mask(null)).toBe(false);
+	});
+
+	it('resamples the stored mask to the picture and rejects a broken one', () => {
+		expect(Array.from(smart_mask_weights(stored, 4, 1) as Uint8ClampedArray)).toEqual([255, 255, 0, 0]);
+		expect(smart_mask_weights({ width: 2 }, 4, 1)).toBeNull();
+		expect(smart_mask_weights(null, 4, 1)).toBeNull();
+	});
+
+	it('keeps the filter where the mask is 255 and the original where it is 0, mixes in between', () => {
+		const original = image(3, 1, () => [100, 100, 100, 255]);
+		const filtered = image(3, 1, () => [200, 0, 100, 255]);
+		const result = mix_with_mask(original, filtered, Uint8ClampedArray.from([255, 0, 128]));
+		expect(Array.from(result.data.slice(0, 4))).toEqual([200, 0, 100, 255]);
+		expect(Array.from(result.data.slice(4, 8))).toEqual([100, 100, 100, 255]);
+		expect(result.data[8]).toBe(150);
+		expect(result.data[9]).toBe(50);
 	});
 });

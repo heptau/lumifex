@@ -4,6 +4,9 @@ import Dialog_class from './../../libs/popup.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { SMART_FILTERS, is_smart_filter, is_smart_entry, default_smart_settings, clean_smart_settings, make_smart_filter } from './../../libs/smart-filters.js';
 import { t } from '../tools/translate.js';
+import Edit_selection_class from './../edit/selection.js';
+import { serialize_layer_mask, deserialize_layer_mask, layer_mask_from_selection } from './../../libs/layer-mask.js';
+import { invert_mask } from './../../libs/selection-mask.js';
 
 /**
  * Layer > Smart Filter > ... A smart filter is a pixel filter kept on the layer with its settings (it is not baked
@@ -65,6 +68,78 @@ class Layer_smart_filter_class {
 			return item;
 		});
 		return this.save(layer, filters);
+	}
+
+	/**
+	 * Layer > Smart Filter > Filter Mask from Selection: the smart filters of the layer apply only to the selected
+	 * part (soft edges give a soft transition); the rest of the layer keeps its original look
+	 */
+	mask_from_selection() {
+		const layer = config.layer;
+		if (!this.can_use(layer)) {
+			return;
+		}
+		if (layer.rotate) {
+			alertify.error(t('Rotate is not supported on this type of object. Convert to raster?'));
+			return;
+		}
+		const current = new Edit_selection_class().get_mask();
+		if (current == null) {
+			alertify.error(t('Empty selection'));
+			return;
+		}
+		return this.save_mask(layer, {smart_mask: serialize_layer_mask(layer_mask_from_selection(current.mask, layer)), smart_mask_enabled: true});
+	}
+
+	/**
+	 * Layer > Smart Filter > Invert Filter Mask
+	 */
+	mask_invert() {
+		const layer = config.layer;
+		const mask = this.stored_mask(layer);
+		if (mask) {
+			return this.save_mask(layer, {smart_mask: serialize_layer_mask(invert_mask(mask)), smart_mask_enabled: true});
+		}
+	}
+
+	/**
+	 * Layer > Smart Filter > Disable / Enable Filter Mask
+	 *
+	 * @param {number|string} [layer_id] the layer, the active one by default
+	 */
+	mask_toggle(layer_id) {
+		const layer = layer_id === undefined ? config.layer : app.Layers.get_layer(parseInt(String(layer_id)));
+		if (this.stored_mask(layer)) {
+			return this.save_mask(layer, {smart_mask_enabled: layer.smart_mask_enabled === false});
+		}
+	}
+
+	/**
+	 * Layer > Smart Filter > Delete Filter Mask
+	 *
+	 * @param {number|string} [layer_id] the layer, the active one by default
+	 */
+	mask_remove(layer_id) {
+		const layer = layer_id === undefined ? config.layer : app.Layers.get_layer(parseInt(String(layer_id)));
+		if (this.stored_mask(layer)) {
+			return this.save_mask(layer, {smart_mask: null, smart_mask_enabled: true});
+		}
+	}
+
+	stored_mask(layer) {
+		const mask = layer ? deserialize_layer_mask(layer.smart_mask) : null;
+		if (!mask) {
+			alertify.error(t('This layer has no filter mask.'));
+		}
+		return mask;
+	}
+
+	save_mask(layer, settings) {
+		return app.State.do_action(
+			new app.Actions.Bundle_action('smart_filter_mask', 'Filter Mask', [
+				new app.Actions.Update_layer_action(layer.id, settings),
+			])
+		);
 	}
 
 	can_use(layer) {

@@ -11,6 +11,8 @@
 import * as Adjustments from './adjustments.js';
 import * as Filters from './filters.js';
 import { ADJUSTMENTS } from './adjustment-layers.js';
+import { deserialize_layer_mask } from './layer-mask.js';
+import { resize_mask } from './selection-mask.js';
 
 /**
  * A repeatable "random" generator: the same noise is drawn on every redraw, otherwise the picture would flicker
@@ -253,4 +255,49 @@ export function run_smart_filters(image, list) {
 		result = SMART_FILTERS[item.key].apply(result, item.settings) || result;
 	});
 	return result;
+}
+
+/**
+ * The mask shared by all smart filters of a layer (`layer.smart_mask`, the format of a layer mask, 255 = filtered).
+ *
+ * @param {any} layer
+ * @returns {boolean} the layer has a smart filter mask that is switched on
+ */
+export function has_smart_mask(layer) {
+	return !!layer && !!layer.smart_mask && layer.smart_mask_enabled !== false;
+}
+
+/**
+ * @param {any} stored value of `layer.smart_mask`
+ * @param {number} width size of the picture
+ * @param {number} height
+ * @returns {Uint8ClampedArray|null} strengths of the filters per pixel of the picture, null when the mask is not valid
+ */
+export function smart_mask_weights(stored, width, height) {
+	const mask = deserialize_layer_mask(stored);
+	return mask && width > 0 && height > 0 ? resize_mask(mask, width, height).data : null;
+}
+
+/**
+ * Mixes the filtered picture with the original: where the mask is 255 the filtered pixel stays, where it is 0 the
+ * original comes back. The filtered picture is changed in place.
+ *
+ * @param {Image_data} original
+ * @param {Image_data} filtered same size
+ * @param {Uint8ClampedArray} weights one value per pixel
+ * @returns {Image_data} filtered
+ */
+export function mix_with_mask(original, filtered, weights) {
+	const o = original.data;
+	const f = filtered.data;
+	for (let p = 0, i = 0; p < weights.length && i < f.length; p++, i += 4) {
+		const m = weights[p] / 255;
+		if (m == 1) {
+			continue;
+		}
+		for (let c = 0; c < 4; c++) {
+			f[i + c] = o[i + c] + (f[i + c] - o[i + c]) * m;
+		}
+	}
+	return filtered;
 }
