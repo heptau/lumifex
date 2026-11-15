@@ -227,6 +227,13 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	mezzotint() {
+		this.show_dialog('Mezzotint', [
+			{name: "mode", title: "Mode:", value: 'Color', values: ['Color', 'Black and White']},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Filters.mezzotint(img, params));
+	}
+
 	fragment() {
 		this.show_dialog('Fragment', [
 			{name: "distance", title: "Distance:", value: 4, range: [0, 50]},

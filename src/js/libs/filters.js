@@ -50,6 +50,42 @@ export function diffuse(image, params) {
 }
 
 /**
+ * Mezzotint (Photoshop, simplified) - random threshold dither: every pixel becomes black or white (per channel
+ * in Color mode, by brightness in Black and White mode), the chance of white follows the original value, so the
+ * average tone is kept. Deterministic by the seed and the position. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params mode ('Color' | 'Black and White'), seed
+ * @returns {Image_data}
+ */
+export function mezzotint(image, params) {
+	const mono = params.mode == 'Black and White';
+	const seed = parseInt(params.seed) || 0;
+	const w = image.width;
+	const data = image.data;
+	const hash = (x, y, salt) => {
+		let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed + salt, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+	};
+	for (let p = 0, i = 0; p < data.length / 4; p++, i += 4) {
+		const x = p % w;
+		const y = Math.floor(p / w);
+		if (mono) {
+			const luma = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+			const v = luma > hash(x, y, 0) * 255 ? 255 : 0;
+			data[i] = data[i + 1] = data[i + 2] = v;
+		}
+		else {
+			for (let c = 0; c < 3; c++) {
+				data[i + c] = data[i + c] > hash(x, y, c + 1) * 255 ? 255 : 0;
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Fragment (Photoshop) - the mean of four copies of the image shifted diagonally by the distance, which gives a
  * blurry double-vision look. Edges repeat the border pixels, alpha is averaged the same way (premultiplied).
  *

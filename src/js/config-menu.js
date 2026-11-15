@@ -1811,6 +1811,11 @@ const menuDefinition = [
 						target: 'image/adjustments.pointillize'
 					},
 					{
+						name: 'Mezzotint',
+						ellipsis: true,
+						target: 'image/adjustments.mezzotint'
+					},
+					{
 						name: 'Fragment',
 						ellipsis: true,
 						target: 'image/adjustments.fragment'

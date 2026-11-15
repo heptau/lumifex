@@ -39,6 +39,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Distort > Polar Coordinates (Photoshop): bends the image around its center (Rectangular to Polar) or unrolls it back (Polar to Rectangular).
 - Layer > New Adjustment Layer > Channel Mixer and Shadows/Highlights (also in Layer > Smart Filter).
 - Effects > Pixelate > Fragment (Photoshop): the mean of four diagonally shifted copies of the image (distance).
+- Effects > Pixelate > Mezzotint (Photoshop, simplified): a random threshold dither to black and white dots, per channel or by brightness (mode, seed).
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.
 - Effects > Render > Fibers (Photoshop): replaces the image with long vertical fibers between two colors (variance, strength, seed).
 - Effects > Noise > Despeckle (Photoshop): blurs everything except edges, so speckles vanish and outlines stay sharp (edge threshold, passes).

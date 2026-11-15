@@ -1,4 +1,4 @@
-import { fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -330,5 +330,38 @@ describe('fragment', () => {
 		const img = fragment(image(5, 1, (x) => (x < 2 ? [255, 0, 0, 255] : [0, 255, 0, 0])), {distance: 1});
 		expect(img.data[2 * 4 + 1]).toBe(0);
 		expect(img.data[2 * 4]).toBe(255);
+	});
+});
+
+describe('mezzotint', () => {
+	const flat = (v: number) => image(30, 30, () => [v, v, v, 140]);
+
+	it('makes every channel black or white and keeps alpha', () => {
+		const out = mezzotint(flat(128), {mode: 'Color', seed: 1});
+		for (let i = 0; i < out.data.length; i += 4) {
+			expect([0, 255]).toContain(out.data[i]);
+			expect(out.data[i + 3]).toBe(140);
+		}
+	});
+
+	it('keeps the average tone, extremes stay and the mono mode gives gray values', () => {
+		const out = mezzotint(flat(128), {mode: 'Black and White', seed: 2});
+		let sum = 0;
+		for (let i = 0; i < out.data.length; i += 4) {
+			expect(out.data[i]).toBe(out.data[i + 1]);
+			sum += out.data[i];
+		}
+		expect(sum / 900).toBeGreaterThan(100);
+		expect(sum / 900).toBeLessThan(155);
+		expect(mezzotint(flat(0), {}).data[0]).toBe(0);
+		expect(mezzotint(flat(255), {}).data[0]).toBe(255);
+	});
+
+	it('is deterministic by seed', () => {
+		const a = mezzotint(flat(100), {seed: 3});
+		const b = mezzotint(flat(100), {seed: 3});
+		const c = mezzotint(flat(100), {seed: 4});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
 	});
 });
