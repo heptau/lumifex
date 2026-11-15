@@ -1811,6 +1811,11 @@ const menuDefinition = [
 						target: 'image/adjustments.pointillize'
 					},
 					{
+						name: 'Fragment',
+						ellipsis: true,
+						target: 'image/adjustments.fragment'
+					},
+					{
 						name: 'Crystallize',
 						ellipsis: true,
 						target: 'image/adjustments.crystallize'

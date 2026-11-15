@@ -227,6 +227,12 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	fragment() {
+		this.show_dialog('Fragment', [
+			{name: "distance", title: "Distance:", value: 4, range: [0, 50]},
+		], (img, params) => Filters.fragment(img, params));
+	}
+
 	despeckle() {
 		this.show_dialog('Despeckle', [
 			{name: "threshold", title: "Edge threshold:", value: 100, range: [0, 1000]},

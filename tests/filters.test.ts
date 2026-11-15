@@ -1,4 +1,4 @@
-import { despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -310,5 +310,25 @@ describe('despeckle', () => {
 	it('keeps alpha and survives bad parameters', () => {
 		const img = despeckle(image(4, 4, () => [10, 20, 30, 77]), {threshold: 'x', passes: 99});
 		expect(img.data[3]).toBe(77);
+	});
+});
+
+describe('fragment', () => {
+	it('distance 0 changes nothing; a flat image stays flat; a vertical edge is split into steps', () => {
+		const make = () => image(9, 1, (x) => (x < 4 ? [0, 0, 0, 255] : [200, 200, 200, 255]));
+		expect(Array.from(fragment(make(), {distance: 0}).data)).toEqual(Array.from(make().data));
+		const flat = fragment(image(5, 5, () => [50, 60, 70, 255]), {distance: 2});
+		expect(Array.from(flat.data.slice(0, 4))).toEqual([50, 60, 70, 255]);
+		const out = fragment(make(), {distance: 2});
+		//beside the edge pixels are half way: two of the four copies come from each side
+		expect(out.data[3 * 4]).toBe(100);
+		expect(out.data[4 * 4]).toBe(100);
+		expect(out.data[0]).toBe(0);
+	});
+
+	it('is weighted by alpha so transparent pixels add no color', () => {
+		const img = fragment(image(5, 1, (x) => (x < 2 ? [255, 0, 0, 255] : [0, 255, 0, 0])), {distance: 1});
+		expect(img.data[2 * 4 + 1]).toBe(0);
+		expect(img.data[2 * 4]).toBe(255);
 	});
 });

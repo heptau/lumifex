@@ -50,6 +50,47 @@ export function diffuse(image, params) {
 }
 
 /**
+ * Fragment (Photoshop) - the mean of four copies of the image shifted diagonally by the distance, which gives a
+ * blurry double-vision look. Edges repeat the border pixels, alpha is averaged the same way (premultiplied).
+ *
+ * @param {Image_data} image
+ * @param {object} params distance (0-50 pixels, default 4)
+ * @returns {Image_data}
+ */
+export function fragment(image, params) {
+	const d = clamp(Math.round(parseFloat(params.distance ?? 4)) || 0, 0, 50);
+	if (d == 0) {
+		return image;
+	}
+	const w = image.width;
+	const h = image.height;
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const shifts = [[-d, -d], [d, -d], [-d, d], [d, d]];
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			let r = 0, g = 0, b = 0, a = 0;
+			for (const [sx, sy] of shifts) {
+				const j = (clamp(y + sy, 0, h - 1) * w + clamp(x + sx, 0, w - 1)) * 4;
+				const alpha = src[j + 3];
+				r += src[j] * alpha;
+				g += src[j + 1] * alpha;
+				b += src[j + 2] * alpha;
+				a += alpha;
+			}
+			const i = (y * w + x) * 4;
+			if (a > 0) {
+				data[i] = Math.round(r / a);
+				data[i + 1] = Math.round(g / a);
+				data[i + 2] = Math.round(b / a);
+			}
+			data[i + 3] = Math.round(a / 4);
+		}
+	}
+	return image;
+}
+
+/**
  * Despeckle (Photoshop) - blurs the image except along edges, so noise (speckles) disappears and outlines stay
  * sharp. An edge is a pixel whose Sobel gradient of brightness reaches the threshold; the rest is replaced by the
  * mean of its 3x3 neighbourhood. Alpha is kept.
