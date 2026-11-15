@@ -744,6 +744,15 @@ config.TOOLS = [
 				min: 1,
 				max: 100,
 			},
+			sampling: {
+				value: 'Once',
+				values: ['Once', 'Continuous'],
+			},
+			tolerance: {
+				value: 30,
+				min: 1,
+				max: 100,
+			},
 		},
 	},
 	{

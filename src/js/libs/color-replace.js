@@ -68,9 +68,12 @@ export function parse_paint_color(value) {
  * @param {number} hardness 0-100
  * @param {number} opacity 0-100
  * @param {number[]} paint [r, g, b]
+ * @param {number} [tolerance] 0-100 (default 100 = every pixel under the brush): only pixels whose colors differ from the
+ *  pixel under the center of the dab by at most this share of 255 in every channel are recolored ("Continuous" sampling)
+ * @param {number[]|null} [fixed_reference] [r, g, b] compared with instead of the pixel under the center ("Once" sampling)
  * @returns {{data: Uint8ClampedArray, width: number, height: number}}
  */
-export function recolor_dab(image, cx, cy, radius, hardness, opacity, paint) {
+export function recolor_dab(image, cx, cy, radius, hardness, opacity, paint, tolerance = 100, fixed_reference = null) {
 	if (!(radius > 0) || !Array.isArray(paint)) {
 		return image;
 	}
@@ -78,6 +81,12 @@ export function recolor_dab(image, cx, cy, radius, hardness, opacity, paint) {
 	const strength = Math.min(100, Math.max(0, Number(opacity) || 0)) / 100;
 	const w = image.width;
 	const h = image.height;
+	const limit = Math.min(100, Math.max(0, Number.isFinite(Number(tolerance)) ? Number(tolerance) : 100)) / 100 * 255;
+	//the color the pixels are compared with: the one under the center of the dab
+	const sx = Math.min(w - 1, Math.max(0, Math.floor(cx)));
+	const sy = Math.min(h - 1, Math.max(0, Math.floor(cy)));
+	const ref = (sy * w + sx) * 4;
+	const reference = Array.isArray(fixed_reference) && fixed_reference.length == 3 ? fixed_reference : [image.data[ref], image.data[ref + 1], image.data[ref + 2]];
 	const x0 = Math.max(0, Math.floor(cx - radius));
 	const x1 = Math.min(w - 1, Math.ceil(cx + radius));
 	const y0 = Math.max(0, Math.floor(cy - radius));
@@ -92,6 +101,10 @@ export function recolor_dab(image, cx, cy, radius, hardness, opacity, paint) {
 			const weight = fall * strength;
 			const i = (y * w + x) * 4;
 			if (weight <= 0 || image.data[i + 3] == 0) {
+				continue;
+			}
+			if (limit < 255 && (Math.abs(image.data[i] - reference[0]) > limit || Math.abs(image.data[i + 1] - reference[1]) > limit
+				|| Math.abs(image.data[i + 2] - reference[2]) > limit)) {
 				continue;
 			}
 			const blended = color_blend([image.data[i], image.data[i + 1], image.data[i + 2]], paint);

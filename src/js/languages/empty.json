@@ -1719,5 +1719,8 @@
     "Color Replacement (paints the foreground color and keeps light and shade)": "",
     "Color Replacement": "",
     "Pattern Stamp (paints with the pattern from Edit > Define Pattern)": "",
-    "Pattern Stamp": ""
+    "Pattern Stamp": "",
+    "Continuous": "",
+    "Once": "",
+    "Sampling": ""
 }

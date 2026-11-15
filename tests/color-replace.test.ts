@@ -83,6 +83,51 @@ describe('recolor_dab', () => {
 	});
 });
 
+describe('recolor_dab tolerance', () => {
+	//left half dark gray, right half light gray
+	const two_tones = () => {
+		const img = image(10, 1, [60, 60, 60, 255]);
+		for (let x = 5; x < 10; x++) {
+			img.data.set([200, 200, 200, 255], x * 4);
+		}
+		return img;
+	};
+
+	it('changes only colors close to the one under the center', () => {
+		const img = two_tones();
+		recolor_dab(img, 4.5, 0.5, 6, 100, 100, [255, 0, 0], 20);
+		expect(img.data[0] - img.data[1]).toBeGreaterThan(0);
+		expect(img.data[9 * 4]).toBe(img.data[9 * 4 + 1]);
+	});
+
+	it('a high tolerance and the default change both tones, and a bad number counts as 100', () => {
+		for (const args of [[100], [], [NaN as any]]) {
+			const img = two_tones();
+			recolor_dab(img, 4.5, 0.5, 6, 100, 100, [255, 0, 0], ...(args as [number]));
+			expect(img.data[9 * 4] - img.data[9 * 4 + 1]).toBeGreaterThan(0);
+		}
+	});
+});
+
+describe('recolor_dab with a fixed reference ("Once")', () => {
+	it('compares with the given color instead of the pixel under the center', () => {
+		const img = image(10, 1, [60, 60, 60, 255]);
+		for (let x = 5; x < 10; x++) {
+			img.data.set([200, 200, 200, 255], x * 4);
+		}
+		//the center is on the light half, but the reference is the dark one
+		recolor_dab(img, 7.5, 0.5, 8, 100, 100, [255, 0, 0], 20, [60, 60, 60]);
+		expect(img.data[0] - img.data[1]).toBeGreaterThan(0);
+		expect(img.data[9 * 4]).toBe(img.data[9 * 4 + 1]);
+	});
+
+	it('ignores a reference that is not three numbers', () => {
+		const img = image(5, 1, [60, 60, 60, 255]);
+		recolor_dab(img, 2.5, 0.5, 4, 100, 100, [255, 0, 0], 10, [1] as any);
+		expect(img.data[8] - img.data[9]).toBeGreaterThan(0);
+	});
+});
+
 describe('new tools on vector layers', () => {
 	it('are raster tools', () => {
 		expect(is_tool_disabled('pattern_stamp', {type: 'text', is_vector: true})).toBe(true);
