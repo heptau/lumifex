@@ -220,6 +220,12 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	oil_paint() {
+		this.show_dialog('Oil Paint', [
+			{name: "radius", title: "Radius:", value: 4, range: [1, 20]},
+		], (img, params) => Filters.oilPaint(img, params));
+	}
+
 	pixelate() {
 		this.show_dialog('Pixelate', [
 			{name: "size", title: "Cell size:", value: 8, range: [2, 100]},

@@ -50,6 +50,70 @@ export function diffuse(image, params) {
 }
 
 /**
+ * Oil Paint (Kuwahara filter) - flat painted areas with sharp edges. Every pixel takes the mean color of the
+ * calmest (lowest variance of brightness) of the four square quadrants around it. Summed area tables make it
+ * cost the same for any radius. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params radius (1-20 pixels)
+ * @returns {Image_data}
+ */
+export function oilPaint(image, params) {
+	const radius = clamp(Math.round(parseFloat(params.radius) || 0), 1, 20);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const stride = w + 1;
+	//summed area tables of R, G, B, luminance and luminance squared
+	const tables = [0, 1, 2, 3, 4].map(() => new Float64Array(stride * (h + 1)));
+	for (let y = 0; y < h; y++) {
+		const row = [0, 0, 0, 0, 0];
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			const l = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+			const values = [data[i], data[i + 1], data[i + 2], l, l * l];
+			const at = (y + 1) * stride + x + 1;
+			for (let t = 0; t < 5; t++) {
+				row[t] += values[t];
+				tables[t][at] = tables[t][at - stride] + row[t];
+			}
+		}
+	}
+	const box = (t, x0, y0, x1, y1) => {
+		const table = tables[t];
+		return table[(y1 + 1) * stride + x1 + 1] - table[y0 * stride + x1 + 1] - table[(y1 + 1) * stride + x0] + table[y0 * stride + x0];
+	};
+	const out = new Uint8ClampedArray(data.length);
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			let best = Infinity;
+			let best_box = null;
+			for (let q = 0; q < 4; q++) {
+				const x0 = Math.max(0, (q & 1) ? x : x - radius);
+				const x1 = Math.min(w - 1, (q & 1) ? x + radius : x);
+				const y0 = Math.max(0, (q & 2) ? y : y - radius);
+				const y1 = Math.min(h - 1, (q & 2) ? y + radius : y);
+				const n = (x1 - x0 + 1) * (y1 - y0 + 1);
+				const mean = box(3, x0, y0, x1, y1) / n;
+				const variance = box(4, x0, y0, x1, y1) / n - mean * mean;
+				if (variance < best) {
+					best = variance;
+					best_box = [x0, y0, x1, y1, n];
+				}
+			}
+			const i = (y * w + x) * 4;
+			const [x0, y0, x1, y1, n] = best_box;
+			out[i] = box(0, x0, y0, x1, y1) / n;
+			out[i + 1] = box(1, x0, y0, x1, y1) / n;
+			out[i + 2] = box(2, x0, y0, x1, y1) / n;
+			out[i + 3] = data[i + 3];
+		}
+	}
+	data.set(out);
+	return image;
+}
+
+/**
  * Pixelate (Mosaic) - replaces each block with its average color
  *
  * @param {Image_data} image

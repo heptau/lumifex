@@ -1852,6 +1852,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Oil Paint',
+						ellipsis: true,
+						target: 'image/adjustments.oil_paint'
+					},
+					{
 						name: 'Emboss',
 						target: 'effects/emboss.emboss'
 					},

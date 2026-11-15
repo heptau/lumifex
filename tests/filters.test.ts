@@ -1,4 +1,4 @@
-import { diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -177,5 +177,22 @@ describe('Smart blur', () => {
 				expect(Math.abs(a.data[i + 1] / 30 - y)).toBeLessThanOrEqual(2);
 			}
 		}
+	});
+
+	it('oil paint flattens noise, keeps a sharp edge and the alpha', () => {
+		//left half dark, right half bright, with a little noise
+		const make = () => image(20, 10, (x, y) => {
+			const v = (x < 10 ? 40 : 200) + ((x + y) % 2 ? 6 : -6);
+			return [v, v, v, 100 + x];
+		});
+		const out = oilPaint(make(), { radius: 3 });
+		const px = (x: number, y: number) => out.data[(y * 20 + x) * 4];
+		//noise is gone inside the areas
+		expect(Math.abs(px(3, 5) - px(4, 5))).toBeLessThanOrEqual(1);
+		expect(Math.abs(px(15, 5) - px(16, 5))).toBeLessThanOrEqual(1);
+		//the edge stays sharp: right next to it the colors are still the two original areas
+		expect(px(9, 5)).toBeLessThan(60);
+		expect(px(10, 5)).toBeGreaterThan(180);
+		expect(out.data[(5 * 20 + 7) * 4 + 3]).toBe(107);
 	});
 });

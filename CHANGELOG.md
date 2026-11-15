@@ -32,6 +32,7 @@ Only changes since version 5.0.0 are listed here.
 - Layer style Satin (Effects > Layer Style): soft silky shading inside an image layer with angle, distance, radius, opacity and color.
 - Effects > Distort > Polar Coordinates (Photoshop): bends the image around its center (Rectangular to Polar) or unrolls it back (Polar to Rectangular).
 - Effects > Stylize > Diffuse (Photoshop): every pixel is replaced by one from a random place nearby (amount, seed), like frosted glass; the same input always gives the same result.
+- Effects > Stylize > Oil Paint (Kuwahara filter): flat painted areas with sharp edges; the radius does not change the speed.
 - View > Guides > New Guide Layout…: guides for margins, columns and rows with a gutter, as in Photoshop (`libs/guide-layout.js`).
 - Select > Channel as Selection…: the red, green or blue channel, or the transparency, of the active layer becomes the selection (with Invert and a live preview).
 - Edit > Save Brush Preset… / Load Brush Preset…: the options of the Brush (size, hardness, spacing, scatter, jitter, symmetry…) can be saved under a name and chosen later; the Load dialog also deletes a preset (`libs/brush-presets.js`, `modules/edit/brush_presets.js`).
