@@ -115,3 +115,43 @@ describe('seam insertion', () => {
 		expect(content_aware_scale(img, 1000, 1000)?.width).toBe(15);
 	});
 });
+
+describe('protected pixels', () => {
+	const flat = () => {
+		const img = image(10, 4, () => [0, 0, 0, 255]) as any;
+		//the first three columns are protected
+		img.protect = new Uint8ClampedArray(40);
+		for (let y = 0; y < 4; y++) {
+			for (let x = 0; x < 3; x++) {
+				img.protect[y * 10 + x] = 255;
+			}
+		}
+		return img;
+	};
+	const total = (protect: Uint8ClampedArray) => Array.from(protect).reduce((a, b) => a + b, 0);
+
+	it('seams avoid protected pixels while carving and the protection is carved along', () => {
+		const out = carve_width(flat(), 5) as any;
+		expect(out.width).toBe(5);
+		expect(out.protect.length).toBe(20);
+		expect(total(out.protect)).toBe(3 * 4 * 255);
+	});
+
+	it('the protection grows along with inserted seams and follows a transpose', () => {
+		const out = enlarge_width(flat(), 3) as any;
+		expect(out.width).toBe(13);
+		expect(out.protect.length).toBe(52);
+		const turned = transpose(flat()) as any;
+		expect(turned.width).toBe(4);
+		expect(turned.protect[2 * 4 + 1]).toBe(255);
+		expect(turned.protect[5 * 4 + 1]).toBe(0);
+	});
+
+	it('works the same without protection and does not change the input protection', () => {
+		const img = flat();
+		const copy = Array.from(img.protect);
+		content_aware_scale(img, 6, 3);
+		expect(Array.from(img.protect)).toEqual(copy);
+		expect((carve_width(image(4, 2, () => [1, 2, 3, 255]), 1) as any).protect).toBeNull();
+	});
+});

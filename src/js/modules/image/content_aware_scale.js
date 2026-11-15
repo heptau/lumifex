@@ -1,19 +1,22 @@
 import app from './../../app.js';
 import config from './../../config.js';
 import Base_layers_class from './../../core/base-layers.js';
+import Edit_selection_class from './../edit/selection.js';
 import Dialog_class from './../../libs/popup.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { content_aware_scale, MAX_CARVE_PIXELS } from './../../libs/seam-carving.js';
+import { sample_mask_for_layer } from './../../libs/selection-mask.js';
 import { t } from '../tools/translate.js';
 
 /**
- * Image > Content-Aware Scale - makes the active image layer narrower and / or lower by removing the seams with the
+ * Image > Content-Aware Scale - resizes the active image layer by removing the seams with the (a selection is protected)
  * least detail (or adding seams) instead of squeezing / stretching everything (see libs/seam-carving.js), one undo step
  */
 class Image_content_aware_scale_class {
 
 	constructor() {
 		this.Base_layers = new Base_layers_class();
+		this.Edit_selection = new Edit_selection_class();
 	}
 
 	scale() {
@@ -35,6 +38,7 @@ class Image_content_aware_scale_class {
 			params: [
 				{name: 'width_percent', title: 'Width (%):', value: 80, range: [10, 200]},
 				{name: 'height_percent', title: 'Height (%):', value: 100, range: [10, 200]},
+				{name: 'protect', title: 'Protect selection:', value: true},
 			],
 			on_finish: (params) => this.scale_handler(layer.id, params),
 		});
@@ -42,7 +46,7 @@ class Image_content_aware_scale_class {
 
 	/**
 	 * @param {number} layer_id
-	 * @param {{width_percent: number, height_percent: number}} params
+	 * @param {{width_percent: number, height_percent: number, protect?: boolean}} params
 	 */
 	scale_handler(layer_id, params) {
 		const layer = this.Base_layers.get_layer(layer_id);
@@ -56,6 +60,11 @@ class Image_content_aware_scale_class {
 		}
 		const canvas = this.Base_layers.convert_layer_to_canvas(layer_id, true);
 		const source = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+		//the selection (also a soft or shaped one) is the area the seams must avoid
+		const selection = params.protect === false ? null : this.Edit_selection.get_mask();
+		if (selection != null) {
+			source.protect = sample_mask_for_layer(selection.mask, layer, source.width, source.height);
+		}
 		const carved = content_aware_scale(source, canvas.width * width_share, canvas.height * height_share);
 		if (carved == null) {
 			alertify.error(t('The image is too large for Content-Aware Scale.'));

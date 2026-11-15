@@ -3,8 +3,14 @@
  * the connected path of pixels (a seam) that carries the least detail, so faces and edges survive while flat areas
  * shrink. Pure functions on {data, width, height} (RGBA), no DOM.
  *
- * @typedef {{data: Uint8ClampedArray, width: number, height: number}} Image_data
+ * An optional `protect` (one byte per pixel, 255 = keep) marks pixels the seams should avoid; it travels with the
+ * picture through every step.
+ *
+ * @typedef {{data: Uint8ClampedArray, width: number, height: number, protect?: Uint8ClampedArray|null}} Image_data
  */
+
+/** The energy a fully protected pixel gets on top of its own (far above anything a picture can have) */
+export const PROTECT_ENERGY = 100000;
 
 /** The most pixels that are carved (the cost grows with pixels x removed seams) */
 export const MAX_CARVE_PIXELS = 2000000;
@@ -15,9 +21,10 @@ export const MAX_CARVE_PIXELS = 2000000;
  * @param {Uint8ClampedArray} data RGBA
  * @param {number} width the current width of the rows in `data`
  * @param {number} height
+ * @param {Uint8ClampedArray|null} [protect] one byte per pixel, 255 = keep
  * @returns {Float32Array}
  */
-export function seam_energy(data, width, height) {
+export function seam_energy(data, width, height, protect = null) {
 	const energy = new Float32Array(width * height);
 	const value = (x, y, i) => {
 		const p = (y * width + x) * 4;
@@ -36,7 +43,7 @@ export function seam_energy(data, width, height) {
 				sum += Math.abs(here - value(x0, y, i)) + Math.abs(here - value(x1, y, i))
 					+ Math.abs(here - value(x, y0, i)) + Math.abs(here - value(x, y1, i));
 			}
-			energy[y * width + x] = sum;
+			energy[y * width + x] = sum + (protect ? protect[y * width + x] / 255 * PROTECT_ENERGY : 0);
 		}
 	}
 	return energy;
@@ -90,19 +97,38 @@ export function find_vertical_seam(energy, width, height) {
 }
 
 /**
+ * @param {Uint8ClampedArray} values one byte per pixel (row stride `width`)
+ * @param {number} width
+ * @param {number} height
+ * @param {Int32Array} seam
+ * @returns {Uint8ClampedArray} the same without the seam (row stride width - 1)
+ */
+function cut_seam_values(values, width, height, seam) {
+	const next = new Uint8ClampedArray((width - 1) * height);
+	for (let y = 0; y < height; y++) {
+		const row = y * width;
+		const out = y * (width - 1);
+		next.set(values.subarray(row, row + seam[y]), out);
+		next.set(values.subarray(row + seam[y] + 1, row + width), out + seam[y]);
+	}
+	return next;
+}
+
+/**
  * Removes `count` vertical seams
  *
  * @param {Image_data} image
  * @param {number} count how many columns to take away (limited so that at least one column stays)
- * @returns {Image_data} a new image, the input is not changed
+ * @returns {Image_data} a new image (with the carved `protect`), the input is not changed
  */
 export function carve_width(image, count) {
 	const remove = Math.min(Math.max(0, Math.floor(count) || 0), image.width - 1);
 	let width = image.width;
 	const height = image.height;
 	let data = new Uint8ClampedArray(image.data);
+	let protect = image.protect ? new Uint8ClampedArray(image.protect) : null;
 	for (let n = 0; n < remove; n++) {
-		const seam = find_vertical_seam(seam_energy(data, width, height), width, height);
+		const seam = find_vertical_seam(seam_energy(data, width, height, protect), width, height);
 		const next = new Uint8ClampedArray((width - 1) * height * 4);
 		for (let y = 0; y < height; y++) {
 			const cut = seam[y];
@@ -112,9 +138,12 @@ export function carve_width(image, count) {
 			next.set(data.subarray(row + (cut + 1) * 4, row + width * 4), out + cut * 4);
 		}
 		data = next;
+		if (protect) {
+			protect = cut_seam_values(protect, width, height, seam);
+		}
 		width--;
 	}
-	return {data, width, height};
+	return {data, width, height, protect};
 }
 
 /**
@@ -124,17 +153,18 @@ export function carve_width(image, count) {
  *
  * @param {Image_data} image
  * @param {number} count how many columns to add
- * @returns {Image_data} a new image, the input is not changed
+ * @returns {Image_data} a new image (with the matching `protect`), the input is not changed
  */
 export function enlarge_width(image, count) {
 	const add = Math.min(Math.max(0, Math.floor(count) || 0), image.width - 1);
 	const width = image.width;
 	const height = image.height;
 	if (add == 0) {
-		return {data: new Uint8ClampedArray(image.data), width, height};
+		return {data: new Uint8ClampedArray(image.data), width, height, protect: image.protect ? new Uint8ClampedArray(image.protect) : null};
 	}
 	let current = image.width;
 	let data = new Uint8ClampedArray(image.data);
+	let protect = image.protect ? new Uint8ClampedArray(image.protect) : null;
 	//origin[y * width + x] = the column of the original that is now at x
 	let origin = new Int32Array(width * height);
 	for (let y = 0; y < height; y++) {
@@ -145,7 +175,7 @@ export function enlarge_width(image, count) {
 	//marked[y * width + c] = the original column c is on a seam
 	const marked = new Uint8Array(width * height);
 	for (let n = 0; n < add; n++) {
-		const seam = find_vertical_seam(seam_energy(data, current, height), current, height);
+		const seam = find_vertical_seam(seam_energy(data, current, height, protect), current, height);
 		const next = new Uint8ClampedArray((current - 1) * height * 4);
 		const next_origin = new Int32Array((current - 1) * height);
 		for (let y = 0; y < height; y++) {
@@ -160,15 +190,25 @@ export function enlarge_width(image, count) {
 			}
 		}
 		data = next;
+		if (protect) {
+			protect = cut_seam_values(protect, current, height, seam);
+		}
 		origin = next_origin;
 		current--;
 	}
 	const result = new Uint8ClampedArray((width + add) * height * 4);
+	const result_protect = image.protect ? new Uint8ClampedArray((width + add) * height) : null;
 	for (let y = 0; y < height; y++) {
 		let out = y * (width + add) * 4;
 		for (let x = 0; x < width; x++) {
 			const from = (y * width + x) * 4;
 			result.set(image.data.subarray(from, from + 4), out);
+			if (result_protect) {
+				result_protect[out / 4] = image.protect[y * width + x];
+				if (marked[y * width + x]) {
+					result_protect[out / 4 + 1] = image.protect[y * width + x];
+				}
+			}
 			out += 4;
 			if (marked[y * width + x]) {
 				const right = (y * width + Math.min(width - 1, x + 1)) * 4;
@@ -179,7 +219,7 @@ export function enlarge_width(image, count) {
 			}
 		}
 	}
-	return {data: result, width: width + add, height};
+	return {data: result, width: width + add, height, protect: result_protect};
 }
 
 /**
@@ -190,8 +230,12 @@ export function enlarge_width(image, count) {
 export function transpose(image) {
 	const {width, height} = image;
 	const data = new Uint8ClampedArray(image.data.length);
+	const protect = image.protect ? new Uint8ClampedArray(image.protect.length) : null;
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
+			if (protect) {
+				protect[x * height + y] = image.protect[y * width + x];
+			}
 			const from = (y * width + x) * 4;
 			const to = (x * height + y) * 4;
 			data[to] = image.data[from];
@@ -200,7 +244,7 @@ export function transpose(image) {
 			data[to + 3] = image.data[from + 3];
 		}
 	}
-	return {data, width: height, height: width};
+	return {data, width: height, height: width, protect};
 }
 
 /**
