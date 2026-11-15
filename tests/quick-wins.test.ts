@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { shear, fibers, differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { spotlight, shear, fibers, differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -2807,5 +2807,25 @@ describe('shear', () => {
 		const i = (5 * 10 + 0) * 4;
 		expect(repeated.data[i]).toBe(0);
 		expect(wrapped.data[i]).toBeGreaterThan(0);
+	});
+});
+
+describe('spotlight', () => {
+	const grey = () => ({data: new Uint8ClampedArray(Array.from({length: 41 * 41}, () => [100, 100, 100, 77]).flat()), width: 41, height: 41});
+	const at = (img: {data: Uint8ClampedArray}, x: number, y: number) => img.data[(y * 41 + x) * 4];
+
+	it('lights the middle and leaves the ambient level outside the radius, alpha is kept', () => {
+		const out = spotlight(grey(), {radius: 30, intensity: 50, ambient: 30});
+		expect(at(out, 20, 20)).toBeGreaterThan(100);
+		expect(at(out, 0, 0)).toBe(30);
+		expect(out.data[3]).toBe(77);
+	});
+
+	it('moves with the position, tints with the color and ignores bad values', () => {
+		const left = spotlight(grey(), {x: 0, y: 50, radius: 20});
+		expect(at(left, 0, 20)).toBeGreaterThan(at(left, 40, 20));
+		const red = spotlight(grey(), {color: '#ff0000', ambient: 0});
+		expect(red.data[(20 * 41 + 20) * 4 + 1]).toBe(0);
+		expect(() => spotlight(grey(), {x: 'a', radius: 'b', color: 'x'})).not.toThrow();
 	});
 });

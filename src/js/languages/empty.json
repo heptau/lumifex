@@ -1663,5 +1663,11 @@
     "Detail:": "",
     "Edge weight:": "",
     "Tone weight:": "",
-    "Charcoal:": ""
+    "Charcoal:": "",
+    "Spotlight": "",
+    "Position X:": "",
+    "Position Y:": "",
+    "Intensity:": "",
+    "Ambient light:": "",
+    "Light color:": ""
 }

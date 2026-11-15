@@ -1879,6 +1879,11 @@ const menuDefinition = [
 						target: 'image/adjustments.fibers'
 					},
 					{
+						name: 'Spotlight',
+						ellipsis: true,
+						target: 'image/adjustments.spotlight'
+					},
+					{
 						name: 'Difference Clouds',
 						ellipsis: true,
 						target: 'image/adjustments.difference_clouds'

@@ -590,6 +590,17 @@ class Image_adjustments_class {
 		], (img, params) => Distort.differenceClouds(img, params));
 	}
 
+	spotlight() {
+		this.show_dialog('Spotlight', [
+			{name: "x", title: "Position X:", value: 50, range: [0, 100]},
+			{name: "y", title: "Position Y:", value: 50, range: [0, 100]},
+			{name: "radius", title: "Radius:", value: 40, range: [1, 100]},
+			{name: "intensity", title: "Intensity:", value: 50, range: [0, 100]},
+			{name: "ambient", title: "Ambient light:", value: 30, range: [0, 100]},
+			{name: "color", title: "Light color:", value: '#ffffff', type: 'color'},
+		], (img, params) => Distort.spotlight(img, params));
+	}
+
 	clouds() {
 		this.show_dialog('Clouds', [
 			{name: "scale", title: "Scale:", value: 30, range: [2, 100]},

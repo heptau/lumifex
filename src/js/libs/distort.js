@@ -349,6 +349,43 @@ export function differenceClouds(image, params) {
 }
 
 /**
+ * Spotlight (Render > Lighting Effects, one spot light) - a round light on the image: inside the radius the picture
+ * is lit (multiplied by 1 + intensity, tinted by the light color), outside it falls off smoothly to the ambient
+ * level. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params x, y (0-100 % position of the light, default 50), radius (1-100 % of the longer side,
+ *  default 40), intensity (0-100, default 50), ambient (0-100 %, how much light is left outside, default 30),
+ *  color (#rrggbb, default white)
+ * @returns {Image_data}
+ */
+export function spotlight(image, params) {
+	const w = image.width;
+	const h = image.height;
+	const cx = clamp(parseFloat(params.x ?? 50), 0, 100) / 100 * w;
+	const cy = clamp(parseFloat(params.y ?? 50), 0, 100) / 100 * h;
+	const radius = Math.max(1, clamp(parseFloat(params.radius ?? 40) || 40, 1, 100) / 100 * Math.max(w, h));
+	const intensity = clamp(parseFloat(params.intensity ?? 50), 0, 100) / 100;
+	const ambient = clamp(parseFloat(params.ambient ?? 30), 0, 100) / 100;
+	const color = parseHex(params.color || '#ffffff').map((v) => v / 255);
+	const data = image.data;
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy) / radius;
+			//1 in the middle, 0 at the radius and beyond (smooth step)
+			const t = clamp(1 - d, 0, 1);
+			const spot = t * t * (3 - 2 * t);
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				const light = ambient + (1 - ambient) * spot * (1 + intensity) * color[c];
+				data[i + c] = clamp(Math.round(data[i + c] * light), 0, 255);
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Lens Flare - adds a bright glow and a few soft rings ("ghosts") along the line through the image center,
  * like light reflected in camera lenses. The effect is added to the image (additive blending).
  *
