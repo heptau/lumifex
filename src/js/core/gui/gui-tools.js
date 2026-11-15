@@ -349,6 +349,19 @@ class GUI_tools_class {
 	}
 
 	/**
+	 * Chooses a shape; when another shape is active, its border and fill follow the user to the new one
+	 *
+	 * @param {string} key a shape tool
+	 */
+	switch_shape(key) {
+		const next = config.TOOLS.find((tool) => tool.name == key);
+		if (next && this.is_shape_tool(this.active_tool) && this.active_tool != key) {
+			carry_shape_options(this.action_data().attributes, next.attributes);
+		}
+		return this.activate_tool(key);
+	}
+
+	/**
 	 * The "Shape" picker at the start of the options bar of every shape: choose another shape without going back to
 	 * the gallery, and a button that opens the gallery with previews.
 	 *
@@ -371,14 +384,7 @@ class GUI_tools_class {
 			option.selected = shape.key == this.active_tool;
 			select.appendChild(option);
 		});
-		select.addEventListener('change', () => {
-			//the border and fill follow the user to the next shape
-			const next = config.TOOLS.find((tool) => tool.name == select.value);
-			if (next) {
-				carry_shape_options(this.action_data().attributes, next.attributes);
-			}
-			this.activate_tool(select.value);
-		});
+		select.addEventListener('change', () => this.switch_shape(select.value));
 		const gallery = document.createElement('button');
 		gallery.type = 'button';
 		gallery.className = 'trn';

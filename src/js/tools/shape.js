@@ -74,7 +74,7 @@ class Shape_class extends Base_tools_class {
 				for (let i = 0; i < targets.length; i++) {
 					targets[i].addEventListener('click', (event) => {
 						//we have click
-						this.GUI_tools.activate_tool(event.currentTarget.dataset.key);
+						this.GUI_tools.switch_shape(event.currentTarget.dataset.key);
 						this.POP.hide();
 					});
 				}
