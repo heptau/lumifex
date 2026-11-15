@@ -807,6 +807,51 @@ export function stamp(image, params) {
 }
 
 /**
+ * Neon Glow (Photoshop, simplified) - the picture is darkened and its edges glow in a color: the Sobel edges of the
+ * brightness are blurred into a halo and added (screen) over the darkened image. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params size (1-20 px, radius of the glow, default 5), brightness (0-100 %, strength of the glow,
+ *  default 60), darken (0-100 %, how much the original is darkened, default 50), color (#rrggbb, default cyan)
+ * @returns {Image_data}
+ */
+export function neonGlow(image, params) {
+	const radius = clamp(Math.round(parseFloat(params.size ?? 5)) || 1, 1, 20);
+	const strength = clamp(parseFloat(params.brightness ?? 60), 0, 100) / 100 * 3;
+	const keep = 1 - clamp(parseFloat(params.darken ?? 50), 0, 100) / 100;
+	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(params.color || '');
+	const glow = m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0, 255, 255];
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const luma = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		luma[p] = data[p * 4] * 0.299 + data[p * 4 + 1] * 0.587 + data[p * 4 + 2] * 0.114;
+	}
+	const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	const edges = {width: w, height: h, data: new Uint8ClampedArray(w * h * 4)};
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
+			const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
+			const e = clamp(Math.sqrt(gx * gx + gy * gy) / 4, 0, 255);
+			const i = (y * w + x) * 4;
+			edges.data[i] = edges.data[i + 1] = edges.data[i + 2] = e;
+		}
+	}
+	const halo = box_blur(edges, radius);
+	for (let p = 0; p < w * h; p++) {
+		const amount = clamp(halo[p * 4] / 255 * strength, 0, 1);
+		for (let c = 0; c < 3; c++) {
+			const base = data[p * 4 + c] * keep;
+			const light = glow[c] * amount;
+			data[p * 4 + c] = Math.round(255 - (255 - base) * (255 - light) / 255);
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

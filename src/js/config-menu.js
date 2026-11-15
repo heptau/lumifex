@@ -1971,6 +1971,11 @@ const menuDefinition = [
 						target: 'image/adjustments.stamp'
 					},
 					{
+						name: 'Neon Glow',
+						ellipsis: true,
+						target: 'image/adjustments.neon_glow'
+					},
+					{
 						name: 'Cutout',
 						ellipsis: true,
 						target: 'image/adjustments.cutout'

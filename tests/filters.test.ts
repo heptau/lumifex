@@ -1,4 +1,4 @@
-import { stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -499,5 +499,24 @@ describe('stamp', () => {
 		const mid = image(2, 1, () => [128, 128, 128, 255]);
 		expect(stamp(image(2, 1, () => [128, 128, 128, 255]), {balance: 10, smoothness: 0, ink: 'red'}).data[0]).toBe(255);
 		expect(stamp(mid, {balance: 90, smoothness: 0, ink: 'red'}).data[0]).toBe(0);
+	});
+});
+
+describe('neonGlow', () => {
+	const make = () => image(11, 3, (x) => (x < 5 ? [0, 0, 0, 70] : [255, 255, 255, 70]));
+
+	it('glows in the chosen color near an edge, keeps alpha, a flat picture only darkens', () => {
+		const out = neonGlow(make(), {size: 2, brightness: 100, darken: 100, color: '#ff0000'});
+		expect(out.data[5 * 4]).toBeGreaterThan(100);
+		expect(out.data[5 * 4 + 1]).toBe(0);
+		expect(out.data[3]).toBe(70);
+		const flat = neonGlow(image(5, 5, () => [200, 100, 50, 255]), {size: 2, brightness: 100, darken: 50, color: '#ffffff'});
+		expect(Array.from(flat.data.slice(0, 3))).toEqual([100, 50, 25]);
+	});
+
+	it('an invalid color falls back to cyan', () => {
+		const out = neonGlow(make(), {size: 2, brightness: 100, darken: 100, color: 'nope'});
+		expect(out.data[5 * 4]).toBe(0);
+		expect(out.data[5 * 4 + 2]).toBeGreaterThan(100);
 	});
 });

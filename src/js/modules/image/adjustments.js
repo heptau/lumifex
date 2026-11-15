@@ -106,6 +106,15 @@ class Image_adjustments_class {
 		], (img, params) => Filters.stamp(img, params));
 	}
 
+	neon_glow() {
+		this.show_dialog('Neon Glow', [
+			{name: "size", title: "Glow size:", value: 5, range: [1, 20]},
+			{name: "brightness", title: "Glow brightness:", value: 60, range: [0, 100]},
+			{name: "darken", title: "Darken:", value: 50, range: [0, 100]},
+			{name: "color", title: "Glow color:", value: '#00ffff', type: 'color'},
+		], (img, params) => Filters.neonGlow(img, params));
+	}
+
 	cutout() {
 		this.show_dialog('Cutout', [
 			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},
