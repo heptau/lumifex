@@ -389,6 +389,13 @@ class Image_adjustments_class {
 		], (img, params) => Filters.median(img, params.radius));
 	}
 
+	facet() {
+		this.show_dialog('Facet', [
+			{name: "radius", title: "Radius:", value: 1, range: [1, 5]},
+			{name: "passes", title: "Passes:", value: 3, range: [1, 5]},
+		], (img, params) => Filters.facet(img, params));
+	}
+
 	channel_mixer() {
 		this.show_dialog('Channel Mixer', [
 			{name: "r_r", title: "Red from red:", value: 100, range: [-200, 200]},

@@ -899,6 +899,22 @@ export function basRelief(image, params) {
 }
 
 /**
+ * Facet (Photoshop, Pixelate, simplified) - clumps similar colors into flat, slightly angular patches by applying a
+ * median filter repeatedly. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params radius (1-5 px of every pass, default 1), passes (1-5, default 3)
+ * @returns {Image_data}
+ */
+export function facet(image, params) {
+	const passes = clamp(Math.round(parseFloat(params.passes ?? 3)) || 1, 1, 5);
+	for (let pass = 0; pass < passes; pass++) {
+		median(image, params.radius ?? 1);
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

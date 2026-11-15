@@ -1,4 +1,4 @@
-import { basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -543,5 +543,22 @@ describe('basRelief', () => {
 			expect(out.data[i]).toBeGreaterThanOrEqual(32);
 			expect(out.data[i]).toBeLessThanOrEqual(255);
 		}
+	});
+});
+
+describe('facet', () => {
+	it('removes a single odd pixel but keeps a large flat edge, and alpha', () => {
+		const dot = image(7, 7, (x, y) => (x == 3 && y == 3 ? [255, 255, 255, 50] : [0, 0, 0, 50]));
+		const out = facet(dot, {radius: 1, passes: 1});
+		expect(out.data[(3 * 7 + 3) * 4]).toBe(0);
+		expect(out.data[3]).toBe(50);
+		const edge = facet(image(8, 8, (x) => (x < 4 ? [0, 0, 0, 255] : [255, 255, 255, 255])), {radius: 1, passes: 3});
+		expect(edge.data[(4 * 8 + 1) * 4]).toBe(0);
+		expect(edge.data[(4 * 8 + 6) * 4]).toBe(255);
+	});
+
+	it('more passes are not weaker: a bad number falls back to the default', () => {
+		const out = facet(image(3, 3, () => [10, 20, 30, 255]), {radius: 'x', passes: 'y'});
+		expect(Array.from(out.data.slice(0, 3))).toEqual([10, 20, 30]);
 	});
 });

@@ -1832,6 +1832,11 @@ const menuDefinition = [
 						target: 'image/adjustments.pixelate'
 					},
 					{
+						name: 'Facet',
+						ellipsis: true,
+						target: 'image/adjustments.facet'
+					},
+					{
 						name: 'Pointillize',
 						ellipsis: true,
 						target: 'image/adjustments.pointillize'
