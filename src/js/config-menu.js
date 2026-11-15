@@ -886,6 +886,11 @@ const menuDefinition = [
 					{ name: 'Motion Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'motion_blur' },
 					{ name: 'Smart Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'smart_blur' },
 					{ name: 'Surface Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'surface_blur' },
+					{
+						name: 'Despeckle',
+						ellipsis: true,
+						target: 'image/adjustments.despeckle'
+					},
 					{ name: 'Median', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'median' },
 					{ name: 'Pixelate', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'pixelate' },
 					{ name: 'Emboss', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'emboss' },

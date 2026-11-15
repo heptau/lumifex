@@ -1637,5 +1637,8 @@
     "Weight 9:": "",
     "Pointillize": "",
     "Background:": "",
-    "Difference Clouds": ""
+    "Difference Clouds": "",
+    "Despeckle": "",
+    "Edge threshold:": "",
+    "Passes:": ""
 }

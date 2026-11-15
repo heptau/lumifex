@@ -1,4 +1,4 @@
-import { customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -295,5 +295,20 @@ describe('customKernel', () => {
 
 	it('survives garbage parameters', () => {
 		expect(() => customKernel(make(), {k4: 'x', scale: 0, offset: 'y'})).not.toThrow();
+	});
+});
+
+describe('despeckle', () => {
+	it('removes a lone speckle on a flat area but keeps a sharp edge', () => {
+		const speck = image(7, 7, (x, y) => (x == 3 && y == 3 ? [90, 90, 90, 255] : [100, 100, 100, 255]));
+		expect(despeckle(speck, {threshold: 100}).data[(3 * 7 + 3) * 4]).toBeGreaterThan(90);
+		const edge = () => image(8, 3, (x) => (x < 4 ? [0, 0, 0, 255] : [255, 255, 255, 255]));
+		const out = despeckle(edge(), {threshold: 100});
+		expect(Array.from(out.data)).toEqual(Array.from(edge().data));
+	});
+
+	it('keeps alpha and survives bad parameters', () => {
+		const img = despeckle(image(4, 4, () => [10, 20, 30, 77]), {threshold: 'x', passes: 99});
+		expect(img.data[3]).toBe(77);
 	});
 });

@@ -227,6 +227,13 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	despeckle() {
+		this.show_dialog('Despeckle', [
+			{name: "threshold", title: "Edge threshold:", value: 100, range: [0, 1000]},
+			{name: "passes", title: "Passes:", value: 1, range: [1, 5]},
+		], (img, params) => Filters.despeckle(img, params));
+	}
+
 	custom_kernel() {
 		const names = ['k0', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8'];
 		const params = [{heading: 'Kernel'}];

@@ -50,6 +50,52 @@ export function diffuse(image, params) {
 }
 
 /**
+ * Despeckle (Photoshop) - blurs the image except along edges, so noise (speckles) disappears and outlines stay
+ * sharp. An edge is a pixel whose Sobel gradient of brightness reaches the threshold; the rest is replaced by the
+ * mean of its 3x3 neighbourhood. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params threshold (0-1000, default 100; higher keeps fewer edges), passes (1-5, repeats the blur)
+ * @returns {Image_data}
+ */
+export function despeckle(image, params) {
+	const threshold = clamp(parseFloat(params.threshold ?? 100), 0, 1000);
+	const passes = clamp(Math.round(parseFloat(params.passes ?? 1)) || 1, 1, 5);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const luma = new Float32Array(w * h);
+	for (let pass = 0; pass < passes; pass++) {
+		const src = new Uint8ClampedArray(data);
+		for (let p = 0; p < w * h; p++) {
+			luma[p] = src[p * 4] * 0.299 + src[p * 4 + 1] * 0.587 + src[p * 4 + 2] * 0.114;
+		}
+		const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
+				const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
+				if (Math.sqrt(gx * gx + gy * gy) >= threshold) {
+					continue;
+				}
+				const i = (y * w + x) * 4;
+				for (let c = 0; c < 3; c++) {
+					let sum = 0;
+					for (let ky = -1; ky <= 1; ky++) {
+						const yy = clamp(y + ky, 0, h - 1);
+						for (let kx = -1; kx <= 1; kx++) {
+							sum += src[(yy * w + clamp(x + kx, 0, w - 1)) * 4 + c];
+						}
+					}
+					data[i + c] = Math.round(sum / 9);
+				}
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Custom (Photoshop, 3x3 kernel) - every pixel becomes the weighted sum of its neighbourhood divided by the scale
  * plus the offset. Edges repeat the border pixels, alpha is kept.
  *
