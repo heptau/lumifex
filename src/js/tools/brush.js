@@ -7,7 +7,7 @@ import { stroke_scale, is_stretched } from './../libs/stroke-scale.js';
 import { load_stored_tip } from './../libs/brush-tip.js';
 import { symmetry_transforms } from './../libs/symmetry.js';
 import { stamps_along } from './../libs/brush-tip.js';
-import { has_dynamics, apply_dynamics } from './../libs/brush-dynamics.js';
+import { has_dynamics, has_flow, flow_of, apply_dynamics } from './../libs/brush-dynamics.js';
 import { soft_blur_radius } from './../libs/brush-hardness.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
@@ -440,7 +440,8 @@ class Brush_class extends Base_tools_class {
 	render_tip_strokes(ctx, data, params, tip) {
 		const spacing = Math.max(1, params.size * (parseFloat(params.spacing) || 25) / 100);
 		const longest = tip ? Math.max(tip.width, tip.height) : 1;
-		const base_alpha = ctx.globalAlpha;
+		//every stamp carries the flow, so the overlaps of stamps build up
+		const base_alpha = ctx.globalAlpha * flow_of(params);
 		for (let k = 0; k < data.length; k++) {
 			const stamps = stamps_along(data[k], spacing).map((stamp) => {
 				return {x: stamp.x, y: stamp.y, size: params.pressure == true ? stamp.size : params.size};
@@ -518,8 +519,8 @@ class Brush_class extends Base_tools_class {
 	}
 
 	render_strokes(ctx, data, params, size) {
-		if (params.tip_data || has_dynamics(params)) {
-			//custom brush tip and / or dynamics - until the tip is loaded nothing is drawn
+		if (params.tip_data || has_dynamics(params) || has_flow(params)) {
+			//custom brush tip, dynamics and / or a flow below 100 % - until the tip is loaded nothing is drawn
 			let tip = null;
 			if (params.tip_data) {
 				tip = this.get_tip_canvas(params.tip_data, ctx.fillStyle);

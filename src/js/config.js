@@ -237,6 +237,11 @@ config.TOOLS = [
 				min: 0,
 				max: 100,
 			},
+			flow: {
+				value: 100,
+				min: 1,
+				max: 100,
+			},
 			tip: {
 				value: 'Round',
 				values: ['Round', 'Custom'],

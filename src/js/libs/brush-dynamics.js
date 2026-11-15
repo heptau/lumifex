@@ -41,6 +41,30 @@ export function has_dynamics(params) {
 }
 
 /**
+ * Flow (Photoshop): how much paint a single stamp puts down. Below 100 % the stroke is made of stamps whose overlaps
+ * build up, so a slow drag over one place gets darker, unlike one opacity for the whole stroke.
+ *
+ * @param {object} params brush settings (the number may come as a string or {value}; a layer made before Flow existed has none)
+ * @returns {number} 0.01 - 1, 1 for a missing or invalid value
+ */
+export function flow_of(params) {
+	let value = params ? params.flow : undefined;
+	if (value && value.value !== undefined) {
+		value = value.value;
+	}
+	const number = parseFloat(value);
+	return isNaN(number) ? 1 : Math.min(100, Math.max(1, number)) / 100;
+}
+
+/**
+ * @param {object} params
+ * @returns {boolean} the stroke must be drawn as stamps (a flow below 100 %), not as one line
+ */
+export function has_flow(params) {
+	return flow_of(params) < 1;
+}
+
+/**
  * Number between 0 and 1 that depends only on the two numbers (the same input always gives the same output).
  *
  * @param {number} a for example the number of the stroke

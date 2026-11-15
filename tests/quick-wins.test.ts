@@ -400,7 +400,7 @@ import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
 import { symmetry_transforms, symmetric_points } from '../src/js/libs/symmetry.js';
 import { fit_tip_size, tip_mask, tip_has_paint, stamps_along, clean_stored_tip, load_stored_tip, save_stored_tip } from '../src/js/libs/brush-tip.js';
-import { dynamics_settings, has_dynamics, noise, apply_dynamics } from '../src/js/libs/brush-dynamics.js';
+import { dynamics_settings, has_dynamics, noise, apply_dynamics, flow_of, has_flow } from '../src/js/libs/brush-dynamics.js';
 import { transform_mask } from '../src/js/libs/selection-mask.js';
 import { warp_settings, warp_text } from '../src/js/libs/text-warp.js';
 import { normalize_range, is_default as blend_default, range_table, apply_blend_if, range_from_settings, settings_from_range } from '../src/js/libs/blend-if.js';
@@ -668,6 +668,20 @@ describe('brush dynamics', () => {
 		expect(has_dynamics({ scatter: 10 })).toBe(true);
 		expect(has_dynamics({ follow_direction: { value: true } })).toBe(true);
 		expect(dynamics_settings({ scatter: 9999, size_jitter: -5, angle_jitter: 'x' })).toMatchObject({ scatter: 300, size_jitter: 0, angle_jitter: 0 });
+	});
+
+	it('flow is 1-100 %, 100 for anything missing or invalid, and below 100 the stroke is drawn as stamps', () => {
+		expect(flow_of({})).toBe(1);
+		expect(flow_of(undefined as any)).toBe(1);
+		expect(flow_of({ flow: 40 })).toBe(0.4);
+		expect(flow_of({ flow: '25' })).toBe(0.25);
+		expect(flow_of({ flow: { value: 60 } })).toBe(0.6);
+		expect(flow_of({ flow: 0 })).toBe(0.01);
+		expect(flow_of({ flow: 500 })).toBe(1);
+		expect(flow_of({ flow: 'x' })).toBe(1);
+		expect(has_flow({ flow: 99 })).toBe(true);
+		expect(has_flow({ flow: 100 })).toBe(false);
+		expect(has_flow({})).toBe(false);
 	});
 
 	it('noise is stable, in range and different for different inputs', () => {
