@@ -397,6 +397,55 @@ export function ripple(image, params) {
 	});
 }
 
+/** The styles of Zigzag */
+export const ZIGZAG_STYLES = ['Around Center', 'Out From Center', 'Pond Ripples'];
+
+/**
+ * Zigzag (Photoshop) - rings of waves around the center. Around Center turns the pixels back and forth around
+ * the center, Out From Center pushes them along the radius with a sharp zigzag, Pond Ripples with a smooth wave.
+ *
+ * @param {Image_data} image
+ * @param {object} params amount (-100..100 % of the strength), ridges (1-20 rings), style (one of ZIGZAG_STYLES)
+ * @returns {Image_data}
+ */
+export function zigzag(image, params) {
+	const amount = clamp(parseFloat(params.amount) || 0, -100, 100) / 100;
+	const ridges = clamp(Math.round(parseFloat(params.ridges ?? 5) || 5), 1, 20);
+	const style = ZIGZAG_STYLES.includes(params.style) ? params.style : ZIGZAG_STYLES[0];
+	if (amount == 0) {
+		return image;
+	}
+	const cx = image.width / 2;
+	const cy = image.height / 2;
+	const radius = Math.min(image.width, image.height) / 2;
+	return remap(image, (x, y, position) => {
+		const dx = x - cx;
+		const dy = y - cy;
+		const distance = Math.sqrt(dx * dx + dy * dy);
+		if (distance == 0 || distance >= radius) {
+			return;
+		}
+		const phase = distance / radius * ridges;
+		if (style == ZIGZAG_STYLES[0]) {
+			//the angle changes with the distance: up to a quarter turn at full strength
+			const angle = amount * Math.sin(phase * Math.PI * 2) * Math.PI / 2 * (1 - distance / radius);
+			const cos = Math.cos(angle);
+			const sin = Math.sin(angle);
+			position[0] = cx + dx * cos - dy * sin;
+			position[1] = cy + dx * sin + dy * cos;
+		}
+		else {
+			//a triangle wave for the sharp zigzag, a sine for the smooth one; at most a tenth of the radius
+			const wave = style == ZIGZAG_STYLES[1]
+				? 1 - 4 * Math.abs((phase % 1) - 0.5)
+				: Math.sin(phase * Math.PI * 2);
+			const shift = amount * wave * radius * 0.1;
+			position[0] = x + dx / distance * shift;
+			position[1] = y + dy / distance * shift;
+		}
+	});
+}
+
 /**
  * Kaleidoscope - one wedge of the image is mirrored around the center
  *

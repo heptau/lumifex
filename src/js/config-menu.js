@@ -1687,6 +1687,11 @@ const menuDefinition = [
 						target: 'image/adjustments.polar_coordinates'
 					},
 					{
+						name: 'Zigzag',
+						ellipsis: true,
+						target: 'image/adjustments.zigzag'
+					},
+					{
 						name: 'Kaleidoscope',
 						ellipsis: true,
 						target: 'image/adjustments.kaleidoscope'

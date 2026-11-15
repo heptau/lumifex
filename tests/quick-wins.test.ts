@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -446,6 +446,19 @@ describe('distort and blur filters', () => {
 		expect(bulge.data[i]).toBeLessThan(base.data[i]);
 		//the corner is outside the circle
 		expect(bulge.data[0]).toBe(base.data[0]);
+	});
+
+	it('zigzag keeps size and alpha, leaves the corners and does nothing with zero amount', () => {
+		const base = gradient_image(41, 41);
+		expect(Array.from(zigzag(gradient_image(41, 41), { amount: 0 }).data)).toEqual(Array.from(base.data));
+		for (const style of ['Around Center', 'Out From Center', 'Pond Ripples']) {
+			const out = zigzag(gradient_image(41, 41), { amount: 80, ridges: 4, style });
+			expect(out.data.length).toBe(base.data.length);
+			expect(out.data[3]).toBe(base.data[3]);
+			//the corner is outside the circle
+			expect(out.data[0]).toBe(base.data[0]);
+			expect(Array.from(out.data)).not.toEqual(Array.from(base.data));
+		}
 	});
 
 	it('polar coordinates bend the top edge into the center and unroll it back', () => {

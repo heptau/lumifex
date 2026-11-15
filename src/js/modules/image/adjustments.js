@@ -419,6 +419,14 @@ class Image_adjustments_class {
 		], (img, params) => Distort.polar_coordinates(img, params));
 	}
 
+	zigzag() {
+		this.show_dialog('Zigzag', [
+			{name: "amount", title: "Amount:", value: 50, range: [-100, 100]},
+			{name: "ridges", title: "Ridges:", value: 5, range: [1, 20]},
+			{name: "style", title: "Style:", values: Distort.ZIGZAG_STYLES, value: Distort.ZIGZAG_STYLES[0]},
+		], (img, params) => Distort.zigzag(img, params));
+	}
+
 	ripple() {
 		this.show_dialog('Ripple', [
 			{name: "amplitude", title: "Amplitude:", value: 2, range: [0, 10], step: 0.1},
