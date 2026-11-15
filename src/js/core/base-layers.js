@@ -45,7 +45,7 @@ let instance = null;
  * - mask (object|null) layer mask, see libs/layer-mask.js
  * - mask_density (0-100, default 100), mask_feather (px, default 0) how the mask works on the layer (the stored mask is not changed)
  * - mask_enabled (bool, default true)
- * - locked (bool), lock_alpha (bool, Lock Transparency), group (string|null), color_label (string|null), link_id (number|null), blend_if (object|null)
+ * - locked (bool), lock_alpha (bool, Lock Transparency), effects_hidden (bool, Layer Style > Hide All Effects), group (string|null), color_label (string|null), link_id (number|null), blend_if (object|null)
  * - order (int)
  * - composition (string)
  * - rotate (int) 0-359
@@ -1070,7 +1070,7 @@ class Base_layers_class {
 		//apply pre-filters
 		for (let i in object.filters) {
 			const filter = object.filters[i];
-			if (filter.id == this.disabled_filter_id || is_smart_entry(filter)) {
+			if (filter.id == this.disabled_filter_id || is_smart_entry(filter) || object.effects_hidden) {
 				continue; //smart filters change the picture of the layer (get_smart_source), they draw nothing around it
 			}
 
@@ -1105,7 +1105,7 @@ class Base_layers_class {
 		//apply post-filters
 		for (let i in object.filters) {
 			const filter = object.filters[i];
-			if (filter.id == this.disabled_filter_id || is_smart_entry(filter)) {
+			if (filter.id == this.disabled_filter_id || is_smart_entry(filter) || object.effects_hidden) {
 				continue; //smart filters change the picture of the layer (get_smart_source), they draw nothing around it
 			}
 			filter.name = filter.name.replace("drop-shadow", "shadow");

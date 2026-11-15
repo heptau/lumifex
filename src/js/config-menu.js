@@ -867,6 +867,10 @@ const menuDefinition = [
 				target: 'layer/style.paste'
 			},
 			{
+				name: 'Hide / Show All Effects',
+				target: 'layer/style.toggle_effects'
+			},
+			{
 				name: 'Scale Effects',
 				ellipsis: true,
 				target: 'layer/style.scale'

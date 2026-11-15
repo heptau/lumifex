@@ -49,6 +49,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Render > Spotlight (Photoshop Lighting Effects, one spot): a round light with position, radius, intensity, ambient level and color.
 - Effects > Stylize > Photocopy (Photoshop, simplified): black and white photocopy of dark areas and edges (detail, edge threshold, darkness).
 - File > Revert (Photoshop): jumps back to the oldest step of the undo history; the steps stay available as Redo.
+- Layer > Layer Style > Hide / Show All Effects (Photoshop): turns the drawing of a layer's styles off and on without losing them (one undo step).
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.
 - Effects > Render > Fibers (Photoshop): replaces the image with long vertical fibers between two colors (variance, strength, seed).
 - Effects > Noise > Despeckle (Photoshop): blurs everything except edges, so speckles vanish and outlines stay sharp (edge threshold, passes).

@@ -43,6 +43,22 @@ class Layer_style_class {
 	}
 
 	/**
+	 * Layer > Layer Style > Hide / Show All Effects - turns the drawing of the styles off and on without losing them
+	 * (smart filters are not affected); one undo step
+	 */
+	toggle_effects() {
+		const layer = config.layer;
+		const has_styles = layer && layer.filters && layer.filters.some((filter) => filter.name != 'smart');
+		if (!has_styles) {
+			alertify.warning(t('This layer has no layer style.'));
+			return;
+		}
+		return app.State.do_action(
+			new app.Actions.Update_layer_action(layer.id, {effects_hidden: !layer.effects_hidden})
+		);
+	}
+
+	/**
 	 * Layer > Layer Style > Scale Effects - multiplies the pixel sizes of the styles (offsets, radii, widths) by a
 	 * percentage, for example after the layer was resized; one undo step
 	 */
