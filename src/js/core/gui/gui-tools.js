@@ -11,6 +11,7 @@ import Helper_class from './../../libs/helpers.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Base_gui_class from '../base-gui.js';
+import { pick_shape, is_shape_module, sort_shapes, LAST_SHAPE_KEY } from './../../libs/shape-tools.js';
 
 //a double click on these tools in the toolbar runs a command (Photoshop: Hand = Fit on Screen, Zoom = 100 %)
 const DOUBLE_CLICK_TARGETS = {hand: 'view/zoom.auto', zoom: 'view/zoom.original'};
@@ -288,6 +289,99 @@ class GUI_tools_class {
 	}
 
 	/**
+	 * @returns {{key: string, title: string}[]} the shape tools (rectangle, ellipse, star...), sorted by title
+	 */
+	get_shape_tools() {
+		const list = [];
+		for (const key in this.tools_modules) {
+			const module = this.tools_modules[key];
+			if (is_shape_module(module.full_key)) {
+				list.push({key: module.name || key, title: module.title || key});
+			}
+		}
+		return sort_shapes(list);
+	}
+
+	/**
+	 * @param {string} key a tool
+	 * @returns {boolean} the tool is one of the shapes
+	 */
+	is_shape_tool(key) {
+		return this.get_shape_tools().some((shape) => shape.key == key);
+	}
+
+	/**
+	 * @returns {string} the shape that the Shape button activates (the last used one, the rectangle at first)
+	 */
+	get_last_shape() {
+		let stored = this.last_shape;
+		if (stored === undefined) {
+			try {
+				stored = localStorage.getItem(LAST_SHAPE_KEY);
+			}
+			catch {
+				stored = null;
+			}
+		}
+		return pick_shape(stored, this.get_shape_tools().map((shape) => shape.key));
+	}
+
+	/**
+	 * The Shape button stays pressed while any of the shapes is the active tool, and the shape is remembered
+	 */
+	sync_shape_button() {
+		const button = document.querySelector('#tools_container .shape');
+		if (!button) {
+			return;
+		}
+		const on = this.is_shape_tool(this.active_tool) || this.active_tool == 'shape';
+		button.classList.toggle('active', on);
+		button.setAttribute('aria-checked', on ? 'true' : 'false');
+		if (this.is_shape_tool(this.active_tool)) {
+			this.last_shape = this.active_tool;
+			try {
+				localStorage.setItem(LAST_SHAPE_KEY, this.active_tool);
+			}
+			catch {
+				//storage can be blocked, the shape is still remembered for the session
+			}
+		}
+	}
+
+	/**
+	 * The "Shape" picker at the start of the options bar of every shape: choose another shape without going back to
+	 * the gallery, and a button that opens the gallery with previews.
+	 *
+	 * @param {HTMLElement} container the options bar
+	 */
+	render_shape_picker(container) {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'item shape_picker';
+		const label = document.createElement('label');
+		label.className = 'trn';
+		label.id = 'attribute_label_shape_picker';
+		label.textContent = `${t('Shape')}:`;
+		const select = document.createElement('select');
+		select.id = 'shape_picker';
+		select.setAttribute('aria-labelledby', label.id);
+		this.get_shape_tools().forEach((shape) => {
+			const option = document.createElement('option');
+			option.value = shape.key;
+			option.textContent = t(shape.title);
+			option.selected = shape.key == this.active_tool;
+			select.appendChild(option);
+		});
+		select.addEventListener('change', () => this.activate_tool(select.value));
+		const gallery = document.createElement('button');
+		gallery.type = 'button';
+		gallery.className = 'trn';
+		gallery.textContent = t('Shape Gallery…');
+		gallery.addEventListener('click', () => this.tools_modules.shape.object.show_shapes());
+		wrapper.append(label, select, gallery);
+		container.appendChild(wrapper);
+	}
+
+	/**
 	 * used strings:
 	 * "Fill", "Square", "Circle", "Radial", "Anti aliasing", "Circle", "Strict", "Burn"
 	 */
@@ -300,6 +394,10 @@ class GUI_tools_class {
 		itemContainer.innerHTML = "";
 
 		const attributes = this.action_data().attributes;
+		this.sync_shape_button();
+		if (this.is_shape_tool(this.active_tool)) {
+			this.render_shape_picker(itemContainer);
+		}
 
 		let itemDom;
 		let currentButtonGroup = null;

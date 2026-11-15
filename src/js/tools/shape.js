@@ -1,3 +1,4 @@
+import app from './../app.js';
 import Base_tools_class from './../core/base-tools.js';
 import Base_layers_class from './../core/base-layers.js';
 import Dialog_class from './../libs/popup.js';
@@ -35,8 +36,13 @@ class Shape_class extends Base_tools_class {
 
 	}
 
+	/**
+	 * One Shape tool as in Photoshop: the button activates the last used shape (the rectangle at first) and the
+	 * options bar lets the user pick another one; the gallery with previews is a button there. Returned as an
+	 * action, so one Undo takes back both activations.
+	 */
 	on_activate() {
-		this.show_shapes();
+		return [new app.Actions.Activate_tool_action(this.GUI_tools.get_last_shape())];
 	}
 
 	async show_shapes(){
