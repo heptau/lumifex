@@ -20,3 +20,20 @@ export function fit_zoom_percent(space_width, space_height, width, height) {
 	//a tiny amount is added so that 0.29 * 100 = 28.999999999999996 does not cost a whole percent
 	return Math.max(1, Math.floor(best * 100 + 1e-6));
 }
+
+/** Pixels per inch of a typical screen (the reference of View > Print Size) */
+export const SCREEN_DPI = 96;
+
+/**
+ * View > Zoom > Print Size - the zoom at which the picture shows as big on the screen as it would be on paper.
+ *
+ * @param {number} dpi resolution of the document (pixels per inch)
+ * @returns {number} zoom in percent, a whole number from 2 to 3200
+ */
+export function print_size_percent(dpi) {
+	const value = parseFloat(dpi);
+	if (!(value > 0)) {
+		return 100;
+	}
+	return Math.max(2, Math.min(3200, Math.round(SCREEN_DPI / value * 100)));
+}

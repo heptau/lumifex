@@ -2005,6 +2005,10 @@ const menuDefinition = [
 						target: 'view/zoom.original'
 					},
 					{
+						name: 'Print Size',
+						target: 'view/zoom.print_size'
+					},
+					{
 						name: 'Zoom to Selection',
 						shortcut: 'Alt+Ctrl+0',
 						target: 'view/zoom.to_selection'

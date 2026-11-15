@@ -2,12 +2,15 @@ import GUI_preview_class from './../../core/gui/gui-preview.js';
 import config from './../../config.js';
 import Selection_class from './../../tools/selection.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
+import Tools_settings_class from './../tools/settings.js';
+import { print_size_percent } from './../../libs/zoom-fit.js';
 import { t } from '../tools/translate.js';
 
 class View_zoom_class {
 
 	constructor() {
 		this.GUI_preview = new GUI_preview_class();
+		this.Tools_settings = new Tools_settings_class();
 	}
 
 	in() {
@@ -20,6 +23,13 @@ class View_zoom_class {
 
 	original() {
 		this.GUI_preview.zoom(100);
+	}
+
+	/**
+	 * View > Zoom > Print Size - the picture is as big on the screen as it would be on paper (at 96 dpi of the screen)
+	 */
+	print_size() {
+		this.GUI_preview.zoom(print_size_percent(this.Tools_settings.get_setting('resolution')));
 	}
 
 	/**
