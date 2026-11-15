@@ -994,6 +994,47 @@ export function dryBrush(image, params) {
 }
 
 /**
+ * Diffuse Glow (Photoshop, Distort, simplified) - the picture glows as if seen through a soft screen: grain is added
+ * to its smoothed brightness and the result is screened over the picture in a glow color, brighter areas glowing
+ * more. The grain comes from a hash of the position and the seed, so the same input gives the same result. Alpha is
+ * kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params graininess (0-10, default 6), glow (0-20, strength of the glow, default 10), size (1-20 px,
+ *  radius of the spread, default 6), color (#rrggbb, default white), seed (any integer)
+ * @returns {Image_data}
+ */
+export function diffuseGlow(image, params) {
+	const grain = clamp(parseFloat(params.graininess ?? 6) || 0, 0, 10) / 10;
+	const strength = clamp(parseFloat(params.glow ?? 10) || 0, 0, 20) / 20;
+	const radius = clamp(Math.round(parseFloat(params.size ?? 6)) || 1, 1, 20);
+	const seed = parseInt(params.seed) || 0;
+	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(params.color || '');
+	const glow = m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [255, 255, 255];
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const hash = (x, y) => {
+		let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+	};
+	const smooth = box_blur(image, radius);
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			const luma = (smooth[i] * 0.299 + smooth[i + 1] * 0.587 + smooth[i + 2] * 0.114) / 255;
+			const amount = clamp((luma + (hash(x, y) - 0.5) * grain * 2) * strength, 0, 1);
+			for (let c = 0; c < 3; c++) {
+				const light = glow[c] * amount;
+				data[i + c] = Math.round(255 - (255 - data[i + c]) * (255 - light) / 255);
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

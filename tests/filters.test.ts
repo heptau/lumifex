@@ -1,4 +1,4 @@
-import { dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -600,5 +600,35 @@ describe('dryBrush', () => {
 		const noisy = image(9, 9, (x, y) => ((x + y) % 2 ? [120, 120, 120, 255] : [130, 130, 130, 255]));
 		const out = dryBrush(noisy, {size: 2, levels: 16});
 		expect(out.data[(4 * 9 + 4) * 4]).toBe(out.data[(4 * 9 + 5) * 4]);
+	});
+});
+
+describe('diffuseGlow', () => {
+	const make = () => image(8, 8, () => [120, 60, 30, 77]);
+
+	it('only brightens, keeps alpha and is repeatable for the same seed', () => {
+		const a = diffuseGlow(make(), {graininess: 5, glow: 20, size: 2, seed: 3});
+		const b = diffuseGlow(make(), {graininess: 5, glow: 20, size: 2, seed: 3});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		for (let i = 0; i < a.data.length; i += 4) {
+			expect(a.data[i]).toBeGreaterThanOrEqual(120);
+			expect(a.data[i + 1]).toBeGreaterThanOrEqual(60);
+			expect(a.data[i + 3]).toBe(77);
+		}
+	});
+
+	it('zero glow changes nothing, a different seed changes the grain, a bad color glows white', () => {
+		expect(Array.from(diffuseGlow(make(), {glow: 0}).data)).toEqual(Array.from(make().data));
+		const one = diffuseGlow(make(), {graininess: 10, glow: 20, size: 1, seed: 1});
+		const two = diffuseGlow(make(), {graininess: 10, glow: 20, size: 1, seed: 2});
+		expect(Array.from(one.data)).not.toEqual(Array.from(two.data));
+		const white = diffuseGlow(image(4, 4, () => [0, 0, 0, 255]), {graininess: 0, glow: 20, size: 1, color: 'nope'});
+		expect(white.data[0]).toBe(white.data[1]);
+	});
+
+	it('the glow color tints the glow', () => {
+		const red = diffuseGlow(image(4, 4, () => [100, 100, 100, 255]), {graininess: 0, glow: 20, size: 1, color: '#ff0000'});
+		expect(red.data[0]).toBeGreaterThan(red.data[1]);
+		expect(red.data[1]).toBe(100);
 	});
 });

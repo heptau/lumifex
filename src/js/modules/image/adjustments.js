@@ -586,6 +586,16 @@ class Image_adjustments_class {
 		], (img, params) => Distort.zigzag(img, params));
 	}
 
+	diffuse_glow() {
+		this.show_dialog('Diffuse Glow', [
+			{name: "graininess", title: "Graininess:", value: 6, range: [0, 10]},
+			{name: "glow", title: "Glow amount:", value: 10, range: [0, 20]},
+			{name: "size", title: "Glow size:", value: 6, range: [1, 20]},
+			{name: "color", title: "Glow color:", value: '#ffffff', type: 'color'},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Filters.diffuseGlow(img, params));
+	}
+
 	ripple() {
 		this.show_dialog('Ripple', [
 			{name: "amplitude", title: "Amplitude:", value: 2, range: [0, 10], step: 0.1},

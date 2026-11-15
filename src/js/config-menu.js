@@ -1760,6 +1760,11 @@ const menuDefinition = [
 						target: 'image/adjustments.spherize'
 					},
 					{
+						name: 'Diffuse Glow',
+						ellipsis: true,
+						target: 'image/adjustments.diffuse_glow'
+					},
+					{
 						name: 'Ripple',
 						ellipsis: true,
 						target: 'image/adjustments.ripple'

@@ -1705,5 +1705,8 @@
     "Remove Black Matte": "",
     "The image is too large for Content-Aware Scale.": "",
     "Content-Aware Scale": "",
-    "Protect selection:": ""
+    "Protect selection:": "",
+    "Glow amount:": "",
+    "Graininess:": "",
+    "Diffuse Glow": ""
 }
