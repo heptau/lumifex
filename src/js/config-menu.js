@@ -917,7 +917,8 @@ const menuDefinition = [
 				name: 'New Fill Layer',
 				children: [
 					{ name: 'Solid Color', target: 'layer/fill.fill_layer', parameter: 'solid' },
-					{ name: 'Gradient', target: 'layer/fill.fill_layer', parameter: 'gradient' }
+					{ name: 'Gradient', target: 'layer/fill.fill_layer', parameter: 'gradient' },
+					{ name: 'Pattern', target: 'layer/fill.fill_layer', parameter: 'pattern' }
 				]
 			},
 			{

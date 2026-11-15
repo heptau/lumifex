@@ -249,7 +249,7 @@ A quick overview of what is already done (so that it is not added twice) and whe
 | Select > Subject - selecting an object on a calm background (the background is searched from the edges, `select_subject_mask`) | `edit/selection.js` | – |
 | Image > Quick Edit (editing with words in Czech/English, `libs/quick-commands.js`), Recipes (ready-made combinations), Match Color (`libs/color-match.js`), Repeat Last Adjustment | `image/quick_edit.js`, `image/adjustments.js` | Shift+Ctrl+Q, Alt+Ctrl+F |
 | The Histogram and History panels, the color under the cursor and the measurement in the status bar | `core/gui/gui-histogram.js`, `gui-history.js`, `gui-information.js` | – |
-| Layers: search, color labels (`layer.color_label`), dragging to change the order, Bevel & Emboss, fill layers | `gui-layers.js`, `layer/label.js`, `layer/fill.js`, `effects/common/bevel.js` | – |
+| Layers: search, color labels (`layer.color_label`), dragging to change the order, Bevel & Emboss, fill layers (solid, gradient, pattern from Define Pattern) | `gui-layers.js`, `layer/label.js`, `layer/fill.js`, `effects/common/bevel.js` | – |
 | Window > Workspace (Essentials, Painting, Photography, Minimal, custom), Proof Colors (simulation of color blindness with a CSS filter) | `libs/panels.js`, `view/proof.js` | – |
 | Export PDF (`libs/pdf.js`), SVG import, quick export, an optional system save dialog (`libs/file-save.js`), Paste as New Document, Privacy (deleting stored data) | `file/save*.js`, `edit/paste_new.js`, `help/privacy.js` | Alt+Shift+Ctrl+W |
 | Autosave of all documents (`libs/autosave.js`), an offer to restore after startup, a new document when a file is opened (setting) | `core/gui/gui-documents.js` | – |
