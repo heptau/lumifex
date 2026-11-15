@@ -1953,6 +1953,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Photocopy',
+						ellipsis: true,
+						target: 'image/adjustments.photocopy'
+					},
+					{
 						name: 'Charcoal',
 						ellipsis: true,
 						target: 'image/adjustments.charcoal'

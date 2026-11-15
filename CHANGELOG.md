@@ -47,6 +47,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Blur > Blur More and Effects > Sharpen > Sharpen More (Photoshop): one-click stronger blur / sharpening (they respect the selection).
 - Effects > Stylize > Charcoal (Photoshop, simplified): a charcoal drawing of dark tones and bold edges on paper (detail, edge weight, tone weight, colors).
 - Effects > Render > Spotlight (Photoshop Lighting Effects, one spot): a round light with position, radius, intensity, ambient level and color.
+- Effects > Stylize > Photocopy (Photoshop, simplified): black and white photocopy of dark areas and edges (detail, edge threshold, darkness).
 - Edit > Purge Undo History (Photoshop): forgets the steps that can be undone to free memory; the image and the redo steps stay.
 - Effects > Render > Fibers (Photoshop): replaces the image with long vertical fibers between two colors (variance, strength, seed).
 - Effects > Noise > Despeckle (Photoshop): blurs everything except edges, so speckles vanish and outlines stay sharp (edge threshold, passes).

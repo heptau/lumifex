@@ -243,6 +243,54 @@ export function customKernel(image, params) {
 }
 
 /**
+ * Photocopy (Photoshop, simplified) - a black and white photocopy: pixels that are dark or lie on an edge become
+ * black, the rest white. The brightness is smoothed by a 3x3 mean first (more passes = less detail).
+ *
+ * @param {Image_data} image
+ * @param {object} params detail (1-5, smoothing passes are 6 - detail), edge (0-255, the gradient from which a
+ *  pixel counts as an edge, default 40), darkness (0-255, brightness below which a pixel is black, default 60)
+ * @returns {Image_data}
+ */
+export function photocopy(image, params) {
+	const detail = clamp(Math.round(parseFloat(params.detail ?? 3)) || 1, 1, 5);
+	const edge_level = clamp(parseFloat(params.edge ?? 40), 0, 255);
+	const dark_level = clamp(parseFloat(params.darkness ?? 60), 0, 255);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	let luma = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		luma[p] = data[p * 4] * 0.299 + data[p * 4 + 1] * 0.587 + data[p * 4 + 2] * 0.114;
+	}
+	for (let pass = 0; pass < 6 - detail; pass++) {
+		const next = new Float32Array(w * h);
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				let sum = 0;
+				for (let ky = -1; ky <= 1; ky++) {
+					for (let kx = -1; kx <= 1; kx++) {
+						sum += luma[clamp(y + ky, 0, h - 1) * w + clamp(x + kx, 0, w - 1)];
+					}
+				}
+				next[y * w + x] = sum / 9;
+			}
+		}
+		luma = next;
+	}
+	const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
+			const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
+			const black = at(x, y) < dark_level || Math.sqrt(gx * gx + gy * gy) / 4 >= edge_level;
+			const i = (y * w + x) * 4;
+			data[i] = data[i + 1] = data[i + 2] = black ? 0 : 255;
+		}
+	}
+	return image;
+}
+
+/**
  * Charcoal (Photoshop, simplified) - a charcoal drawing: dark smudged tones plus bold edges, drawn on paper. The
  * brightness is smoothed by a 3x3 mean first (the more detail, the less smoothing is repeated), then the result
  * is the paper color darkened by (edges * edge_weight + darkness of the tone * tone_weight). Alpha is kept.

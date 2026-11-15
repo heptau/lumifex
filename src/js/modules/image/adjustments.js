@@ -88,6 +88,14 @@ class Image_adjustments_class {
 		this.apply_direct((img) => Filters.average(img, shaped ? sample_mask_for_layer(selection.mask, config.layer, img.width, img.height) : null));
 	}
 
+	photocopy() {
+		this.show_dialog('Photocopy', [
+			{name: "detail", title: "Detail:", value: 3, range: [1, 5]},
+			{name: "edge", title: "Edge threshold:", value: 40, range: [0, 255]},
+			{name: "darkness", title: "Darkness:", value: 60, range: [0, 255]},
+		], (img, params) => Filters.photocopy(img, params));
+	}
+
 	charcoal() {
 		this.show_dialog('Charcoal', [
 			{name: "detail", title: "Detail:", value: 3, range: [1, 5]},

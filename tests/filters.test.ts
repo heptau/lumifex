@@ -1,4 +1,4 @@
-import { charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -426,5 +426,26 @@ describe('charcoal', () => {
 	it('an edge is darker than flat areas beside it', () => {
 		const img = charcoal(image(10, 1, (x) => (x < 5 ? [255, 255, 255, 255] : [200, 200, 200, 255])), {detail: 5, edge: 100, tone: 0});
 		expect(img.data[4 * 4]).toBeLessThan(img.data[0]);
+	});
+});
+
+describe('photocopy', () => {
+	it('gives only black or white, keeps alpha, dark areas are black and bright flat areas white', () => {
+		const img = image(12, 12, (x) => (x < 6 ? [20, 20, 20, 90] : [240, 240, 240, 90]));
+		const out = photocopy(img, {detail: 5});
+		for (let i = 0; i < out.data.length; i += 4) {
+			expect([0, 255]).toContain(out.data[i]);
+			expect(out.data[i + 3]).toBe(90);
+		}
+		expect(out.data[0]).toBe(0);
+		expect(out.data[(5 * 12 + 11) * 4]).toBe(255);
+	});
+
+	it('an edge in a bright picture becomes a line and a high threshold removes it', () => {
+		const make = () => image(10, 3, (x) => (x < 5 ? [255, 255, 255, 255] : [150, 150, 150, 255]));
+		const lined = photocopy(make(), {detail: 5, edge: 20, darkness: 0});
+		expect(lined.data[4 * 4]).toBe(0);
+		expect(lined.data[0]).toBe(255);
+		expect(photocopy(make(), {detail: 5, edge: 255, darkness: 0}).data[4 * 4]).toBe(255);
 	});
 });
