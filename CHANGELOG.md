@@ -29,6 +29,7 @@ Only changes since version 5.0.0 are listed here.
 - Image > Canvas Size has a Relative checkbox (Photoshop): the fields then hold the change of the size (starting at 0, negative numbers shrink the canvas) instead of the new size.
 - Image > Reveal All (Photoshop): enlarges the canvas so that every layer, also one sticking out to the left or top, fits into it (one undo step).
 - Layer style Inner Glow (Effects > Layer Style): a soft glow along the inner edge of an image layer with radius, opacity and color.
+- Inner Shadow and Inner Glow have a Choke (0-100): the soft edge of the effect is hardened (its alpha is raised up to ten times) so it reaches deeper into the picture and ends more sharply; 0 is the old look.
 - Layer style Pattern Overlay (Effects > Layer Style): covers an image layer with the pattern from Edit > Define Pattern (scale, opacity, blend mode); the pattern is stored in the style, so it stays in a saved project.
 - Layer > New Fill Layer > Pattern: a layer filled with the tiled pattern from Edit > Define Pattern (one undo step).
 - Layer > Clear Layer Style: removes all live effects of the layer (shadows, glows, strokes, overlays) in one undo step; smart filters stay.

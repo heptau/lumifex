@@ -4,6 +4,26 @@
  * can come from saved projects.
  */
 
+/**
+ * Choke of Inner Shadow / Inner Glow: the soft edge of the shadow is hardened by raising its alpha, so the shadow
+ * reaches deeper into the picture and ends more sharply (0 changes nothing, 100 multiplies the alpha by 10).
+ *
+ * @param {Uint8ClampedArray} data RGBA, changed in place
+ * @param {number} choke 0-100 (anything else is limited to that range, NaN counts as 0)
+ * @returns {Uint8ClampedArray} the same array
+ */
+export function choke_alpha(data, choke) {
+	const amount = Math.min(100, Math.max(0, Number(choke) || 0));
+	if (amount == 0) {
+		return data;
+	}
+	const factor = 1 + amount / 100 * 9;
+	for (let i = 3; i < data.length; i += 4) {
+		data[i] = Math.min(255, Math.round(data[i] * factor));
+	}
+	return data;
+}
+
 export function clamp_int(value, min, max, fallback) {
 	let number = parseInt(value);
 	if (isNaN(number)) {

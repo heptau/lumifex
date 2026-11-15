@@ -1,6 +1,6 @@
 import config from '../../../config.js';
 import Effects_layer_style_class from '../abstract/layer-style.js';
-import { safe_color, clamp_int } from './../../../libs/layer-styles.js';
+import { safe_color, clamp_int, choke_alpha } from './../../../libs/layer-styles.js';
 import alertify from './../../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../../tools/translate.js';
 
@@ -22,6 +22,7 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 			{name: "x", title: "Offset X:", value: filter.x ??= 5, range: [-50, 50]},
 			{name: "y", title: "Offset Y:", value: filter.y ??= 5, range: [-50, 50]},
 			{name: "blur", title: "Radius:", value: filter.blur ??= 8, range: [0, 50]},
+			{name: "choke", title: "Choke:", value: filter.choke ??= 0, range: [0, 100]},
 			{name: "opacity", title: "Opacity:", value: filter.opacity ??= 75, range: [1, 100]},
 			{name: "color", title: "Color:", value: filter.color ??= "#000000", type: 'color'},
 		];
@@ -36,7 +37,7 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 	 * @param {CanvasImageSource} source
 	 * @param {number} width
 	 * @param {number} height
-	 * @param {object} params x, y, blur, color
+	 * @param {object} params x, y, blur, color, choke (0-100, hardens the edge of the shadow)
 	 * @returns {HTMLCanvasElement}
 	 */
 	build_shadow(source, width, height, params) {
@@ -66,7 +67,14 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 		const canvas = document.createElement('canvas');
 		canvas.width = width;
 		canvas.height = height;
-		canvas.getContext('2d').drawImage(work, -pad, -pad);
+		const out = canvas.getContext('2d');
+		out.drawImage(work, -pad, -pad);
+		const choke = clamp_int(params.choke, 0, 100, 0);
+		if (choke > 0) {
+			const image = out.getImageData(0, 0, width, height);
+			choke_alpha(image.data, choke);
+			out.putImageData(image, 0, 0);
+		}
 		return canvas;
 	}
 
@@ -76,6 +84,7 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 			y: params.y * ratio,
 			blur: params.blur * ratio,
 			color: params.color,
+			choke: params.choke,
 		};
 		ctx.drawImage(source, x, y, width, height);
 		ctx.save();
@@ -98,8 +107,8 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 		if (!layer || layer.type != 'image') {
 			return;
 		}
-		const params = {x: data.params.x, y: data.params.y, blur: data.params.blur, color: safe_color(data.params.color)};
-		const key = [params.x, params.y, params.blur, params.color].join('|');
+		const params = {x: data.params.x, y: data.params.y, blur: data.params.blur, color: safe_color(data.params.color), choke: data.params.choke};
+		const key = [params.x, params.y, params.blur, params.color, params.choke].join('|');
 		const shadow = this.cached(layer, key, (source) => this.build_shadow(source, layer.width, layer.height, params));
 
 		const previous_filter = ctx.filter;

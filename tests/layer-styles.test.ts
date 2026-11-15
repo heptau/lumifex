@@ -1,4 +1,4 @@
-import { safe_color, parse_color, outline_alpha, inner_outline_alpha, glow_filter, gradient_line, alpha_bounds, blend_operation, BLEND_MODES, parse_gradient_stops } from '../src/js/libs/layer-styles.js';
+import { choke_alpha, safe_color, parse_color, outline_alpha, inner_outline_alpha, glow_filter, gradient_line, alpha_bounds, blend_operation, BLEND_MODES, parse_gradient_stops } from '../src/js/libs/layer-styles.js';
 
 describe('outline_alpha', () => {
 	const dot = (w: number, h: number, x: number, y: number) => {
@@ -240,5 +240,31 @@ describe('scale_style_params', () => {
 	it('limits the percentage', () => {
 		expect(scale_style_params('stroke', {size: 10}, 100000)).toEqual({size: 100});
 		expect((scale_style_params('stroke', {size: 100}, 0) as any)?.size).toBe(100);
+	});
+});
+
+describe('choke_alpha', () => {
+	it('0 changes nothing and bad values count as 0', () => {
+		const data = new Uint8ClampedArray([1, 2, 3, 40, 4, 5, 6, 200]);
+		const copy = Array.from(data);
+		expect(Array.from(choke_alpha(data, 0))).toEqual(copy);
+		expect(Array.from(choke_alpha(data, NaN))).toEqual(copy);
+		expect(Array.from(choke_alpha(data, -5))).toEqual(copy);
+	});
+
+	it('raises only the alpha, harder for more choke, up to 255', () => {
+		const soft = choke_alpha(new Uint8ClampedArray([10, 20, 30, 20]), 50);
+		expect(Array.from(soft.slice(0, 3))).toEqual([10, 20, 30]);
+		expect(soft[3]).toBeGreaterThan(20);
+		const hard = choke_alpha(new Uint8ClampedArray([10, 20, 30, 20]), 100);
+		expect(hard[3]).toBeGreaterThan(soft[3]);
+		expect(choke_alpha(new Uint8ClampedArray([0, 0, 0, 200]), 100)[3]).toBe(255);
+		expect(choke_alpha(new Uint8ClampedArray([0, 0, 0, 0]), 100)[3]).toBe(0);
+	});
+
+	it('limits a choke above 100', () => {
+		const a = choke_alpha(new Uint8ClampedArray([0, 0, 0, 20]), 100);
+		const b = choke_alpha(new Uint8ClampedArray([0, 0, 0, 20]), 5000);
+		expect(Array.from(b)).toEqual(Array.from(a));
 	});
 });

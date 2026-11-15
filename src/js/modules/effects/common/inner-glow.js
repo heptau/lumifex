@@ -19,6 +19,7 @@ class Effects_innerGlow_class extends Effects_innerShadow_class {
 
 		const params = [
 			{name: "blur", title: "Radius:", value: filter.blur ??= 10, range: [1, 50]},
+			{name: "choke", title: "Choke:", value: filter.choke ??= 0, range: [0, 100]},
 			{name: "opacity", title: "Opacity:", value: filter.opacity ??= 75, range: [1, 100]},
 			{name: "color", title: "Color:", value: filter.color ??= "#ffffbe", type: 'color'},
 		];
