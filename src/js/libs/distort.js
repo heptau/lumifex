@@ -68,6 +68,36 @@ export function remap(image, mapper) {
 	return image;
 }
 
+/** Shear (Photoshop): what fills the area that is shifted in from outside */
+export const SHEAR_UNDEFINED = ['Repeat Edge Pixels', 'Wrap Around'];
+
+/**
+ * Shear - bends the image sideways along a smooth curve: the middle row moves by the full amount, the top and
+ * bottom rows stay (a half sine), so the picture bulges like a bent sheet.
+ *
+ * @param {Image_data} image
+ * @param {object} params amount (-100..100 % of the width, positive = to the right), undefined (one of SHEAR_UNDEFINED)
+ * @returns {Image_data}
+ */
+export function shear(image, params) {
+	const w = image.width;
+	const h = image.height;
+	const amount = clamp(parseFloat(params.amount) || 0, -100, 100) / 100 * w;
+	if (amount == 0 || h == 0) {
+		return image;
+	}
+	const wrap = params.undefined == 'Wrap Around';
+	return remap(image, (x, y, position) => {
+		const shift = amount * Math.sin(Math.PI * y / h);
+		let sx = x - shift;
+		if (wrap) {
+			sx = ((sx % w) + w) % w;
+		}
+		position[0] = sx;
+		position[1] = y;
+	});
+}
+
 /**
  * Twirl - rotates the image around its center, more in the middle than at the edge of the radius
  *

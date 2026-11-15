@@ -516,6 +516,13 @@ class Image_adjustments_class {
 		], (img, params) => Distort.crystallize(img, params));
 	}
 
+	shear() {
+		this.show_dialog('Shear', [
+			{name: "amount", title: "Amount:", value: 30, range: [-100, 100]},
+			{name: "undefined", title: "Undefined areas:", value: 'Repeat Edge Pixels', values: Distort.SHEAR_UNDEFINED},
+		], (img, params) => Distort.shear(img, params));
+	}
+
 	pointillize() {
 		this.show_dialog('Pointillize', [
 			{name: "size", title: "Dot size:", value: 4, range: [1, 30]},

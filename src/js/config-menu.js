@@ -1716,6 +1716,11 @@ const menuDefinition = [
 						target: 'image/adjustments.twirl'
 					},
 					{
+						name: 'Shear',
+						ellipsis: true,
+						target: 'image/adjustments.shear'
+					},
+					{
 						name: 'Spherize',
 						ellipsis: true,
 						target: 'image/adjustments.spherize'

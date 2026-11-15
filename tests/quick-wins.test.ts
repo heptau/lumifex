@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { fibers, differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { shear, fibers, differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -2787,5 +2787,25 @@ describe('fibers', () => {
 			}
 		}
 		expect(down).toBeLessThan(across);
+	});
+});
+
+describe('shear', () => {
+	const rows = () => ({data: new Uint8ClampedArray(Array.from({length: 10 * 10}, (_, n) => [(n % 10) * 25, 0, 0, 255]).flat()), width: 10, height: 10});
+
+	it('amount 0 changes nothing, the top row stays and the middle row moves right', () => {
+		expect(Array.from(shear(rows(), {amount: 0}).data)).toEqual(Array.from(rows().data));
+		const out = shear(rows(), {amount: 50});
+		expect(Math.abs(out.data[5 * 4] - rows().data[5 * 4])).toBeLessThan(25); //the top row hardly moves
+		const mid = 5 * 10 * 4;
+		expect(out.data[mid + 8 * 4]).toBeLessThan(rows().data[mid + 8 * 4]); //content moved right
+	});
+
+	it('wrap around brings the other edge in, repeat edge keeps the border color', () => {
+		const wrapped = shear(rows(), {amount: 100, undefined: 'Wrap Around'});
+		const repeated = shear(rows(), {amount: 100, undefined: 'Repeat Edge Pixels'});
+		const i = (5 * 10 + 0) * 4;
+		expect(repeated.data[i]).toBe(0);
+		expect(wrapped.data[i]).toBeGreaterThan(0);
 	});
 });
