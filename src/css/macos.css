@@ -2091,3 +2091,7 @@ html.large_ui input[type="number"] {
 	outline: 2px solid var(--accent);
 	outline-offset: 1px;
 }
+
+/* the Move tool is over a guide: it can be dragged (View > Lock Guides turns this off) */
+body.guide_hover_x #main_wrapper, body.guide_hover_x #main_wrapper * { cursor: ew-resize !important; }
+body.guide_hover_y #main_wrapper, body.guide_hover_y #main_wrapper * { cursor: ns-resize !important; }

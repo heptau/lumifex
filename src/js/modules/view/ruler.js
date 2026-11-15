@@ -120,6 +120,22 @@ class View_ruler_class {
 			const rect = canvas.getBoundingClientRect();
 			return this.Base_layers.get_world_coords(e.clientX - rect.left, e.clientY - rect.top);
 		};
+		//the pointer shows which way a guide under it can be dragged (the CSS rules use !important, because the tools
+		//set their own cursor on the work area)
+		window.addEventListener('mousemove', (event) => {
+			let kind = '';
+			if (config.TOOL != null && config.TOOL.name == 'select' && config.guides_enabled != false && config.guides_locked !== true
+				&& config.guides.length && event.buttons === 0 && event.target instanceof Element
+				&& (event.target === canvas || event.target.closest('#canvas_wrapper'))) {
+				const point = world(event);
+				const index = find_guide(config.guides, point.x, point.y, 4 / (config.ZOOM || 1));
+				if (index >= 0) {
+					kind = config.guides[index].x === null ? 'guide_hover_y' : 'guide_hover_x';
+				}
+			}
+			document.body.classList.toggle('guide_hover_x', kind == 'guide_hover_x');
+			document.body.classList.toggle('guide_hover_y', kind == 'guide_hover_y');
+		}, true);
 		window.addEventListener('mousedown', (event) => {
 			if (event.button !== 0 || config.TOOL == null || config.TOOL.name != 'select'
 				|| config.guides_enabled == false || config.guides_locked === true || !config.guides.length) {
