@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Layer > Smart Filter > Filter Mask to Selection loads the part where the filters apply as a selection.
 - Density and Feather of the smart filter mask in the Layer details panel, as for the layer mask.
 - Quick Mask can paint the smart filter mask with a brush (target "Filter mask"): painting reveals the filters, Alt / Subtract hides them again.
 - Changing the shape in the Shape picker keeps the border size, border, fill and colors instead of bringing back the defaults of the new shape.

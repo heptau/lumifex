@@ -5,7 +5,7 @@ import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.j
 import { SMART_FILTERS, is_smart_filter, is_smart_entry, default_smart_settings, clean_smart_settings, make_smart_filter } from './../../libs/smart-filters.js';
 import { t } from '../tools/translate.js';
 import Edit_selection_class from './../edit/selection.js';
-import { serialize_layer_mask, deserialize_layer_mask, layer_mask_from_selection } from './../../libs/layer-mask.js';
+import { serialize_layer_mask, deserialize_layer_mask, layer_mask_from_selection, layer_mask_to_selection, shape_layer_mask } from './../../libs/layer-mask.js';
 import { invert_mask } from './../../libs/selection-mask.js';
 
 /**
@@ -89,6 +89,19 @@ class Layer_smart_filter_class {
 			return;
 		}
 		return this.save_mask(layer, {smart_mask: serialize_layer_mask(layer_mask_from_selection(current.mask, layer)), smart_mask_enabled: true, smart_mask_density: 100, smart_mask_feather: 0});
+	}
+
+	/**
+	 * Layer > Smart Filter > Filter Mask to Selection: the part where the filters apply (with the Density and
+	 * Feather of the mask) becomes the selection
+	 */
+	mask_to_selection() {
+		const layer = config.layer;
+		const mask = this.stored_mask(layer);
+		if (mask) {
+			const shaped = shape_layer_mask(mask, layer.smart_mask_density, layer.smart_mask_feather);
+			return new Edit_selection_class().set_mask(layer_mask_to_selection(shaped, layer, config.WIDTH, config.HEIGHT), true);
+		}
 	}
 
 	/**

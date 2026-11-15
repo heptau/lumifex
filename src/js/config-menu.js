@@ -870,6 +870,7 @@ const menuDefinition = [
 					{ name: 'Add Noise', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'add_noise' },
 					{ divider: true },
 					{ name: 'Filter Mask from Selection', target: 'layer/smart_filter.mask_from_selection' },
+					{ name: 'Filter Mask to Selection', target: 'layer/smart_filter.mask_to_selection' },
 					{ name: 'Invert Filter Mask', target: 'layer/smart_filter.mask_invert' },
 					{ name: 'Disable / Enable Filter Mask', target: 'layer/smart_filter.mask_toggle' },
 					{ name: 'Delete Filter Mask', target: 'layer/smart_filter.mask_remove' }
