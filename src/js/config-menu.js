@@ -1970,6 +1970,11 @@ const menuDefinition = [
 				name: 'Other',
 				children: [
 					{
+						name: 'Custom',
+						ellipsis: true,
+						target: 'image/adjustments.custom_kernel'
+					},
+					{
 						name: 'High Pass',
 						ellipsis: true,
 						target: 'image/adjustments.high_pass'

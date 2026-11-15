@@ -1,4 +1,4 @@
-import { traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -273,5 +273,27 @@ describe('traceContour', () => {
 	it('keeps alpha and tolerates bad parameters', () => {
 		const img = traceContour(make(), {level: 'x', edge: 5});
 		expect(img.data[3]).toBe(200);
+	});
+});
+
+describe('customKernel', () => {
+	const make = () => image(3, 3, (x, y) => [x * 40 + y * 10, 100, 7, 180]);
+	const identity = {k0: 0, k1: 0, k2: 0, k3: 0, k4: 1, k5: 0, k6: 0, k7: 0, k8: 0, scale: 1, offset: 0};
+
+	it('identity kernel changes nothing and keeps alpha', () => {
+		const img = customKernel(make(), identity);
+		expect(Array.from(img.data)).toEqual(Array.from(make().data));
+	});
+
+	it('box blur averages the neighbourhood, offset and scale apply, values are clamped', () => {
+		const flat = image(3, 3, () => [90, 90, 90, 255]);
+		const box = {k0: 1, k1: 1, k2: 1, k3: 1, k4: 1, k5: 1, k6: 1, k7: 1, k8: 1, scale: 9, offset: 10};
+		expect(customKernel(flat, box).data[4 * 4]).toBe(100);
+		const bright = customKernel(image(2, 2, () => [200, 200, 200, 255]), {...identity, k4: 5});
+		expect(bright.data[0]).toBe(255);
+	});
+
+	it('survives garbage parameters', () => {
+		expect(() => customKernel(make(), {k4: 'x', scale: 0, offset: 'y'})).not.toThrow();
 	});
 });

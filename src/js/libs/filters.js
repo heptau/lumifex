@@ -50,6 +50,44 @@ export function diffuse(image, params) {
 }
 
 /**
+ * Custom (Photoshop, 3x3 kernel) - every pixel becomes the weighted sum of its neighbourhood divided by the scale
+ * plus the offset. Edges repeat the border pixels, alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params k0..k8 (weights, row by row, -999..999), scale (not 0, default 1), offset (-255..255)
+ * @returns {Image_data}
+ */
+export function customKernel(image, params) {
+	const kernel = [];
+	for (let n = 0; n < 9; n++) {
+		kernel.push(clamp(parseFloat(params[`k${n}`]) || 0, -999, 999));
+	}
+	const scale = parseFloat(params.scale) || 1;
+	const shift = clamp(parseFloat(params.offset) || 0, -255, 255);
+	const w = image.width;
+	const h = image.height;
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				let sum = 0;
+				for (let ky = -1; ky <= 1; ky++) {
+					const yy = clamp(y + ky, 0, h - 1);
+					for (let kx = -1; kx <= 1; kx++) {
+						const xx = clamp(x + kx, 0, w - 1);
+						sum += kernel[(ky + 1) * 3 + kx + 1] * src[(yy * w + xx) * 4 + c];
+					}
+				}
+				data[i + c] = clamp(Math.round(sum / scale + shift), 0, 255);
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Trace Contour (Photoshop) - thin colored lines along the places where a channel crosses the chosen level,
  * on a white (or transparent-kept) background. Alpha is kept.
  *

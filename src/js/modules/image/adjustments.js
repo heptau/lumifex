@@ -227,6 +227,15 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	custom_kernel() {
+		const names = ['k0', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8'];
+		const params = [{heading: 'Kernel'}];
+		names.forEach((name, n) => params.push({name, title: `Weight ${n + 1}:`, value: n == 4 ? 1 : 0, range: [-20, 20]}));
+		params.push({name: "scale", title: "Scale:", value: 1, range: [1, 999]});
+		params.push({name: "offset", title: "Offset:", value: 0, range: [-255, 255]});
+		this.show_dialog('Custom', params, (img, p) => Filters.customKernel(img, p));
+	}
+
 	trace_contour() {
 		this.show_dialog('Trace Contour', [
 			{name: "level", title: "Level:", value: 128, range: [0, 255]},

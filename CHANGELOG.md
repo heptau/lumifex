@@ -37,6 +37,7 @@ Only changes since version 5.0.0 are listed here.
 - Layer > Show All Layers and Hide Other Layers: every hidden layer becomes visible / only the active layer stays visible, each in one undo step.
 - Layer style Satin (Effects > Layer Style): soft silky shading inside an image layer with angle, distance, radius, opacity and color.
 - Effects > Distort > Polar Coordinates (Photoshop): bends the image around its center (Rectangular to Polar) or unrolls it back (Polar to Rectangular).
+- Effects > Other > Custom (Photoshop): a 3x3 convolution kernel with scale and offset for your own blur / sharpen / emboss.
 - Effects > Stylize > Trace Contour (Photoshop): thin lines of each color channel where it crosses the chosen level (level, lower / upper edge) on white.
 - Effects > Stylize > Wind (Photoshop): streaks trail from brightness edges (methods Wind / Blast / Stagger, from the left or right, edge strength, seed); deterministic.
 - Effects > Stylize > Diffuse (Photoshop): every pixel is replaced by one from a random place nearby (amount, seed), like frosted glass; the same input always gives the same result.
