@@ -88,6 +88,16 @@ class Image_adjustments_class {
 		this.apply_direct((img) => Filters.average(img, shaped ? sample_mask_for_layer(selection.mask, config.layer, img.width, img.height) : null));
 	}
 
+	charcoal() {
+		this.show_dialog('Charcoal', [
+			{name: "detail", title: "Detail:", value: 3, range: [1, 5]},
+			{name: "edge", title: "Edge weight:", value: 60, range: [0, 100]},
+			{name: "tone", title: "Tone weight:", value: 40, range: [0, 100]},
+			{name: "charcoal", title: "Charcoal:", value: '#000000', type: 'color'},
+			{name: "paper", title: "Paper:", value: '#ffffff', type: 'color'},
+		], (img, params) => Filters.charcoal(img, params));
+	}
+
 	blur_more() {
 		this.apply_direct((img) => Filters.blurMore(img));
 	}

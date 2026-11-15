@@ -1,4 +1,4 @@
-import { blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -405,5 +405,26 @@ describe('blurMore / sharpenMore', () => {
 		expect(out.data[4 * 4]).toBe(255);
 		const flat = sharpenMore(image(4, 4, () => [77, 77, 77, 255]));
 		expect(flat.data[5 * 4]).toBe(77);
+	});
+});
+
+describe('charcoal', () => {
+	it('flat white stays paper, dark areas and edges get ink, alpha is kept', () => {
+		const white = charcoal(image(6, 6, () => [255, 255, 255, 120]), {});
+		expect(Array.from(white.data.slice(0, 4))).toEqual([255, 255, 255, 120]);
+		const dark = charcoal(image(6, 6, () => [0, 0, 0, 255]), {tone: 100, edge: 0});
+		expect(dark.data[0]).toBe(0);
+	});
+
+	it('uses the given colors and falls back to black on white for bad ones', () => {
+		const custom = charcoal(image(4, 4, () => [255, 255, 255, 255]), {paper: '#102030', charcoal: '#ffffff'});
+		expect(Array.from(custom.data.slice(0, 3))).toEqual([16, 32, 48]);
+		const bad = charcoal(image(4, 4, () => [255, 255, 255, 255]), {paper: 'red', charcoal: 5});
+		expect(Array.from(bad.data.slice(0, 3))).toEqual([255, 255, 255]);
+	});
+
+	it('an edge is darker than flat areas beside it', () => {
+		const img = charcoal(image(10, 1, (x) => (x < 5 ? [255, 255, 255, 255] : [200, 200, 200, 255])), {detail: 5, edge: 100, tone: 0});
+		expect(img.data[4 * 4]).toBeLessThan(img.data[0]);
 	});
 });

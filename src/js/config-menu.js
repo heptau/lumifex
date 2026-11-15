@@ -1948,6 +1948,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Charcoal',
+						ellipsis: true,
+						target: 'image/adjustments.charcoal'
+					},
+					{
 						name: 'Glowing Edges',
 						ellipsis: true,
 						target: 'image/adjustments.glowing_edges'

@@ -243,6 +243,65 @@ export function customKernel(image, params) {
 }
 
 /**
+ * Charcoal (Photoshop, simplified) - a charcoal drawing: dark smudged tones plus bold edges, drawn on paper. The
+ * brightness is smoothed by a 3x3 mean first (the more detail, the less smoothing is repeated), then the result
+ * is the paper color darkened by (edges * edge_weight + darkness of the tone * tone_weight). Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params detail (1-5, smoothing passes are 6 - detail), edge (0-100, weight of the edges, default 60),
+ *  tone (0-100, weight of the dark tones, default 40), charcoal and paper (#rrggbb, default black and white)
+ * @returns {Image_data}
+ */
+export function charcoal(image, params) {
+	const detail = clamp(Math.round(parseFloat(params.detail ?? 3)) || 1, 1, 5);
+	const edge_weight = clamp(parseFloat(params.edge ?? 60), 0, 100) / 100 * 4;
+	const tone_weight = clamp(parseFloat(params.tone ?? 40), 0, 100) / 100;
+	const hex = (value, fallback) => {
+		const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(value || '');
+		return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : fallback;
+	};
+	const ink = hex(params.charcoal, [0, 0, 0]);
+	const paper = hex(params.paper, [255, 255, 255]);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	let luma = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		luma[p] = data[p * 4] * 0.299 + data[p * 4 + 1] * 0.587 + data[p * 4 + 2] * 0.114;
+	}
+	for (let pass = 0; pass < 6 - detail; pass++) {
+		const next = new Float32Array(w * h);
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				let sum = 0;
+				for (let ky = -1; ky <= 1; ky++) {
+					for (let kx = -1; kx <= 1; kx++) {
+						sum += luma[clamp(y + ky, 0, h - 1) * w + clamp(x + kx, 0, w - 1)];
+					}
+				}
+				next[y * w + x] = sum / 9;
+			}
+		}
+		luma = next;
+	}
+	const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
+			const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
+			const edge = Math.sqrt(gx * gx + gy * gy) / 4 / 255;
+			const dark = (255 - at(x, y)) / 255;
+			const amount = clamp(edge * edge_weight + dark * tone_weight, 0, 1);
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				data[i + c] = Math.round(paper[c] + (ink[c] - paper[c]) * amount);
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Blur More (Photoshop) - a 3x3 mean applied twice (stronger than one pass); alpha is kept
  *
  * @param {Image_data} image
