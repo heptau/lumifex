@@ -1,4 +1,4 @@
-import { photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -447,5 +447,24 @@ describe('photocopy', () => {
 		expect(lined.data[4 * 4]).toBe(0);
 		expect(lined.data[0]).toBe(255);
 		expect(photocopy(make(), {detail: 5, edge: 255, darkness: 0}).data[4 * 4]).toBe(255);
+	});
+});
+
+describe('cutout', () => {
+	it('reduces every channel to the given number of levels and keeps alpha', () => {
+		const img = image(6, 1, (x) => [x * 40, 100, 255 - x * 40, 77]);
+		const out = cutout(img, {levels: 2, simplicity: 0});
+		for (let i = 0; i < out.data.length; i += 4) {
+			for (let c = 0; c < 3; c++) {
+				expect([0, 255]).toContain(out.data[i + c]);
+			}
+			expect(out.data[i + 3]).toBe(77);
+		}
+	});
+
+	it('a larger simplicity smooths away a small detail', () => {
+		const make = () => image(9, 9, (x, y) => (x == 4 && y == 4 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
+		expect(cutout(make(), {levels: 2, simplicity: 0}).data[(4 * 9 + 4) * 4]).toBe(255);
+		expect(cutout(make(), {levels: 2, simplicity: 3}).data[(4 * 9 + 4) * 4]).toBe(0);
 	});
 });

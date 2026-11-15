@@ -714,6 +714,28 @@ function box_blur(image, radius) {
 }
 
 /**
+ * Cutout (Photoshop, simplified) - the picture is cut from a few flat layers of color: it is smoothed by a box blur
+ * (the simplicity is its radius) and every color channel is then reduced to a few levels. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params levels (2-8, default 4), simplicity (0-10 px blur radius, default 4)
+ * @returns {Image_data}
+ */
+export function cutout(image, params) {
+	const levels = clamp(Math.round(parseFloat(params.levels ?? 4)) || 2, 2, 8);
+	const radius = clamp(Math.round(parseFloat(params.simplicity ?? 4)) || 0, 0, 10);
+	const data = image.data;
+	const source = radius > 0 ? box_blur(image, radius) : data;
+	const step = 255 / (levels - 1);
+	for (let i = 0; i < data.length; i += 4) {
+		for (let c = 0; c < 3; c++) {
+			data[i + c] = Math.round(Math.round(source[i + c] / step) * step);
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

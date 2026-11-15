@@ -88,6 +88,13 @@ class Image_adjustments_class {
 		this.apply_direct((img) => Filters.average(img, shaped ? sample_mask_for_layer(selection.mask, config.layer, img.width, img.height) : null));
 	}
 
+	cutout() {
+		this.show_dialog('Cutout', [
+			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},
+			{name: "simplicity", title: "Simplicity:", value: 4, range: [0, 10]},
+		], (img, params) => Filters.cutout(img, params));
+	}
+
 	photocopy() {
 		this.show_dialog('Photocopy', [
 			{name: "detail", title: "Detail:", value: 3, range: [1, 5]},

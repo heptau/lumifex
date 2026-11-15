@@ -1961,6 +1961,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Cutout',
+						ellipsis: true,
+						target: 'image/adjustments.cutout'
+					},
+					{
 						name: 'Photocopy',
 						ellipsis: true,
 						target: 'image/adjustments.photocopy'
