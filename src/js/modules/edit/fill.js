@@ -17,6 +17,13 @@ let pattern_canvas = null;
  * Edit > Fill with foreground color (Alt+Backspace, as in Photoshop).
  * Fills active selection, or whole layer if nothing is selected.
  */
+/**
+ * @returns {HTMLCanvasElement|null} the pattern defined by Edit > Define Pattern (null when there is none)
+ */
+export function get_pattern_canvas() {
+	return pattern_canvas;
+}
+
 class Edit_fill_class {
 
 	constructor() {

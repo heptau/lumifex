@@ -834,6 +834,11 @@ const menuDefinition = [
 						target: 'effects/common/color-overlay.color_overlay'
 					},
 					{
+						name: 'Pattern Overlay',
+						ellipsis: true,
+						target: 'effects/common/pattern-overlay.pattern_overlay'
+					},
+					{
 						name: 'Gradient Overlay',
 						ellipsis: true,
 						target: 'effects/common/gradient-overlay.gradient_overlay'

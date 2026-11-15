@@ -20,6 +20,34 @@ export function safe_color(color) {
 	return /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(String(color)) ? String(color) : '#000000';
 }
 
+/** The largest side of a pattern stored in a layer style (bigger patterns are scaled down) */
+export const MAX_PATTERN_SIZE = 256;
+
+/**
+ * A pattern is stored in the style as a PNG data URL (it is part of a saved project, so it is not trusted)
+ *
+ * @param {*} url
+ * @returns {string|null} the URL when it is a base64 PNG data URL of a sane length, otherwise null
+ */
+export function safe_pattern_url(url) {
+	if (typeof url != 'string' || url.length > 1500000) {
+		return null;
+	}
+	return /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(url) ? url : null;
+}
+
+/**
+ * @param {number} width
+ * @param {number} height
+ * @returns {{width: number, height: number}} the size scaled down so that the longer side is at most MAX_PATTERN_SIZE
+ */
+export function pattern_size(width, height) {
+	const w = Math.max(1, Math.round(Number(width) || 1));
+	const h = Math.max(1, Math.round(Number(height) || 1));
+	const scale = Math.min(1, MAX_PATTERN_SIZE / Math.max(w, h));
+	return {width: Math.max(1, Math.round(w * scale)), height: Math.max(1, Math.round(h * scale))};
+}
+
 /**
  * [r, g, b] of a hex color (black for anything else)
  *
