@@ -1857,6 +1857,11 @@ const menuDefinition = [
 						target: 'image/adjustments.oil_paint'
 					},
 					{
+						name: 'Tiles',
+						ellipsis: true,
+						target: 'image/adjustments.tiles'
+					},
+					{
 						name: 'Emboss',
 						target: 'effects/emboss.emboss'
 					},

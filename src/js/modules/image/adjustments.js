@@ -226,6 +226,14 @@ class Image_adjustments_class {
 		], (img, params) => Filters.oilPaint(img, params));
 	}
 
+	tiles() {
+		this.show_dialog('Tiles', [
+			{name: "count", title: "Number of tiles:", value: 10, range: [2, 100]},
+			{name: "offset", title: "Maximum offset (%):", value: 10, range: [1, 99]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Filters.tiles(img, params));
+	}
+
 	pixelate() {
 		this.show_dialog('Pixelate', [
 			{name: "size", title: "Cell size:", value: 8, range: [2, 100]},

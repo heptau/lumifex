@@ -1,4 +1,4 @@
-import { oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -194,5 +194,22 @@ describe('Smart blur', () => {
 		expect(px(9, 5)).toBeLessThan(60);
 		expect(px(10, 5)).toBeGreaterThan(180);
 		expect(out.data[(5 * 20 + 7) * 4 + 3]).toBe(107);
+	});
+
+	it('tiles shift whole tiles, are deterministic and do nothing without an offset', () => {
+		const make = () => image(20, 20, (x, y) => [x * 10, y * 10, 3, 255]);
+		const base = make();
+		expect(Array.from(tiles(make(), { count: 4, offset: 0 }).data)).toEqual(Array.from(base.data));
+		const a = tiles(make(), { count: 4, offset: 40, seed: 3 });
+		const b = tiles(make(), { count: 4, offset: 40, seed: 3 });
+		const c = tiles(make(), { count: 4, offset: 40, seed: 4 });
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(base.data));
+		//only values from the source appear and the alpha is untouched
+		for (let i = 0; i < a.data.length; i += 4) {
+			expect(a.data[i] % 10).toBe(0);
+			expect(a.data[i + 3]).toBe(255);
+		}
 	});
 });

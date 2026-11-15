@@ -114,6 +114,62 @@ export function oilPaint(image, params) {
 }
 
 /**
+ * Tiles (Photoshop, Stylize) - the image is cut into tiles and every tile is shifted by a random distance.
+ * Tiles are drawn over a copy of the original, so the gaps show the unshifted image underneath.
+ * The shifts come from a hash of the tile index and the seed (the same input gives the same result).
+ *
+ * @param {Image_data} image
+ * @param {object} params count (tiles along the longer side, 2-100), offset (1-99 % of a tile), seed (integer)
+ * @returns {Image_data}
+ */
+export function tiles(image, params) {
+	const count = clamp(Math.round(parseFloat(params.count) || 0), 2, 100);
+	const offset_share = clamp(parseFloat(params.offset) || 0, 0, 99) / 100;
+	const seed = parseInt(params.seed) || 0;
+	const w = image.width;
+	const h = image.height;
+	const size = Math.max(1, Math.ceil(Math.max(w, h) / count));
+	const max_shift = Math.round(size * offset_share);
+	if (max_shift == 0) {
+		return image;
+	}
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const hash = (a, b, salt) => {
+		let n = (Math.imul(a, 374761393) + Math.imul(b, 668265263) + Math.imul(seed + salt, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+	};
+	for (let ty = 0; ty * size < h; ty++) {
+		for (let tx = 0; tx * size < w; tx++) {
+			const dx = Math.floor(hash(tx, ty, 1) * (max_shift * 2 + 1)) - max_shift;
+			const dy = Math.floor(hash(tx, ty, 2) * (max_shift * 2 + 1)) - max_shift;
+			const x_end = Math.min(w, (tx + 1) * size);
+			const y_end = Math.min(h, (ty + 1) * size);
+			for (let y = ty * size; y < y_end; y++) {
+				const ny = y + dy;
+				if (ny < 0 || ny >= h) {
+					continue;
+				}
+				for (let x = tx * size; x < x_end; x++) {
+					const nx = x + dx;
+					if (nx < 0 || nx >= w) {
+						continue;
+					}
+					const i = (y * w + x) * 4;
+					const j = (ny * w + nx) * 4;
+					data[j] = src[i];
+					data[j + 1] = src[i + 1];
+					data[j + 2] = src[i + 2];
+					data[j + 3] = src[i + 3];
+				}
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Pixelate (Mosaic) - replaces each block with its average color
  *
  * @param {Image_data} image
