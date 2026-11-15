@@ -50,6 +50,38 @@ export function diffuse(image, params) {
 }
 
 /**
+ * Glowing Edges (Photoshop, simplified) - the edges of every color channel glow on a black background: the Sobel
+ * gradient of each channel, multiplied by the brightness. Edges repeat the border pixels. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params brightness (0-100, default 20; 20 = the gradient as it is), threshold (0-255, gradients
+ *  below it are dropped, default 0)
+ * @returns {Image_data}
+ */
+export function glowingEdges(image, params) {
+	const gain = clamp(parseFloat(params.brightness ?? 20) || 0, 0, 100) / 20;
+	const threshold = clamp(parseFloat(params.threshold) || 0, 0, 255);
+	const w = image.width;
+	const h = image.height;
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const at = (x, y, c) => src[(clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)) * 4 + c];
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			for (let c = 0; c < 3; c++) {
+				const gx = at(x + 1, y - 1, c) + 2 * at(x + 1, y, c) + at(x + 1, y + 1, c) - at(x - 1, y - 1, c) - 2 * at(x - 1, y, c) - at(x - 1, y + 1, c);
+				const gy = at(x - 1, y + 1, c) + 2 * at(x, y + 1, c) + at(x + 1, y + 1, c) - at(x - 1, y - 1, c) - 2 * at(x, y - 1, c) - at(x + 1, y - 1, c);
+				//the Sobel sum of a unit step is 4, so divide by 4 to get the size of the step itself
+				const magnitude = Math.sqrt(gx * gx + gy * gy) / 4;
+				data[i + c] = magnitude < threshold ? 0 : clamp(Math.round(magnitude * gain), 0, 255);
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Mezzotint (Photoshop, simplified) - random threshold dither: every pixel becomes black or white (per channel
  * in Color mode, by brightness in Black and White mode), the chance of white follows the original value, so the
  * average tone is kept. Deterministic by the seed and the position. Alpha is kept.

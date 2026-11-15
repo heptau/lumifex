@@ -1,4 +1,4 @@
-import { mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -363,5 +363,25 @@ describe('mezzotint', () => {
 		const c = mezzotint(flat(100), {seed: 4});
 		expect(Array.from(a.data)).toEqual(Array.from(b.data));
 		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+	});
+});
+
+describe('glowingEdges', () => {
+	const step = () => image(8, 3, (x) => (x < 4 ? [0, 0, 0, 200] : [100, 100, 100, 200]));
+
+	it('is black on flat areas and bright at a step, keeps alpha', () => {
+		const out = glowingEdges(step(), {brightness: 20});
+		expect(out.data[0]).toBe(0);
+		expect(out.data[7 * 4]).toBe(0);
+		expect(out.data[3 * 4]).toBeGreaterThan(30);
+		expect(out.data[3 * 4]).toBe(out.data[4 * 4]);
+		expect(out.data[3]).toBe(200);
+	});
+
+	it('brightness scales the glow, the threshold drops weak edges', () => {
+		const dim = glowingEdges(step(), {brightness: 10}).data[3 * 4];
+		const bright = glowingEdges(step(), {brightness: 40}).data[3 * 4];
+		expect(bright).toBeGreaterThan(dim);
+		expect(glowingEdges(step(), {threshold: 200}).data[3 * 4]).toBe(0);
 	});
 });

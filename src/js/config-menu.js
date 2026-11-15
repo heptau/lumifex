@@ -1935,6 +1935,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Glowing Edges',
+						ellipsis: true,
+						target: 'image/adjustments.glowing_edges'
+					},
+					{
 						name: 'Trace Contour',
 						ellipsis: true,
 						target: 'image/adjustments.trace_contour'

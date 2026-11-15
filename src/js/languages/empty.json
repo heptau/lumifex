@@ -1653,5 +1653,7 @@
     "Repeat Edge Pixels": "",
     "Wrap Around": "",
     "Merge Visible": "",
-    "There are fewer than two visible layers.": ""
+    "There are fewer than two visible layers.": "",
+    "Glowing Edges": "",
+    "Edge brightness:": ""
 }

@@ -227,6 +227,13 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuse(img, params));
 	}
 
+	glowing_edges() {
+		this.show_dialog('Glowing Edges', [
+			{name: "brightness", title: "Edge brightness:", value: 20, range: [0, 100]},
+			{name: "threshold", title: "Edge threshold:", value: 0, range: [0, 255]},
+		], (img, params) => Filters.glowingEdges(img, params));
+	}
+
 	mezzotint() {
 		this.show_dialog('Mezzotint', [
 			{name: "mode", title: "Mode:", value: 'Color', values: ['Color', 'Black and White']},
