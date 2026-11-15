@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -2723,5 +2723,30 @@ describe('moving a selection and its pixels', () => {
 		expect(px(1, 0)[0]).toBeGreaterThan(100);
 		expect(px(1, 0)[2]).toBeGreaterThan(100);
 		expect(px(1, 0)[3]).toBe(255);
+	});
+});
+
+describe('pointillize', () => {
+	const make = () => gradient_image(40, 40);
+
+	it('is deterministic by seed and paints background between the dots', () => {
+		const a = pointillize(make(), {size: 10, seed: 3, background: '#000000'});
+		const b = pointillize(make(), {size: 10, seed: 3, background: '#000000'});
+		const c = pointillize(make(), {size: 10, seed: 4, background: '#000000'});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+		let dark = 0;
+		for (let i = 0; i < a.data.length; i += 4) {
+			if (a.data[i] == 0 && a.data[i + 1] == 0 && a.data[i + 2] == 0) {
+				dark++;
+			}
+		}
+		expect(dark).toBeGreaterThan(0);
+		expect(dark).toBeLessThan(40 * 40);
+	});
+
+	it('falls back to white for a bad background and keeps the size', () => {
+		const img = pointillize(make(), {size: 'x', background: 'red; evil'});
+		expect(img.data.length).toBe(40 * 40 * 4);
 	});
 });

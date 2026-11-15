@@ -496,6 +496,14 @@ class Image_adjustments_class {
 		], (img, params) => Distort.crystallize(img, params));
 	}
 
+	pointillize() {
+		this.show_dialog('Pointillize', [
+			{name: "size", title: "Dot size:", value: 4, range: [1, 30]},
+			{name: "background", title: "Background:", value: '#ffffff', type: 'color'},
+			{name: "seed", title: "Seed:", value: Math.floor(Math.random() * 1000), range: [0, 999]},
+		], (img, params) => Distort.pointillize(img, params));
+	}
+
 	wave() {
 		this.show_dialog('Wave', [
 			{name: "amplitude", title: "Amplitude:", value: 3, range: [0, 30], step: 0.5},

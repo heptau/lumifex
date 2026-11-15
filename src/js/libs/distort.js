@@ -535,6 +535,81 @@ export function radialBlur(image, params) {
 }
 
 /**
+ * Pointillize (Photoshop) - the image is repainted with randomly placed round dots on a background color. Every
+ * dot has the color of the source at its center. Deterministic by the seed. Alpha of the source is kept at the dots.
+ *
+ * @param {Image_data} image
+ * @param {object} params size (1-30 % of the shorter side, the distance of dots), seed, background (#rrggbb, default white)
+ * @returns {Image_data}
+ */
+export function pointillize(image, params) {
+	const size = Math.max(3, clamp(parseFloat(params.size ?? 4) || 4, 1, 30) / 100 * Math.min(image.width, image.height));
+	const w = image.width;
+	const h = image.height;
+	const cols = Math.max(1, Math.ceil(w / size));
+	const rows = Math.max(1, Math.ceil(h / size));
+	const cell_w = w / cols;
+	const cell_h = h / rows;
+	const random = seeded_random(params.seed);
+	const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(params.background || '');
+	const background = match ? [parseInt(match[1], 16), parseInt(match[2], 16), parseInt(match[3], 16)] : [255, 255, 255];
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+
+	//a dot in every cell: its center (moved inside the cell), radius and the color taken from the source there
+	const dots = new Float32Array(cols * rows * 7);
+	for (let row = 0; row < rows; row++) {
+		for (let col = 0; col < cols; col++) {
+			const d = (row * cols + col) * 7;
+			const x = (col + 0.2 + random() * 0.6) * cell_w;
+			const y = (row + 0.2 + random() * 0.6) * cell_h;
+			const i = (clamp(Math.floor(y), 0, h - 1) * w + clamp(Math.floor(x), 0, w - 1)) * 4;
+			dots[d] = x;
+			dots[d + 1] = y;
+			dots[d + 2] = Math.min(cell_w, cell_h) * (0.45 + random() * 0.25);
+			dots[d + 3] = src[i];
+			dots[d + 4] = src[i + 1];
+			dots[d + 5] = src[i + 2];
+			dots[d + 6] = src[i + 3];
+		}
+	}
+	for (let y = 0; y < h; y++) {
+		const cell_row = Math.min(rows - 1, Math.floor(y / cell_h));
+		for (let x = 0; x < w; x++) {
+			const cell_col = Math.min(cols - 1, Math.floor(x / cell_w));
+			const i = (y * w + x) * 4;
+			let best = -1;
+			let best_distance = Infinity;
+			for (let r = Math.max(0, cell_row - 1); r <= Math.min(rows - 1, cell_row + 1); r++) {
+				for (let c = Math.max(0, cell_col - 1); c <= Math.min(cols - 1, cell_col + 1); c++) {
+					const q = (r * cols + c) * 7;
+					const dx = dots[q] - x - 0.5;
+					const dy = dots[q + 1] - y - 0.5;
+					const dist = Math.sqrt(dx * dx + dy * dy) - dots[q + 2];
+					if (dist < best_distance) {
+						best_distance = dist;
+						best = q;
+					}
+				}
+			}
+			if (best_distance <= 0) {
+				data[i] = dots[best + 3];
+				data[i + 1] = dots[best + 4];
+				data[i + 2] = dots[best + 5];
+				data[i + 3] = dots[best + 6];
+			}
+			else {
+				data[i] = background[0];
+				data[i + 1] = background[1];
+				data[i + 2] = background[2];
+				data[i + 3] = src[i + 3];
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Crystallize - the image breaks into irregular cells of one color each
  *
  * @param {Image_data} image

@@ -1793,6 +1793,11 @@ const menuDefinition = [
 						target: 'image/adjustments.pixelate'
 					},
 					{
+						name: 'Pointillize',
+						ellipsis: true,
+						target: 'image/adjustments.pointillize'
+					},
+					{
 						name: 'Crystallize',
 						ellipsis: true,
 						target: 'image/adjustments.crystallize'
