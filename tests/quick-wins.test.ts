@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { fibers, differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -2759,5 +2759,33 @@ describe('differenceClouds', () => {
 		expect(Array.from(a.data)).toEqual(Array.from(b.data));
 		expect(a.data[3]).toBe(90);
 		expect(Math.max(...Array.from(a.data).filter((_, i) => i % 4 == 0))).toBeGreaterThan(100);
+	});
+});
+
+describe('fibers', () => {
+	const blank = () => ({data: new Uint8ClampedArray(30 * 60 * 4), width: 30, height: 60});
+
+	it('fills the image with an opaque pattern between the colors, same for the same seed', () => {
+		const a = fibers(blank(), {seed: 1, color1: '#000000', color2: '#ff0000'});
+		const b = fibers(blank(), {seed: 1, color1: '#000000', color2: '#ff0000'});
+		const c = fibers(blank(), {seed: 2, color1: '#000000', color2: '#ff0000'});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+		expect(a.data[3]).toBe(255);
+		expect(a.data[1]).toBe(0); //green stays 0 between black and red
+	});
+
+	it('is streaked along y: neighbours down differ less than neighbours across', () => {
+		const img = fibers(blank(), {seed: 3, variance: 20, strength: 2});
+		let across = 0;
+		let down = 0;
+		for (let y = 0; y < 59; y++) {
+			for (let x = 0; x < 29; x++) {
+				const i = (y * 30 + x) * 4;
+				across += Math.abs(img.data[i] - img.data[i + 4]);
+				down += Math.abs(img.data[i] - img.data[i + 30 * 4]);
+			}
+		}
+		expect(down).toBeLessThan(across);
 	});
 });

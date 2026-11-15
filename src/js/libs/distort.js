@@ -231,6 +231,66 @@ export function clouds(image, params) {
 }
 
 /**
+ * Fibers (Photoshop) - replaces the image with long vertical fibers (value noise stretched along y) between two
+ * colors; the result is the same for the same seed. Alpha becomes 255.
+ *
+ * @param {Image_data} image
+ * @param {object} params variance (1-64, how much the fibers differ: higher = coarser), strength (1-64, higher =
+ *  shorter fibers), seed, color1, color2 (hex)
+ * @returns {Image_data}
+ */
+export function fibers(image, params) {
+	const variance = clamp(parseFloat(params.variance ?? 16) || 16, 1, 64);
+	const strength = clamp(parseFloat(params.strength ?? 4) || 4, 1, 64);
+	const c1 = parseHex(params.color1 || '#000000');
+	const c2 = parseHex(params.color2 || '#ffffff');
+	const w = image.width;
+	const h = image.height;
+	const random = seeded_random(params.seed);
+	const OCTAVES = 4;
+	const noise = new Float32Array(w * h);
+	let total = 0;
+	let amplitude = 1;
+	for (let o = 0; o < OCTAVES; o++) {
+		//fibers are narrow (cell_x) and long (cell_y); strength shortens them
+		const cell_x = Math.max(1, variance / 4 / Math.pow(2, o));
+		const cell_y = Math.max(cell_x, (h / 2) / strength * 4 / Math.pow(2, o));
+		const cols = Math.ceil(w / cell_x) + 2;
+		const rows = Math.ceil(h / cell_y) + 2;
+		const lattice = new Float32Array(cols * rows);
+		for (let i = 0; i < lattice.length; i++) {
+			lattice[i] = random();
+		}
+		for (let y = 0; y < h; y++) {
+			const gy = y / cell_y;
+			const y0 = Math.floor(gy);
+			let ty = gy - y0;
+			ty = ty * ty * (3 - 2 * ty);
+			for (let x = 0; x < w; x++) {
+				const gx = x / cell_x;
+				const x0 = Math.floor(gx);
+				let tx = gx - x0;
+				tx = tx * tx * (3 - 2 * tx);
+				const a = lattice[y0 * cols + x0] * (1 - tx) + lattice[y0 * cols + x0 + 1] * tx;
+				const b = lattice[(y0 + 1) * cols + x0] * (1 - tx) + lattice[(y0 + 1) * cols + x0 + 1] * tx;
+				noise[y * w + x] += (a * (1 - ty) + b * ty) * amplitude;
+			}
+		}
+		total += amplitude;
+		amplitude /= 2;
+	}
+	const data = image.data;
+	for (let p = 0, i = 0; p < noise.length; p++, i += 4) {
+		const t = clamp(noise[p] / total, 0, 1);
+		for (let c = 0; c < 3; c++) {
+			data[i + c] = c1[c] + (c2[c] - c1[c]) * t;
+		}
+		data[i + 3] = 255;
+	}
+	return image;
+}
+
+/**
  * Difference Clouds (Photoshop) - clouds (black to white) combined with the image by the Difference blend, so
  * applying it again flips parts of the pattern and builds marble-like veins. Alpha is kept.
  *

@@ -527,6 +527,16 @@ class Image_adjustments_class {
 		], (img, params) => Distort.lensFlare(img, params));
 	}
 
+	fibers() {
+		this.show_dialog('Fibers', [
+			{name: "variance", title: "Variance:", value: 16, range: [1, 64]},
+			{name: "strength", title: "Strength:", value: 4, range: [1, 64]},
+			{name: "seed", title: "Seed:", value: Math.floor(Math.random() * 1000), range: [0, 999]},
+			{name: "color1", title: "Color 1:", value: '#000000', type: 'color'},
+			{name: "color2", title: "Color 2:", value: '#ffffff', type: 'color'},
+		], (img, params) => Distort.fibers(img, params));
+	}
+
 	difference_clouds() {
 		this.show_dialog('Difference Clouds', [
 			{name: "scale", title: "Scale:", value: 30, range: [2, 100]},
