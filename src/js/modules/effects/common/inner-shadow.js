@@ -88,6 +88,7 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 			color: params.color,
 			choke: params.choke,
 			center: params.source === 'Center',
+			invert: params.invert === true,
 		};
 		ctx.drawImage(source, x, y, width, height);
 		ctx.save();
@@ -110,8 +111,8 @@ class Effects_innerShadow_class extends Effects_layer_style_class {
 		if (!layer || layer.type != 'image') {
 			return;
 		}
-		const params = {x: data.params.x, y: data.params.y, blur: data.params.blur, color: safe_color(data.params.color), choke: data.params.choke, center: data.params.source === 'Center'};
-		const key = [params.x, params.y, params.blur, params.color, params.choke, params.center].join('|');
+		const params = {x: data.params.x, y: data.params.y, blur: data.params.blur, color: safe_color(data.params.color), choke: data.params.choke, center: data.params.source === 'Center', invert: data.params.invert === true};
+		const key = [params.x, params.y, params.blur, params.color, params.choke, params.center, params.invert].join('|');
 		const shadow = this.cached(layer, key, (source) => this.build_shadow(source, layer.width, layer.height, params));
 
 		const previous_filter = ctx.filter;

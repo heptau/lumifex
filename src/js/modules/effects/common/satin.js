@@ -25,6 +25,7 @@ class Effects_satin_class extends Effects_innerShadow_class {
 			{name: "blur", title: "Radius:", value: filter.blur ??= 14, range: [0, 50]},
 			{name: "opacity", title: "Opacity:", value: filter.opacity ??= 50, range: [1, 100]},
 			{name: "color", title: "Color:", value: filter.color ??= "#000000", type: 'color'},
+			{name: "invert", title: "Invert:", value: filter.invert ??= false},
 		];
 		this.show_dialog('satin', params, filter_id);
 	}
@@ -58,16 +59,32 @@ class Effects_satin_class extends Effects_innerShadow_class {
 		ctx.drawImage(source, pad - x, pad - y, width, height);
 
 		//blur, then color the result
-		const soft = document.createElement('canvas');
+		let soft = document.createElement('canvas');
 		soft.width = work.width;
 		soft.height = work.height;
-		const soft_ctx = soft.getContext('2d');
+		let soft_ctx = soft.getContext('2d');
 		soft_ctx.filter = blur > 0 ? `blur(${blur}px)` : 'none';
 		soft_ctx.drawImage(work, 0, 0);
 		soft_ctx.filter = 'none';
 		soft_ctx.globalCompositeOperation = 'source-in';
 		soft_ctx.fillStyle = safe_color(params.color);
 		soft_ctx.fillRect(0, 0, soft.width, soft.height);
+
+		if (params.invert === true) {
+			//Invert: the shading goes where it was not - the colored shape minus the shading
+			const flipped = document.createElement('canvas');
+			flipped.width = work.width;
+			flipped.height = work.height;
+			const flipped_ctx = flipped.getContext('2d');
+			flipped_ctx.drawImage(source, pad, pad, width, height);
+			flipped_ctx.globalCompositeOperation = 'source-in';
+			flipped_ctx.fillStyle = safe_color(params.color);
+			flipped_ctx.fillRect(0, 0, flipped.width, flipped.height);
+			flipped_ctx.globalCompositeOperation = 'destination-out';
+			flipped_ctx.drawImage(soft, 0, 0);
+			soft = flipped;
+			soft_ctx = flipped_ctx;
+		}
 
 		//clip to the original shape
 		soft_ctx.globalCompositeOperation = 'destination-in';
