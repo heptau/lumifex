@@ -1642,5 +1642,8 @@
     "Edge threshold:": "",
     "Passes:": "",
     "Fibers": "",
-    "Variance:": ""
+    "Variance:": "",
+    "Purge Undo History": "",
+    "There is no undo history to purge.": "",
+    "Undo history purged.": ""
 }

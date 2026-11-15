@@ -222,6 +222,10 @@ const menuDefinition = [
 				target: 'edit/history.history'
 			},
 			{
+				name: 'Purge Undo History',
+				target: 'edit/history.purge'
+			},
+			{
 				name: 'Repeat Last Command',
 				shortcut: 'Alt+Shift+Ctrl+R',
 				target: 'edit/repeat.repeat_last'

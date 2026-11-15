@@ -52,6 +52,45 @@ class Edit_history_class {
 	 *
 	 * @returns {{step: number, name: string, active: boolean, undone: boolean}[]}
 	 */
+	/**
+	 * Edit > Purge > Undo History - forgets the steps that can be undone to free memory; the image stays as it is,
+	 * the steps that can be redone are kept
+	 */
+	async purge() {
+		const state = app.State;
+		if (state.action_history_index == 0) {
+			alertify.warning(t('There is no undo history to purge.'));
+			return;
+		}
+		if (this.busy) {
+			return;
+		}
+		this.busy = true;
+		let failed = false;
+		try {
+			while (state.action_history_index > 0) {
+				const action = state.action_history.shift();
+				state.action_history_index--;
+				try {
+					await action.free();
+				}
+				catch {
+					failed = true;
+				}
+			}
+		}
+		finally {
+			this.busy = false;
+			state.notify_history();
+		}
+		if (failed) {
+			alertify.error(t('A problem occurred while removing undo history. It\'s suggested you save your work and refresh the page in order to free up memory.'));
+		}
+		else {
+			alertify.success(t('Undo history purged.'));
+		}
+	}
+
 	get_steps() {
 		const state = app.State;
 		const steps = [{step: 0, name: t('Initial state'), active: state.action_history_index == 0, undone: false}];
