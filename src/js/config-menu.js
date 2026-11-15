@@ -1837,6 +1837,11 @@ const menuDefinition = [
 						target: 'image/adjustments.facet'
 					},
 					{
+						name: 'Patchwork',
+						ellipsis: true,
+						target: 'image/adjustments.patchwork'
+					},
+					{
 						name: 'Pointillize',
 						ellipsis: true,
 						target: 'image/adjustments.pointillize'

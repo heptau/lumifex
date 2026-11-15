@@ -915,6 +915,63 @@ export function facet(image, params) {
 }
 
 /**
+ * Patchwork (Photoshop, Texture, simplified) - the picture is made of colored squares: each square takes the mean
+ * color of its area and gets a random relief, so its top and left edge are lighter and its bottom and right edge
+ * darker by that amount (the randomness comes from a hash of the square and the seed). Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params size (2-64 px, side of a square, default 8), relief (0-25, the largest shading in levels,
+ *  default 8), seed (any integer)
+ * @returns {Image_data}
+ */
+export function patchwork(image, params) {
+	const size = clamp(Math.round(parseFloat(params.size ?? 8)) || 2, 2, 64);
+	const relief = clamp(parseFloat(params.relief ?? 8) || 0, 0, 25);
+	const seed = parseInt(params.seed) || 0;
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const hash = (a, b) => {
+		let n = (Math.imul(a, 374761393) + Math.imul(b, 668265263) + Math.imul(seed, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+	};
+	for (let ty = 0; ty * size < h; ty++) {
+		for (let tx = 0; tx * size < w; tx++) {
+			const x0 = tx * size;
+			const y0 = ty * size;
+			const x1 = Math.min(w, x0 + size);
+			const y1 = Math.min(h, y0 + size);
+			const mean = [0, 0, 0];
+			for (let y = y0; y < y1; y++) {
+				for (let x = x0; x < x1; x++) {
+					for (let c = 0; c < 3; c++) {
+						mean[c] += data[(y * w + x) * 4 + c];
+					}
+				}
+			}
+			const count = (x1 - x0) * (y1 - y0);
+			const height = hash(tx, ty) * relief;
+			for (let y = y0; y < y1; y++) {
+				for (let x = x0; x < x1; x++) {
+					let shade = 0;
+					if (x == x0 || y == y0) {
+						shade += height;
+					}
+					if (x == x1 - 1 || y == y1 - 1) {
+						shade -= height;
+					}
+					for (let c = 0; c < 3; c++) {
+						data[(y * w + x) * 4 + c] = clamp(Math.round(mean[c] / count + shade), 0, 255);
+					}
+				}
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

@@ -1,4 +1,4 @@
-import { facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -560,5 +560,25 @@ describe('facet', () => {
 	it('more passes are not weaker: a bad number falls back to the default', () => {
 		const out = facet(image(3, 3, () => [10, 20, 30, 255]), {radius: 'x', passes: 'y'});
 		expect(Array.from(out.data.slice(0, 3))).toEqual([10, 20, 30]);
+	});
+});
+
+describe('patchwork', () => {
+	it('every square gets its mean color, alpha is kept, and relief 0 makes the squares flat', () => {
+		const img = image(4, 2, (x) => (x % 2 == 0 ? [0, 0, 0, 33] : [100, 100, 100, 33]));
+		const out = patchwork(img, {size: 2, relief: 0});
+		for (let i = 0; i < out.data.length; i += 4) {
+			expect(out.data[i]).toBe(50);
+			expect(out.data[i + 3]).toBe(33);
+		}
+	});
+
+	it('the relief lightens the top left and darkens the bottom right of a square, deterministically', () => {
+		const make = () => image(8, 8, () => [100, 100, 100, 255]);
+		const a = patchwork(make(), {size: 8, relief: 25, seed: 5});
+		const b = patchwork(make(), {size: 8, relief: 25, seed: 5});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(a.data[0]).toBeGreaterThanOrEqual(a.data[(3 * 8 + 3) * 4]);
+		expect(a.data[(7 * 8 + 7) * 4]).toBeLessThanOrEqual(a.data[(3 * 8 + 3) * 4]);
 	});
 });

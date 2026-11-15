@@ -125,6 +125,14 @@ class Image_adjustments_class {
 		], (img, params) => Filters.basRelief(img, params));
 	}
 
+	patchwork() {
+		this.show_dialog('Patchwork', [
+			{name: "size", title: "Square size:", value: 8, range: [2, 64]},
+			{name: "relief", title: "Relief:", value: 8, range: [0, 25]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Filters.patchwork(img, params));
+	}
+
 	cutout() {
 		this.show_dialog('Cutout', [
 			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},

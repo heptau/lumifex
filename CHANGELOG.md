@@ -41,6 +41,7 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Pixelate > Fragment (Photoshop): the mean of four diagonally shifted copies of the image (distance).
 - Effects > Pixelate > Mezzotint (Photoshop, simplified): a random threshold dither to black and white dots, per channel or by brightness (mode, seed).
 - Effects > Pixelate > Facet (Photoshop, simplified): clumps similar colors into flat patches with repeated median passes (radius, passes).
+- Effects > Pixelate > Patchwork (Photoshop, simplified): the picture is made of squares of their mean color with a random relief shading on their edges (square size, relief, seed).
 - Effects > Distort > Shear (Photoshop, simplified): bends the image sideways along a half-sine curve (amount, repeat edge pixels or wrap around).
 - Layer > Merge Visible (Photoshop): the visible layers are replaced by one layer with their merged picture; hidden layers stay (one undo step).
 - Effects > Stylize > Glowing Edges (Photoshop, simplified): the edges of every channel glow on black (edge brightness, threshold).
