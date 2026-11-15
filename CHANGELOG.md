@@ -37,6 +37,7 @@ Only changes since version 5.0.0 are listed here.
 - Layer > Show All Layers and Hide Other Layers: every hidden layer becomes visible / only the active layer stays visible, each in one undo step.
 - Layer style Satin (Effects > Layer Style): soft silky shading inside an image layer with angle, distance, radius, opacity and color.
 - Effects > Distort > Polar Coordinates (Photoshop): bends the image around its center (Rectangular to Polar) or unrolls it back (Polar to Rectangular).
+- Effects > Render > Difference Clouds (Photoshop): clouds blended with the image by Difference; repeating it builds marble-like veins (scale, seed, contrast).
 - Effects > Pixelate > Pointillize (Photoshop): the image is repainted with random round dots on a background color (dot size, background, seed).
 - Effects > Other > Custom (Photoshop): a 3x3 convolution kernel with scale and offset for your own blur / sharpen / emboss.
 - Effects > Stylize > Trace Contour (Photoshop): thin lines of each color channel where it crosses the chosen level (level, lower / upper edge) on white.

@@ -394,7 +394,7 @@ describe('export layers names and resampling', () => {
 	});
 });
 
-import { pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
+import { differenceClouds, pointillize, zigzag, polar_coordinates, spherize, ripple, kaleidoscope, radialBlur, crystallize } from '../src/js/libs/distort.js';
 import { surfaceBlur } from '../src/js/libs/filters.js';
 import { rounded_rect_mask } from '../src/js/libs/selection-mask.js';
 import { link_changes, toggle_link_changes, unlink_changes, linked_with, next_link_id, follow_transform } from '../src/js/libs/layer-link.js';
@@ -2748,5 +2748,16 @@ describe('pointillize', () => {
 	it('falls back to white for a bad background and keeps the size', () => {
 		const img = pointillize(make(), {size: 'x', background: 'red; evil'});
 		expect(img.data.length).toBe(40 * 40 * 4);
+	});
+});
+
+describe('differenceClouds', () => {
+	it('on black it equals the clouds, is deterministic and keeps alpha', () => {
+		const black = () => ({data: new Uint8ClampedArray(Array.from({length: 20 * 20}, () => [0, 0, 0, 90]).flat()), width: 20, height: 20});
+		const a = differenceClouds(black(), {scale: 30, seed: 2});
+		const b = differenceClouds(black(), {scale: 30, seed: 2});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(a.data[3]).toBe(90);
+		expect(Math.max(...Array.from(a.data).filter((_, i) => i % 4 == 0))).toBeGreaterThan(100);
 	});
 });

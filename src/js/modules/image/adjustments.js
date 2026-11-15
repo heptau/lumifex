@@ -520,6 +520,14 @@ class Image_adjustments_class {
 		], (img, params) => Distort.lensFlare(img, params));
 	}
 
+	difference_clouds() {
+		this.show_dialog('Difference Clouds', [
+			{name: "scale", title: "Scale:", value: 30, range: [2, 100]},
+			{name: "seed", title: "Seed:", value: Math.floor(Math.random() * 1000), range: [0, 999]},
+			{name: "contrast", title: "Contrast:", value: 0, range: [0, 100]},
+		], (img, params) => Distort.differenceClouds(img, params));
+	}
+
 	clouds() {
 		this.show_dialog('Clouds', [
 			{name: "scale", title: "Scale:", value: 30, range: [2, 100]},

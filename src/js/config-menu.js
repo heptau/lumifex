@@ -1833,6 +1833,11 @@ const menuDefinition = [
 						target: 'image/adjustments.clouds'
 					},
 					{
+						name: 'Difference Clouds',
+						ellipsis: true,
+						target: 'image/adjustments.difference_clouds'
+					},
+					{
 						name: 'Lens Flare',
 						ellipsis: true,
 						target: 'image/adjustments.lens_flare'

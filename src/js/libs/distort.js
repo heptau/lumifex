@@ -231,6 +231,34 @@ export function clouds(image, params) {
 }
 
 /**
+ * Difference Clouds (Photoshop) - clouds (black to white) combined with the image by the Difference blend, so
+ * applying it again flips parts of the pattern and builds marble-like veins. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params scale (2-100 % of the longer side), seed, contrast (0-100)
+ * @returns {Image_data}
+ */
+export function differenceClouds(image, params) {
+	const scale = clamp(parseFloat(params.scale ?? 30) || 30, 2, 100) / 100 * Math.max(image.width, image.height);
+	const contrast = clamp(parseFloat(params.contrast) || 0, 0, 100) / 100;
+	const noise = cloud_noise(image.width, image.height, scale, params.seed);
+	let min = Infinity, max = -Infinity;
+	for (let n = 0; n < noise.length; n++) {
+		if (noise[n] < min) min = noise[n];
+		if (noise[n] > max) max = noise[n];
+	}
+	const range = max - min || 1;
+	const data = image.data;
+	for (let p = 0, i = 0; p < noise.length; p++, i += 4) {
+		const t = clamp(((noise[p] - min) / range - 0.5) * (1 + contrast * 3) + 0.5, 0, 1) * 255;
+		data[i] = Math.abs(data[i] - t);
+		data[i + 1] = Math.abs(data[i + 1] - t);
+		data[i + 2] = Math.abs(data[i + 2] - t);
+	}
+	return image;
+}
+
+/**
  * Lens Flare - adds a bright glow and a few soft rings ("ghosts") along the line through the image center,
  * like light reflected in camera lenses. The effect is added to the image (additive blending).
  *
