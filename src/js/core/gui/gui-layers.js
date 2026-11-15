@@ -506,6 +506,7 @@ class GUI_layers_class {
 				const kind_icon = `<svg class="layer_kind ${kind}" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="${kind_title}"><title>${kind_title}</title>${kind_shapes[kind]}</svg>`;
 				const linked = value.link_id != null;
 				const layer_title = kind_icon + (value.locked === true ? '\uD83D\uDD12 ' : '')
+					+ (value.effects_hidden === true ? `<span class="layer_effects_hidden" title="${t('Effects hidden')}" aria-label="${t('Effects hidden')}">\u25CC</span> ` : '')
 					+ (value.lock_alpha === true ? `<span class="layer_lock_alpha" title="${t('Lock Transparency')}" aria-label="${t('Lock Transparency')}">\u25A7</span> ` : '')
 					+ (linked ? `<span class="layer_link" title="${t('Linked layer')}" aria-label="${t('Linked layer')}">\uD83D\uDD17</span> ` : '')
 					+ this.Helper.escapeHtml(value.name);
