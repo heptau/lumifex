@@ -736,6 +736,47 @@ export function cutout(image, params) {
 }
 
 /**
+ * Poster Edges (Photoshop, simplified) - posterized colors (as Cutout) with dark lines drawn where the smoothed
+ * brightness changes sharply. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params levels (2-8, default 4), simplicity (0-10 px blur radius, default 2), edge (0-255, the
+ *  gradient from which a pixel is a line, default 30), intensity (0-100 %, how dark the lines are, default 80)
+ * @returns {Image_data}
+ */
+export function posterEdges(image, params) {
+	const radius = clamp(Math.round(parseFloat(params.simplicity ?? 2)) || 0, 0, 10);
+	const edge_level = clamp(parseFloat(params.edge ?? 30), 0, 255);
+	const strength = clamp(parseFloat(params.intensity ?? 80), 0, 100) / 100;
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const smooth = radius > 0 ? box_blur(image, radius) : data;
+	const luma = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		luma[p] = smooth[p * 4] * 0.299 + smooth[p * 4 + 1] * 0.587 + smooth[p * 4 + 2] * 0.114;
+	}
+	const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	const line = new Float32Array(w * h);
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
+			const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
+			line[y * w + x] = Math.sqrt(gx * gx + gy * gy) / 4 >= edge_level ? 1 : 0;
+		}
+	}
+	cutout(image, params);
+	for (let p = 0; p < w * h; p++) {
+		if (line[p]) {
+			for (let c = 0; c < 3; c++) {
+				data[p * 4 + c] = Math.round(data[p * 4 + c] * (1 - strength));
+			}
+		}
+	}
+	return image;
+}
+
+/**
  * Unsharp Mask - sharpens by adding the difference between the image and its blurred copy
  *
  * @param {Image_data} image

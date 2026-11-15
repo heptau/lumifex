@@ -1961,6 +1961,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse'
 					},
 					{
+						name: 'Poster Edges',
+						ellipsis: true,
+						target: 'image/adjustments.poster_edges'
+					},
+					{
 						name: 'Cutout',
 						ellipsis: true,
 						target: 'image/adjustments.cutout'

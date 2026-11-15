@@ -1,4 +1,4 @@
-import { cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -466,5 +466,22 @@ describe('cutout', () => {
 		const make = () => image(9, 9, (x, y) => (x == 4 && y == 4 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
 		expect(cutout(make(), {levels: 2, simplicity: 0}).data[(4 * 9 + 4) * 4]).toBe(255);
 		expect(cutout(make(), {levels: 2, simplicity: 3}).data[(4 * 9 + 4) * 4]).toBe(0);
+	});
+});
+
+describe('posterEdges', () => {
+	const make = () => image(10, 3, (x) => (x < 5 ? [255, 255, 255, 60] : [180, 180, 180, 60]));
+
+	it('darkens the pixels on a sharp edge, leaves flat areas and keeps alpha', () => {
+		const out = posterEdges(make(), {levels: 8, simplicity: 0, edge: 20, intensity: 100});
+		expect(out.data[4 * 4]).toBe(0);
+		expect(out.data[0]).toBe(255);
+		expect(out.data[3]).toBe(60);
+	});
+
+	it('a high threshold or zero intensity draws no lines', () => {
+		const plain = cutout(make(), {levels: 8, simplicity: 0}).data[4 * 4];
+		expect(posterEdges(make(), {levels: 8, simplicity: 0, edge: 255}).data[4 * 4]).toBe(plain);
+		expect(posterEdges(make(), {levels: 8, simplicity: 0, edge: 20, intensity: 0}).data[4 * 4]).toBe(plain);
 	});
 });

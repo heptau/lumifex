@@ -88,6 +88,15 @@ class Image_adjustments_class {
 		this.apply_direct((img) => Filters.average(img, shaped ? sample_mask_for_layer(selection.mask, config.layer, img.width, img.height) : null));
 	}
 
+	poster_edges() {
+		this.show_dialog('Poster Edges', [
+			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},
+			{name: "simplicity", title: "Simplicity:", value: 2, range: [0, 10]},
+			{name: "edge", title: "Edge threshold:", value: 30, range: [0, 255]},
+			{name: "intensity", title: "Intensity:", value: 80, range: [0, 100]},
+		], (img, params) => Filters.posterEdges(img, params));
+	}
+
 	cutout() {
 		this.show_dialog('Cutout', [
 			{name: "levels", title: "Levels:", value: 4, range: [2, 8]},
