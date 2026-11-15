@@ -166,6 +166,10 @@ export const EXTRA_SHORTCUTS = [
 	//layer
 	{id: 'layer/group.set_group', group: 'Layer', name: 'Set Group', target: 'layer/group.set_group', spec: 'Mod+G'},
 	{id: 'layer/group.clear_group', group: 'Layer', name: 'Clear Group', target: 'layer/group.clear_group', spec: 'Mod+Shift+G'},
+	{id: 'layer/select.next', group: 'Layer', name: 'Select Next Layer', target: 'layer/select.next', spec: 'Alt+]'},
+	{id: 'layer/select.previous', group: 'Layer', name: 'Select Previous Layer', target: 'layer/select.previous', spec: 'Alt+['},
+	{id: 'layer/select.top', group: 'Layer', name: 'Select Top Layer', target: 'layer/select.top', spec: 'Alt+.'},
+	{id: 'layer/select.bottom', group: 'Layer', name: 'Select Bottom Layer', target: 'layer/select.bottom', spec: 'Alt+,'},
 	{id: 'layer/move.up', group: 'Layer', name: 'Move Layer Up', target: 'layer/move.up', spec: 'Mod+]'},
 	{id: 'layer/move.down', group: 'Layer', name: 'Move Layer Down', target: 'layer/move.down', spec: 'Mod+['},
 	{id: 'layer/move.top', group: 'Layer', name: 'Bring Layer to Front', target: 'layer/move.top', spec: 'Mod+Shift+]'},

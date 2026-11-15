@@ -1602,5 +1602,14 @@
     "Pattern": "",
     "Pattern Fill": "",
     "Clear Layer Style": "",
-    "Print Size": ""
+    "Print Size": "",
+    "Select Layer": "",
+    "Next Layer": "",
+    "Previous Layer": "",
+    "Top Layer": "",
+    "Bottom Layer": "",
+    "Select Next Layer": "",
+    "Select Previous Layer": "",
+    "Select Top Layer": "",
+    "Select Bottom Layer": ""
 }

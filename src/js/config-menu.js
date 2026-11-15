@@ -1066,6 +1066,15 @@ const menuDefinition = [
 				target: 'layer/visibility.toggle'
 			},
 			{
+				name: 'Select Layer',
+				children: [
+					{ name: 'Next Layer', target: 'layer/select.next' },
+					{ name: 'Previous Layer', target: 'layer/select.previous' },
+					{ name: 'Top Layer', target: 'layer/select.top' },
+					{ name: 'Bottom Layer', target: 'layer/select.bottom' }
+				]
+			},
+			{
 				name: 'Move',
 				children: [
 					{

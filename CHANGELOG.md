@@ -33,6 +33,7 @@ Only changes since version 5.0.0 are listed here.
 - Layer > New Fill Layer > Pattern: a layer filled with the tiled pattern from Edit > Define Pattern (one undo step).
 - Layer > Clear Layer Style: removes all live effects of the layer (shadows, glows, strokes, overlays) in one undo step; smart filters stay.
 - View > Zoom > Print Size (Photoshop): zooms so that the picture is as big on the screen as it would be on paper, from the resolution of the document (a 96 dpi screen is assumed).
+- Layer > Select Layer: Next / Previous / Top / Bottom Layer (Alt+] / Alt+[ / Alt+. / Alt+, as in Photoshop) moves the active layer through the stack; the shortcuts can be changed in Keyboard Shortcuts.
 - Layer style Satin (Effects > Layer Style): soft silky shading inside an image layer with angle, distance, radius, opacity and color.
 - Effects > Distort > Polar Coordinates (Photoshop): bends the image around its center (Rectangular to Polar) or unrolls it back (Polar to Rectangular).
 - Effects > Stylize > Diffuse (Photoshop): every pixel is replaced by one from a random place nearby (amount, seed), like frosted glass; the same input always gives the same result.
