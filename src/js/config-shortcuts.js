@@ -127,6 +127,8 @@ export const EXTRA_SHORTCUTS = [
 	{id: 'tool:patch', group: 'Tools', name: 'Patch', tool: 'patch', spec: 'Shift+J'},
 	{id: 'tool:red_eye', group: 'Tools', name: 'Red Eye', tool: 'red_eye', spec: ''},
 	{id: 'tool:clone', group: 'Tools', name: 'Clone Stamp', tool: 'clone', spec: 'S'},
+	{id: 'tool:pattern_stamp', group: 'Tools', name: 'Pattern Stamp', tool: 'pattern_stamp', spec: ''},
+	{id: 'tool:color_replace', group: 'Tools', name: 'Color Replacement', tool: 'color_replace', spec: ''},
 	{id: 'tool:history_brush', group: 'Tools', name: 'History Brush', tool: 'history_brush', spec: 'Y'},
 	{id: 'tool:brush', group: 'Tools', name: 'Brush', tool: 'brush', spec: 'B'},
 	{id: 'tool:pencil', group: 'Tools', name: 'Pencil', tool: 'pencil', spec: 'Shift+B'},

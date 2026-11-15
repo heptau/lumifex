@@ -4,7 +4,7 @@
  */
 export const RASTER_TOOLS = [
 	'lasso', 'quick_select', 'magic_wand', 'quick_mask',
-	'clone', 'heal', 'patch', 'history_brush', 'red_eye', 'background_eraser', 'liquify',
+	'clone', 'pattern_stamp', 'color_replace', 'heal', 'patch', 'history_brush', 'red_eye', 'background_eraser', 'liquify',
 	'erase', 'magic_erase', 'fill',
 	'blur', 'sharpen', 'smudge', 'dodge_burn', 'sponge', 'bulge_pinch',
 ];

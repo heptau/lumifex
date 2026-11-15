@@ -307,6 +307,8 @@ body .sp-preview{
 .sidebar_left .pen:after{ background-image: url('images/icons/pen.svg'); }
 .sidebar_left .patch:after{ background-image: url('images/icons/patch.svg'); }
 .sidebar_left .history_brush:after{ background-image: url('images/icons/history_brush.svg'); }
+.sidebar_left .pattern_stamp:after{ background-image: url('images/icons/pattern_stamp.svg'); }
+.sidebar_left .color_replace:after{ background-image: url('images/icons/color_replace.svg'); }
 .sidebar_left .sponge:after{ background-image: url('images/icons/sponge.svg'); }
 .sidebar_left .bulge_pinch:after{ background-image: url('images/icons/bulge_pinch.svg'); }
 .sidebar_left .heal:after{ background-image: url('images/icons/heal.svg'); }

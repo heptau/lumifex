@@ -713,6 +713,40 @@ config.TOOLS = [
 		},
 	},
 	{
+		name: 'pattern_stamp',
+		title: 'Pattern Stamp (paints with the pattern from Edit > Define Pattern)',
+		attributes: {
+			size: 40,
+			hardness: {
+				value: 50,
+				min: 0,
+				max: 100,
+			},
+			opacity: {
+				value: 100,
+				min: 1,
+				max: 100,
+			},
+		},
+	},
+	{
+		name: 'color_replace',
+		title: 'Color Replacement (paints the foreground color and keeps light and shade)',
+		attributes: {
+			size: 40,
+			hardness: {
+				value: 50,
+				min: 0,
+				max: 100,
+			},
+			opacity: {
+				value: 100,
+				min: 1,
+				max: 100,
+			},
+		},
+	},
+	{
 		name: 'history_brush',
 		title: 'History Brush (paints back the original picture)',
 		attributes: {

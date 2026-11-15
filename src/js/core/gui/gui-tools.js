@@ -193,10 +193,12 @@ class GUI_tools_class {
 		const groups = [
 			//Move, Marquee, Lasso, Quick Selection, Magic Wand, Quick Mask
 			['select', 'selection', 'lasso', 'quick_select', 'magic_wand', 'quick_mask'],
-			//Crop, Eyedropper, Ruler, Healing, Patch, Red Eye, Brush, Pencil, Clone Stamp, History Brush, Eraser,
+			//Crop, Eyedropper, Ruler, Healing, Patch, Red Eye, Brush, Pencil, Color Replacement, Clone Stamp, Pattern Stamp,
+			//History Brush, Eraser,
 			//Background Eraser, Magic Eraser, Gradient, Paint Bucket, Blur, Sharpen, Smudge, Dodge/Burn, Sponge,
 			//Liquify, Bulge/Pinch
-			['crop', 'pick_color', 'measure', 'heal', 'patch', 'red_eye', 'brush', 'pencil', 'clone', 'history_brush',
+			['crop', 'pick_color', 'measure', 'heal', 'patch', 'red_eye', 'brush', 'pencil', 'color_replace', 'clone',
+				'pattern_stamp', 'history_brush',
 				'erase', 'background_eraser', 'magic_erase', 'gradient', 'fill', 'blur', 'sharpen', 'smudge', 'dodge_burn',
 				'sponge', 'liquify', 'bulge_pinch'],
 			//Pen, Type, Shapes, Hand

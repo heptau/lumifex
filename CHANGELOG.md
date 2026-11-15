@@ -57,6 +57,8 @@ Only changes since version 5.0.0 are listed here.
 - Effects > Stylize > Neon Glow (Photoshop, simplified): the picture is darkened and its edges glow in a chosen color (glow size, brightness, darken, color).
 - Effects > Stylize > Bas Relief (Photoshop, simplified): the brightness is carved into a low relief lit from a chosen angle, mixed between a dark and a light color (detail, smoothness, light angle, colors).
 - File > Revert (Photoshop): jumps back to the oldest step of the undo history; the steps stay available as Redo.
+- Color Replacement tool (Photoshop): paints the foreground color over an image layer but keeps its light and shade (hue and saturation of the color, luminosity of the pixels; size, hardness, opacity); transparent pixels stay transparent.
+- Pattern Stamp tool (Photoshop): paints with the pattern from Edit > Define Pattern, tiled from the top left corner of the layer so strokes line up (size, hardness, opacity).
 - Effects > Distort > Glass (Photoshop, simplified): the picture is seen through uneven glass - every pixel is taken from a place shifted by two smooth noise fields (distortion, scale, seed).
 - Effects > Blur > Gaussian Blur (Photoshop; also a smart filter): a true Gaussian blur that changes the pixels (radius up to 100 px, fractions allowed), premultiplied by alpha so transparent areas do not bleed color; the live Gaussian Blur under Common Filters stays.
 - Effects > Sharpen > Smart Sharpen (Photoshop, simplified; also a smart filter): Unsharp Mask that ignores differences below a noise limit and fades the sharpening towards black and white (amount, radius, reduce noise, fade shadows, fade highlights).
