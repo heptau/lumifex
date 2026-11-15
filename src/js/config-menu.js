@@ -1847,6 +1847,11 @@ const menuDefinition = [
 						target: 'image/adjustments.emboss'
 					},
 					{
+						name: 'Diffuse',
+						ellipsis: true,
+						target: 'image/adjustments.diffuse'
+					},
+					{
 						name: 'Emboss',
 						target: 'effects/emboss.emboss'
 					},

@@ -213,6 +213,13 @@ class Image_adjustments_class {
 		], (img, params) => Adjustments.gradientMap(img, params));
 	}
 
+	diffuse() {
+		this.show_dialog('Diffuse', [
+			{name: "amount", title: "Amount:", value: 4, range: [0, 100]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Filters.diffuse(img, params));
+	}
+
 	pixelate() {
 		this.show_dialog('Pixelate', [
 			{name: "size", title: "Cell size:", value: 8, range: [2, 100]},

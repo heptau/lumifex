@@ -10,6 +10,46 @@ function clamp(value, min, max) {
 }
 
 /**
+ * Diffuse (Photoshop, Stylize) - every pixel is replaced by a pixel from a random place nearby, like frosted glass.
+ * The randomness comes from a hash of the position and the seed, so the same input always gives the same result
+ * (the dialog preview and the final result match).
+ *
+ * @param {Image_data} image
+ * @param {object} params amount (0-100 pixels, how far a pixel can come from), seed (any integer)
+ * @returns {Image_data}
+ */
+export function diffuse(image, params) {
+	const amount = clamp(Math.round(parseFloat(params.amount) || 0), 0, 100);
+	if (amount == 0) {
+		return image;
+	}
+	const seed = parseInt(params.seed) || 0;
+	const w = image.width;
+	const h = image.height;
+	const src = new Uint8ClampedArray(image.data);
+	const data = image.data;
+	const span = amount * 2 + 1;
+	const hash = (x, y, salt) => {
+		let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed + salt, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+	};
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const sx = clamp(x + Math.floor(hash(x, y, 1) * span) - amount, 0, w - 1);
+			const sy = clamp(y + Math.floor(hash(x, y, 2) * span) - amount, 0, h - 1);
+			const i = (y * w + x) * 4;
+			const j = (sy * w + sx) * 4;
+			data[i] = src[j];
+			data[i + 1] = src[j + 1];
+			data[i + 2] = src[j + 2];
+			data[i + 3] = src[j + 3];
+		}
+	}
+	return image;
+}
+
+/**
  * Pixelate (Mosaic) - replaces each block with its average color
  *
  * @param {Image_data} image

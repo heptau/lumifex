@@ -1,4 +1,4 @@
-import { pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -156,5 +156,26 @@ describe('Smart blur', () => {
 	it('keeps alpha', () => {
 		const img = smartBlur(image(2, 2, () => [10, 10, 10, 66]), {radius: 1, threshold: 10});
 		expect(img.data[3]).toBe(66);
+	});
+
+	it('diffuse is deterministic, keeps pixel values from the source and does nothing with amount 0', () => {
+		const make = () => image(8, 8, (x, y) => [x * 30, y * 30, 7, 255]);
+		const base = make();
+		expect(Array.from(diffuse(make(), { amount: 0 }).data)).toEqual(Array.from(base.data));
+		const a = diffuse(make(), { amount: 2, seed: 5 });
+		const b = diffuse(make(), { amount: 2, seed: 5 });
+		const c = diffuse(make(), { amount: 2, seed: 6 });
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(base.data));
+		//every blue value and alpha stays as in the source, and no pixel comes from farther than 2
+		for (let y = 0; y < 8; y++) {
+			for (let x = 0; x < 8; x++) {
+				const i = (y * 8 + x) * 4;
+				expect(a.data[i + 3]).toBe(255);
+				expect(Math.abs(a.data[i] / 30 - x)).toBeLessThanOrEqual(2);
+				expect(Math.abs(a.data[i + 1] / 30 - y)).toBeLessThanOrEqual(2);
+			}
+		}
 	});
 });
