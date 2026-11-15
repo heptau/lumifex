@@ -28,6 +28,7 @@ Only changes since version 5.0.0 are listed here.
 - Image > Canvas Size has an Anchor (nine positions): when the canvas grows or shrinks, the content stays at the chosen corner, edge or center instead of always at the top left (the default is still Top Left).
 - Image > Canvas Size has a Relative checkbox (Photoshop): the fields then hold the change of the size (starting at 0, negative numbers shrink the canvas) instead of the new size.
 - Image > Reveal All (Photoshop): enlarges the canvas so that every layer, also one sticking out to the left or top, fits into it (one undo step).
+- Layer style Inner Glow (Effects > Layer Style): a soft glow along the inner edge of an image layer with radius, opacity and color.
 - View > Guides > New Guide Layout…: guides for margins, columns and rows with a gutter, as in Photoshop (`libs/guide-layout.js`).
 - Select > Channel as Selection…: the red, green or blue channel, or the transparency, of the active layer becomes the selection (with Invert and a live preview).
 - Edit > Save Brush Preset… / Load Brush Preset…: the options of the Brush (size, hardness, spacing, scatter, jitter, symmetry…) can be saved under a name and chosen later; the Load dialog also deletes a preset (`libs/brush-presets.js`, `modules/edit/brush_presets.js`).
