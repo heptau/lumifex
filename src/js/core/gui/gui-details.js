@@ -13,6 +13,7 @@ import Helper_class from './../../libs/helpers.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import { clean_mask_density, clean_mask_feather } from './../../libs/layer-mask.js';
+import GUI_adjustment_props_class from './gui-adjustment-props.js';
 
 const template = `
 	<div class="row">
@@ -49,6 +50,7 @@ const template = `
 		<span class="trn label">Color:</span>
 		<input style="padding: 0px;" type="color" id="detail_color" />
 	</div>
+	<div id="adjustment_detail_params" hidden></div>
 	<div id="mask_detail_params" hidden>
 		<hr />
 		<div class="row">
@@ -152,6 +154,7 @@ class GUI_details_class {
 		this.Helper = new Helper_class();
 		this.layer_details_active = false;
 		this.Tools_translate = new Tools_translate_class();
+		this.Adjustment_props = new GUI_adjustment_props_class();
 	}
 
 	render_main_details() {
@@ -161,7 +164,10 @@ class GUI_details_class {
 		}
 		this.render_details(true);
 		//a mask can appear, change or go away with any history step (undo included)
-		document.addEventListener('minipaint:history', () => this.render_mask(false));
+		document.addEventListener('minipaint:history', () => {
+			this.render_mask(false);
+			this.Adjustment_props.render();
+		});
 	}
 
 	render_details(events = false) {
@@ -178,6 +184,7 @@ class GUI_details_class {
 		this.render_color(events);
 		this.render_reset(events);
 		this.render_mask(events);
+		this.Adjustment_props.render();
 
 		//text - special case
 		if (config.layer != undefined && config.layer.type == 'text') {
