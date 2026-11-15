@@ -145,6 +145,7 @@ config.TOOLS = [
 		title: 'Lasso (Shift: add, Alt: subtract)',
 		attributes: {
 			polygonal: false,
+			magnetic: false,
 			feather: {
 				value: 0,
 				min: 0,

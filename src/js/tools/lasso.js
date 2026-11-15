@@ -2,11 +2,14 @@ import config from './../config.js';
 import Base_mask_tool_class from './../core/base-mask-tool.js';
 import Helper_class from './../libs/helpers.js';
 import { polygon_mask } from './../libs/selection-mask.js';
+import { edge_strength, build_path_tree, trace_path } from './../libs/magnetic-path.js';
+import Base_layers_class from './../core/base-layers.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
 /**
- * Lasso - freehand or polygonal selection (Photoshop style).
+ * Lasso - freehand, polygonal or magnetic selection (Photoshop style). The magnetic one follows the edges of the picture
+ * between the clicks (libs/magnetic-path.js).
  * Shift adds to the current selection, Alt subtracts from it, Shift+Alt intersects.
  * The result is stored as a selection mask, see core/selection-mask-state.js.
  */
@@ -15,6 +18,10 @@ class Lasso_class extends Base_mask_tool_class {
 	constructor(ctx) {
 		super(ctx, 'lasso');
 		this.Helper = new Helper_class();
+		this.Base_layers = new Base_layers_class();
+		this.edges = null; //edge strength of the visible picture, taken when a magnetic path starts
+		this.tree = null; //cheapest paths from the last click
+		this.live = null; //the path from the last click to the pointer
 		this.points = null; //path being drawn
 		this.cursor = null;
 		this.drawing = false;
@@ -44,8 +51,33 @@ class Lasso_class extends Base_mask_tool_class {
 		}, false);
 	}
 
+	is_magnetic() {
+		return Boolean(this.getParams().magnetic);
+	}
+
+	/**
+	 * @returns {boolean} the path is built from clicks (polygonal and magnetic) and not drawn with the mouse down
+	 */
 	is_polygonal() {
-		return Boolean(this.getParams().polygonal);
+		return Boolean(this.getParams().polygonal) || this.is_magnetic();
+	}
+
+	/**
+	 * Magnetic path: the edges of the visible picture and the cheapest paths from a click (a window of 150 px around it)
+	 *
+	 * @param {{x: number, y: number}} point
+	 */
+	start_tree(point) {
+		if (this.edges == null) {
+			const canvas = document.createElement('canvas');
+			canvas.width = config.WIDTH;
+			canvas.height = config.HEIGHT;
+			const ctx = canvas.getContext('2d', {willReadFrequently: true});
+			this.Base_layers.convert_layers_to_canvas(ctx);
+			this.edges = edge_strength(ctx.getImageData(0, 0, canvas.width, canvas.height));
+		}
+		this.tree = build_path_tree(this.edges, config.WIDTH, config.HEIGHT, point.x, point.y, 150);
+		this.live = null;
 	}
 
 	dragStart(event) {
@@ -81,13 +113,26 @@ class Lasso_class extends Base_mask_tool_class {
 		const point = {x: mouse.x, y: mouse.y};
 
 		if (this.is_polygonal()) {
+			const magnetic = this.is_magnetic();
 			if (this.drawing == false) {
 				this.points = [point];
 				this.drawing = true;
+				if (magnetic) {
+					this.start_tree(point);
+				}
 			}
 			else if (this.is_near_start(point)) {
+				if (magnetic) {
+					//the last stretch runs back to the start along the edges too
+					this.points.push(...trace_path(this.tree, this.points[0].x, this.points[0].y).slice(1));
+				}
 				this.finish(e);
 				return;
+			}
+			else if (magnetic) {
+				//the stretch to the click follows the edges, the next one starts from here
+				this.points.push(...trace_path(this.tree, point.x, point.y).slice(1));
+				this.start_tree(point);
 			}
 			else {
 				this.points.push(point);
@@ -108,6 +153,9 @@ class Lasso_class extends Base_mask_tool_class {
 		const mouse = this.get_mouse_info(e);
 		const point = {x: mouse.x, y: mouse.y};
 		this.cursor = point;
+		if (this.is_magnetic() && this.tree) {
+			this.live = trace_path(this.tree, point.x, point.y);
+		}
 
 		if (this.is_polygonal() == false) {
 			if (mouse.is_drag == false) {
@@ -141,6 +189,9 @@ class Lasso_class extends Base_mask_tool_class {
 
 	cancel() {
 		this.points = null;
+		this.edges = null;
+		this.tree = null;
+		this.live = null;
 		this.cursor = null;
 		this.drawing = false;
 		config.need_render = true;
@@ -180,7 +231,10 @@ class Lasso_class extends Base_mask_tool_class {
 		for (let i = 1; i < points.length; i++) {
 			ctx.lineTo(points[i].x, points[i].y);
 		}
-		if (polygonal && this.cursor) {
+		if (this.is_magnetic() && this.live) {
+			this.live.forEach((point) => ctx.lineTo(point.x, point.y));
+		}
+		else if (polygonal && this.cursor) {
 			ctx.lineTo(this.cursor.x, this.cursor.y);
 		}
 		else {
