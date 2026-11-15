@@ -4,7 +4,7 @@
  * and is stored in the layer as a small JSON friendly object, so it survives duplicating and saving as project:
  * {width, height, values: [...], counts: [...]} - run-length encoded 8 bit mask (255 = visible, 0 = hidden).
  */
-import { create_mask, sample_mask_for_layer, resize_mask } from './selection-mask.js';
+import { create_mask, sample_mask_for_layer, resize_mask, feather_mask } from './selection-mask.js';
 import { rle_encode, rle_decode } from './selection-store.js';
 
 const MAX_PIXELS = 64 * 1000 * 1000;
@@ -93,4 +93,46 @@ export function apply_layer_mask(image, layer_mask) {
 		image.data[i] = image.data[i] * mask.data[p] / 255;
 	}
 	return image;
+}
+
+/**
+ * @param {any} value
+ * @returns {number} density in percent, 0-100 (100 = the mask works fully; the default for anything else)
+ */
+export function clean_mask_density(value) {
+	const number = parseFloat(value);
+	return isFinite(number) ? Math.min(100, Math.max(0, Math.round(number))) : 100;
+}
+
+/**
+ * @param {any} value
+ * @returns {number} feather in pixels, 0-250 (0 for anything else)
+ */
+export function clean_mask_feather(value) {
+	const number = parseFloat(value);
+	return isFinite(number) ? Math.min(250, Math.max(0, Math.round(number))) : 0;
+}
+
+/**
+ * The mask as it works on the layer (Photoshop's Properties: Density and Feather). The stored mask stays untouched.
+ * Density below 100 % lets part of the hidden area through: 0 % means the mask does nothing.
+ *
+ * @param {{width: number, height: number, data: Uint8ClampedArray}} mask
+ * @param {any} [density] percent
+ * @param {any} [feather] pixels
+ * @returns {{width: number, height: number, data: Uint8ClampedArray}} the mask itself when nothing changes
+ */
+export function shape_layer_mask(mask, density, feather) {
+	const d = clean_mask_density(density === undefined || density === null ? 100 : density);
+	const f = clean_mask_feather(feather);
+	if (d == 100 && f == 0) {
+		return mask;
+	}
+	const soft = f > 0 ? feather_mask(mask, f) : {width: mask.width, height: mask.height, data: new Uint8ClampedArray(mask.data)};
+	if (d < 100) {
+		for (let i = 0; i < soft.data.length; i++) {
+			soft.data[i] = Math.round(255 - (255 - soft.data[i]) * d / 100);
+		}
+	}
+	return soft;
 }

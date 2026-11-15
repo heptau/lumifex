@@ -1,6 +1,7 @@
 import {
 	serialize_layer_mask, deserialize_layer_mask, uniform_layer_mask, layer_mask_from_selection,
 	layer_mask_to_selection, apply_layer_mask,
+	shape_layer_mask, clean_mask_density, clean_mask_feather,
 } from '../src/js/libs/layer-mask.js';
 import { rect_mask, create_mask, feather_mask } from '../src/js/libs/selection-mask.js';
 
@@ -78,5 +79,37 @@ describe('apply', () => {
 		const image = { width: 1, height: 1, data: Uint8ClampedArray.from([9, 9, 9, 200]) };
 		apply_layer_mask(image, create_mask(1, 1, 128));
 		expect(image.data[3]).toBe(100);
+	});
+});
+
+describe('Mask density and feather', () => {
+	const mask = { width: 5, height: 1, data: Uint8ClampedArray.from([255, 255, 0, 0, 0]) };
+
+	it('cleans the values from a saved project', () => {
+		expect(clean_mask_density(undefined)).toBe(100);
+		expect(clean_mask_density('abc')).toBe(100);
+		expect(clean_mask_density(150)).toBe(100);
+		expect(clean_mask_density(-5)).toBe(0);
+		expect(clean_mask_feather(undefined)).toBe(0);
+		expect(clean_mask_feather(999)).toBe(250);
+		expect(clean_mask_feather('7.4')).toBe(7);
+	});
+
+	it('returns the very same mask when nothing changes', () => {
+		expect(shape_layer_mask(mask, 100, 0)).toBe(mask);
+		expect(shape_layer_mask(mask)).toBe(mask);
+	});
+
+	it('density lets the hidden part through and keeps the stored mask', () => {
+		const shaped = shape_layer_mask(mask, 50, 0);
+		expect(Array.from(shaped.data)).toEqual([255, 255, 128, 128, 128]);
+		expect(Array.from(shape_layer_mask(mask, 0, 0).data)).toEqual([255, 255, 255, 255, 255]);
+		expect(Array.from(mask.data)).toEqual([255, 255, 0, 0, 0]);
+	});
+
+	it('feather softens the edge', () => {
+		const shaped = shape_layer_mask({ width: 20, height: 1, data: Uint8ClampedArray.from({ length: 20 }, (_, i) => (i < 10 ? 255 : 0)) }, 100, 6);
+		expect(shaped.data[9]).toBeLessThan(255);
+		expect(shaped.data[10]).toBeGreaterThan(0);
 	});
 });

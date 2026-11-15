@@ -6,7 +6,7 @@ import { select_subject_mask } from './../../libs/selection-mask.js';
 import { invert_mask } from './../../libs/selection-mask.js';
 import {
 	serialize_layer_mask, deserialize_layer_mask, uniform_layer_mask, layer_mask_from_selection,
-	layer_mask_to_selection, apply_layer_mask
+	layer_mask_to_selection, apply_layer_mask, shape_layer_mask
 } from './../../libs/layer-mask.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../tools/translate.js';
@@ -40,6 +40,8 @@ class Layer_mask_class {
 				new app.Actions.Update_layer_action(layer.id, {
 					mask: mask ? serialize_layer_mask(mask) : null,
 					mask_enabled: true,
+					mask_density: 100,
+					mask_feather: 0,
 				}),
 			])
 		);
@@ -161,7 +163,7 @@ class Layer_mask_class {
 		}
 		return app.State.do_action(
 			new app.Actions.Bundle_action('layer_mask', 'Delete Mask', [
-				new app.Actions.Update_layer_action(layer.id, {mask: null}),
+				new app.Actions.Update_layer_action(layer.id, {mask: null, mask_density: 100, mask_feather: 0}),
 			])
 		);
 	}
@@ -183,11 +185,11 @@ class Layer_mask_class {
 		const canvas = this.Base_layers.convert_layer_to_canvas(layer.id, true);
 		const ctx = canvas.getContext('2d');
 		const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		ctx.putImageData(apply_layer_mask(image, mask), 0, 0);
+		ctx.putImageData(apply_layer_mask(image, shape_layer_mask(mask, layer.mask_density, layer.mask_feather)), 0, 0);
 		return app.State.do_action(
 			new app.Actions.Bundle_action('layer_mask', 'Apply Mask', [
 				new app.Actions.Update_layer_image_action(canvas, layer.id),
-				new app.Actions.Update_layer_action(layer.id, {mask: null}),
+				new app.Actions.Update_layer_action(layer.id, {mask: null, mask_density: 100, mask_feather: 0}),
 			])
 		);
 	}

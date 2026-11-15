@@ -11,7 +11,7 @@ import Image_trim_class from "./../modules/image/trim.js";
 import View_ruler_class from "./../modules/view/ruler.js";
 import zoomView from "./../libs/zoomView.js";
 import Helper_class from "./../libs/helpers.js";
-import { deserialize_layer_mask } from "./../libs/layer-mask.js";
+import { deserialize_layer_mask, shape_layer_mask, clean_mask_density, clean_mask_feather } from "./../libs/layer-mask.js";
 import alertify from "./../../../node_modules/alertifyjs/build/alertify.min.js";
 import { t } from '../modules/tools/translate.js';
 import { fill_alpha, split_halo_filters } from "./../libs/layer-fill.js";
@@ -43,6 +43,7 @@ let instance = null;
  * - opacity (0-100)
  * - fill_opacity (0-100, default 100) opacity of the layer's own pixels, layer styles are not faded
  * - mask (object|null) layer mask, see libs/layer-mask.js
+ * - mask_density (0-100, default 100), mask_feather (px, default 0) how the mask works on the layer (the stored mask is not changed)
  * - mask_enabled (bool, default true)
  * - locked (bool), lock_alpha (bool, Lock Transparency), group (string|null), color_label (string|null), link_id (number|null), blend_if (object|null)
  * - order (int)
@@ -834,11 +835,13 @@ class Base_layers_class {
 		if (!this.mask_canvases) {
 			this.mask_canvases = new WeakMap();
 		}
+		const key = `${clean_mask_density(object.mask_density === undefined ? 100 : object.mask_density)}/${clean_mask_feather(object.mask_feather)}`;
 		const cached = this.mask_canvases.get(object.mask);
-		if (cached !== undefined) {
-			return cached;
+		if (cached !== undefined && cached.key == key) {
+			return cached.canvas;
 		}
-		const mask = deserialize_layer_mask(object.mask);
+		const decoded = deserialize_layer_mask(object.mask);
+		const mask = decoded ? shape_layer_mask(decoded, object.mask_density, object.mask_feather) : null;
 		let canvas = null;
 		if (mask) {
 			canvas = document.createElement("canvas");
@@ -851,7 +854,7 @@ class Base_layers_class {
 			}
 			ctx.putImageData(image, 0, 0);
 		}
-		this.mask_canvases.set(object.mask, canvas);
+		this.mask_canvases.set(object.mask, {key, canvas});
 		return canvas;
 	}
 

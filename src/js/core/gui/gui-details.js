@@ -12,6 +12,7 @@ import Tools_settings_class from './../../modules/tools/settings.js';
 import Helper_class from './../../libs/helpers.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
+import { clean_mask_density, clean_mask_feather } from './../../libs/layer-mask.js';
 
 const template = `
 	<div class="row">
@@ -47,6 +48,19 @@ const template = `
 	<div class="row">
 		<span class="trn label">Color:</span>
 		<input style="padding: 0px;" type="color" id="detail_color" />
+	</div>
+	<div id="mask_detail_params" hidden>
+		<hr />
+		<div class="row">
+			<span class="trn label">Mask Density:</span>
+			<input type="range" min="0" max="100" step="1" id="detail_mask_density_range" />
+			<input type="number" min="0" max="100" step="1" id="detail_mask_density" />
+		</div>
+		<div class="row">
+			<span class="trn label">Mask Feather:</span>
+			<input type="range" min="0" max="250" step="1" id="detail_mask_feather_range" />
+			<input type="number" min="0" max="250" step="1" id="detail_mask_feather" />
+		</div>
 	</div>
 	<div id="parameters_container"></div>
 	<div id="text_detail_params">
@@ -133,6 +147,8 @@ class GUI_details_class {
 			this.Tools_translate.translate(config.LANG, document.getElementById('toggle_details'));
 		}
 		this.render_details(true);
+		//a mask can appear, change or go away with any history step (undo included)
+		document.addEventListener('minipaint:history', () => this.render_mask(false));
 	}
 
 	render_details(events = false) {
@@ -148,6 +164,7 @@ class GUI_details_class {
 		this.render_general('opacity', events);
 		this.render_color(events);
 		this.render_reset(events);
+		this.render_mask(events);
 
 		//text - special case
 		if (config.layer != undefined && config.layer.type == 'text') {
@@ -178,6 +195,69 @@ class GUI_details_class {
 		this.render_general_select_param('wrap_direction', events);
 		this.render_general_select_param('halign', events);
 		this.render_general_select_param('valign', events);
+	}
+
+	/**
+	 * Properties of the layer mask (Photoshop): Density and Feather change how the mask works on the layer, the
+	 * stored mask stays as it is. The sliders act live; releasing one is a single undo step.
+	 */
+	render_mask(events) {
+		const box = document.getElementById('mask_detail_params');
+		if (!box) {
+			return;
+		}
+		const layer = config.layer;
+		box.hidden = !(layer && layer.mask);
+		const fields = [
+			{key: 'mask_density', clean: clean_mask_density, fallback: 100},
+			{key: 'mask_feather', clean: clean_mask_feather, fallback: 0},
+		];
+		fields.forEach((field) => {
+			const number = document.getElementById(`detail_${field.key}`);
+			const range = document.getElementById(`detail_${field.key}_range`);
+			if (layer && layer.mask && document.activeElement !== number) {
+				const value = field.clean(layer[field.key] === undefined ? field.fallback : layer[field.key]);
+				number.value = range.value = String(value);
+			}
+			if (!events) {
+				return;
+			}
+			let start = null;
+			const live = (source, other) => {
+				const target = config.layer;
+				if (!target || !target.mask) {
+					return;
+				}
+				if (start === null) {
+					start = field.clean(target[field.key] === undefined ? field.fallback : target[field.key]);
+				}
+				const value = field.clean(source.value);
+				other.value = String(value);
+				target[field.key] = value;
+				config.need_render = true;
+			};
+			const commit = () => {
+				const target = config.layer;
+				if (start === null || !target) {
+					return;
+				}
+				const value = field.clean(target[field.key]);
+				target[field.key] = start; //the action stores the old value itself
+				const before = start;
+				start = null;
+				if (value !== before) {
+					app.State.do_action(
+						new app.Actions.Bundle_action('mask_properties', 'Mask Properties', [
+							new app.Actions.Update_layer_action(target.id, {[field.key]: value}),
+						])
+					);
+				}
+			};
+			range.addEventListener('input', () => live(range, number));
+			number.addEventListener('input', () => live(number, range));
+			range.addEventListener('change', commit);
+			number.addEventListener('change', commit);
+		});
 	}
 
 	render_general(key, events) {
