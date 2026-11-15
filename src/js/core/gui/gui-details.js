@@ -62,6 +62,19 @@ const template = `
 			<input type="number" min="0" max="250" step="1" id="detail_mask_feather" />
 		</div>
 	</div>
+	<div id="smart_mask_detail_params" hidden>
+		<hr />
+		<div class="row">
+			<span class="trn label">Filter Mask Density:</span>
+			<input type="range" min="0" max="100" step="1" id="detail_smart_mask_density_range" />
+			<input type="number" min="0" max="100" step="1" id="detail_smart_mask_density" />
+		</div>
+		<div class="row">
+			<span class="trn label">Filter Mask Feather:</span>
+			<input type="range" min="0" max="250" step="1" id="detail_smart_mask_feather_range" />
+			<input type="number" min="0" max="250" step="1" id="detail_smart_mask_feather" />
+		</div>
+	</div>
 	<div id="parameters_container"></div>
 	<div id="text_detail_params">
 		<div class="row center">
@@ -202,20 +215,32 @@ class GUI_details_class {
 	 * stored mask stays as it is. The sliders act live; releasing one is a single undo step.
 	 */
 	render_mask(events) {
-		const box = document.getElementById('mask_detail_params');
+		this.render_mask_group('mask_detail_params', 'mask', ['mask_density', 'mask_feather'], events);
+		this.render_mask_group('smart_mask_detail_params', 'smart_mask', ['smart_mask_density', 'smart_mask_feather'], events);
+	}
+
+	/**
+	 * @param {string} box_id the section
+	 * @param {string} mask_key the layer property that holds the mask (the section is shown when it is set)
+	 * @param {string[]} keys the Density and the Feather property
+	 * @param {boolean} events
+	 */
+	render_mask_group(box_id, mask_key, keys, events) {
+		const box = document.getElementById(box_id);
 		if (!box) {
 			return;
 		}
 		const layer = config.layer;
-		box.hidden = !(layer && layer.mask);
+		const has_mask = () => !!(config.layer && config.layer[mask_key]);
+		box.hidden = !has_mask();
 		const fields = [
-			{key: 'mask_density', clean: clean_mask_density, fallback: 100},
-			{key: 'mask_feather', clean: clean_mask_feather, fallback: 0},
+			{key: keys[0], clean: clean_mask_density, fallback: 100},
+			{key: keys[1], clean: clean_mask_feather, fallback: 0},
 		];
 		fields.forEach((field) => {
 			const number = document.getElementById(`detail_${field.key}`);
 			const range = document.getElementById(`detail_${field.key}_range`);
-			if (layer && layer.mask && document.activeElement !== number) {
+			if (layer && layer[mask_key] && document.activeElement !== number) {
 				const value = field.clean(layer[field.key] === undefined ? field.fallback : layer[field.key]);
 				number.value = range.value = String(value);
 			}
@@ -225,7 +250,7 @@ class GUI_details_class {
 			let start = null;
 			const live = (source, other) => {
 				const target = config.layer;
-				if (!target || !target.mask) {
+				if (!target || !has_mask()) {
 					return;
 				}
 				if (start === null) {

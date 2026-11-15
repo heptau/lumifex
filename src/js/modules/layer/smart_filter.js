@@ -88,7 +88,7 @@ class Layer_smart_filter_class {
 			alertify.error(t('Empty selection'));
 			return;
 		}
-		return this.save_mask(layer, {smart_mask: serialize_layer_mask(layer_mask_from_selection(current.mask, layer)), smart_mask_enabled: true});
+		return this.save_mask(layer, {smart_mask: serialize_layer_mask(layer_mask_from_selection(current.mask, layer)), smart_mask_enabled: true, smart_mask_density: 100, smart_mask_feather: 0});
 	}
 
 	/**
@@ -122,7 +122,7 @@ class Layer_smart_filter_class {
 	mask_remove(layer_id) {
 		const layer = layer_id === undefined ? config.layer : app.Layers.get_layer(parseInt(String(layer_id)));
 		if (this.stored_mask(layer)) {
-			return this.save_mask(layer, {smart_mask: null, smart_mask_enabled: true});
+			return this.save_mask(layer, {smart_mask: null, smart_mask_enabled: true, smart_mask_density: 100, smart_mask_feather: 0});
 		}
 	}
 

@@ -11,7 +11,7 @@
 import * as Adjustments from './adjustments.js';
 import * as Filters from './filters.js';
 import { ADJUSTMENTS } from './adjustment-layers.js';
-import { deserialize_layer_mask } from './layer-mask.js';
+import { deserialize_layer_mask, shape_layer_mask } from './layer-mask.js';
 import { resize_mask } from './selection-mask.js';
 
 /**
@@ -271,10 +271,13 @@ export function has_smart_mask(layer) {
  * @param {any} stored value of `layer.smart_mask`
  * @param {number} width size of the picture
  * @param {number} height
+ * @param {any} [density] percent, 100 by default
+ * @param {any} [feather] pixels, 0 by default
  * @returns {Uint8ClampedArray|null} strengths of the filters per pixel of the picture, null when the mask is not valid
  */
-export function smart_mask_weights(stored, width, height) {
-	const mask = deserialize_layer_mask(stored);
+export function smart_mask_weights(stored, width, height, density, feather) {
+	const decoded = deserialize_layer_mask(stored);
+	const mask = decoded ? shape_layer_mask(decoded, density, feather) : null;
 	return mask && width > 0 && height > 0 ? resize_mask(mask, width, height).data : null;
 }
 

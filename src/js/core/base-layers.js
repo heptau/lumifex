@@ -974,7 +974,7 @@ class Base_layers_class {
 			this.smart_cache = new WeakMap();
 		}
 		const masked = has_smart_mask(object);
-		const signature = smart_signature(list) + (masked ? `|${this.smart_mask_id(object.smart_mask)}` : '');
+		const signature = smart_signature(list) + (masked ? `|${this.smart_mask_id(object.smart_mask)}|${clean_mask_density(object.smart_mask_density === undefined ? 100 : object.smart_mask_density)}|${clean_mask_feather(object.smart_mask_feather)}` : '');
 		const cached = this.smart_cache.get(source);
 		if (cached && cached.signature == signature && cached.width == width && cached.height == height) {
 			return cached.canvas;
@@ -986,7 +986,7 @@ class Base_layers_class {
 		ctx.drawImage(source, 0, 0);
 		try {
 			const original = ctx.getImageData(0, 0, width, height);
-			const weights = masked ? smart_mask_weights(object.smart_mask, width, height) : null;
+			const weights = masked ? smart_mask_weights(object.smart_mask, width, height, object.smart_mask_density, object.smart_mask_feather) : null;
 			const kept = weights ? new ImageData(new Uint8ClampedArray(original.data), width, height) : null;
 			let result = run_smart_filters(original, list);
 			if (weights && kept) {

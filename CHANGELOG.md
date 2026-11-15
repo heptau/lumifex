@@ -11,6 +11,7 @@ Only changes since version 5.0.0 are listed here.
 
 ### Added
 
+- Density and Feather of the smart filter mask in the Layer details panel, as for the layer mask.
 - Quick Mask can paint the smart filter mask with a brush (target "Filter mask"): painting reveals the filters, Alt / Subtract hides them again.
 - Changing the shape in the Shape picker keeps the border size, border, fill and colors instead of bringing back the defaults of the new shape.
 - One Shape tool as in Photoshop: the Shape button (H) activates the last used shape, the options bar has a Shape picker for all shapes and a button for the gallery with previews. The button stays pressed while any shape is active.

@@ -86,6 +86,7 @@ describe('Smart filter mask', () => {
 
 	it('resamples the stored mask to the picture and rejects a broken one', () => {
 		expect(Array.from(smart_mask_weights(stored, 4, 1) as Uint8ClampedArray)).toEqual([255, 255, 0, 0]);
+		expect(Array.from(smart_mask_weights(stored, 2, 1, 50) as Uint8ClampedArray)).toEqual([255, 128]);
 		expect(smart_mask_weights({ width: 2 }, 4, 1)).toBeNull();
 		expect(smart_mask_weights(null, 4, 1)).toBeNull();
 	});
