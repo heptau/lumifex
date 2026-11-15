@@ -218,6 +218,33 @@ export function cloud_noise(width, height, scale, seed) {
 }
 
 /**
+ * Glass (Photoshop, Distort, simplified) - the picture is seen through uneven glass: every pixel is taken from a
+ * place shifted by two smooth noise fields (one for each axis), up to `distortion` pixels. The noise comes from the
+ * seed, so the same input gives the same result.
+ *
+ * @param {Image_data} image
+ * @param {object} params distortion (0-50 px, the largest shift, default 8), scale (2-100 % of the longer side, the
+ *  size of the waves, default 10), seed (any integer)
+ * @returns {Image_data}
+ */
+export function glass(image, params) {
+	const distortion = clamp(parseFloat(params.distortion ?? 8) || 0, 0, 50);
+	if (distortion == 0) {
+		return image;
+	}
+	const scale = clamp(parseFloat(params.scale ?? 10) || 10, 2, 100) / 100 * Math.max(image.width, image.height);
+	const seed = parseInt(params.seed) || 0;
+	const w = image.width;
+	const noise_x = cloud_noise(w, image.height, scale, seed);
+	const noise_y = cloud_noise(w, image.height, scale, seed + 7919);
+	return remap(image, (x, y, position) => {
+		const i = Math.min(image.height - 1, Math.floor(y)) * w + Math.min(w - 1, Math.floor(x));
+		position[0] = x + (noise_x[i] - 0.5) * 2 * distortion;
+		position[1] = y + (noise_y[i] - 0.5) * 2 * distortion;
+	});
+}
+
+/**
  * Clouds - fills the image with clouds between two colors and blends it with the original by opacity
  *
  * @param {Image_data} image

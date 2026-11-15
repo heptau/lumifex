@@ -612,6 +612,14 @@ class Image_adjustments_class {
 		], (img, params) => Filters.diffuseGlow(img, params));
 	}
 
+	glass() {
+		this.show_dialog('Glass', [
+			{name: "distortion", title: "Distortion:", value: 8, range: [0, 50]},
+			{name: "scale", title: "Scale:", value: 10, range: [2, 100]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 9999]},
+		], (img, params) => Distort.glass(img, params));
+	}
+
 	ripple() {
 		this.show_dialog('Ripple', [
 			{name: "amplitude", title: "Amplitude:", value: 2, range: [0, 10], step: 0.1},

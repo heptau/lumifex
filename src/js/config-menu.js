@@ -1772,6 +1772,11 @@ const menuDefinition = [
 						target: 'image/adjustments.diffuse_glow'
 					},
 					{
+						name: 'Glass',
+						ellipsis: true,
+						target: 'image/adjustments.glass'
+					},
+					{
 						name: 'Ripple',
 						ellipsis: true,
 						target: 'image/adjustments.ripple'

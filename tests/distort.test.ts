@@ -1,4 +1,4 @@
-import { remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
+import { glass, remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -154,5 +154,46 @@ describe('lens flare', () => {
 		const column = Array.from({ length: 200 }, (_, x) => px(img, x, 50)[2]);
 		const right = Math.max(...column.slice(100, 170));
 		expect(right).toBeGreaterThan(20);
+	});
+});
+
+describe('glass', () => {
+	const gradient = () => {
+		const w = 16;
+		const h = 16;
+		const data = new Uint8ClampedArray(w * h * 4);
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				data.set([x * 16, y * 16, 100, 77], (y * w + x) * 4);
+			}
+		}
+		return {data, width: w, height: h};
+	};
+
+	it('zero distortion changes nothing', () => {
+		const copy = Array.from(gradient().data);
+		expect(Array.from(glass(gradient(), {distortion: 0}).data)).toEqual(copy);
+	});
+
+	it('moves pixels, is repeatable for a seed, different for another one and keeps alpha', () => {
+		const a = glass(gradient(), {distortion: 6, scale: 30, seed: 4});
+		const b = glass(gradient(), {distortion: 6, scale: 30, seed: 4});
+		const c = glass(gradient(), {distortion: 6, scale: 30, seed: 5});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(gradient().data));
+		expect(Array.from(a.data)).not.toEqual(Array.from(c.data));
+		for (let i = 3; i < a.data.length; i += 4) {
+			expect(a.data[i]).toBe(77);
+		}
+	});
+
+	it('a pixel never comes from farther than the distortion', () => {
+		const out = glass(gradient(), {distortion: 2, scale: 40, seed: 1});
+		for (let y = 4; y < 12; y++) {
+			for (let x = 4; x < 12; x++) {
+				//the red channel grows by 16 per column, so a shift of at most 2 pixels changes it by at most 32 (+ a bit for interpolation)
+				expect(Math.abs(out.data[(y * 16 + x) * 4] - x * 16)).toBeLessThanOrEqual(36);
+			}
+		}
 	});
 });
