@@ -1,4 +1,4 @@
-import { seam_energy, find_vertical_seam, carve_width, transpose, content_aware_scale, MAX_CARVE_PIXELS } from '../src/js/libs/seam-carving.js';
+import { enlarge_width, seam_energy, find_vertical_seam, carve_width, transpose, content_aware_scale, MAX_CARVE_PIXELS } from '../src/js/libs/seam-carving.js';
 
 function image(w: number, h: number, color: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(w * h * 4);
@@ -61,9 +61,9 @@ describe('seam carving', () => {
 		expect(Array.from(back.data)).toEqual(Array.from(img.data));
 	});
 
-	it('scales height too, never enlarges, and refuses huge pictures', () => {
+	it('scales height too and refuses huge pictures', () => {
 		const img = image(8, 8, (x, y) => (y == 4 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
-		const out = content_aware_scale(img, 20, 5) as any;
+		const out = content_aware_scale(img, 8, 5) as any;
 		expect(out.width).toBe(8);
 		expect(out.height).toBe(5);
 		let whites = 0;
@@ -74,5 +74,44 @@ describe('seam carving', () => {
 		}
 		expect(whites).toBe(1);
 		expect(content_aware_scale({data: new Uint8ClampedArray(4), width: MAX_CARVE_PIXELS + 1, height: 1}, 5, 1)).toBeNull();
+	});
+});
+
+describe('seam insertion', () => {
+	const line = () => image(10, 4, (x) => (x == 5 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
+
+	it('adds the columns without widening the detailed line', () => {
+		const out = enlarge_width(line(), 4);
+		expect(out.width).toBe(14);
+		expect(out.height).toBe(4);
+		let whites = 0;
+		for (let x = 0; x < 14; x++) {
+			if (out.data[x * 4] == 255) {
+				whites++;
+			}
+		}
+		expect(whites).toBe(1);
+	});
+
+	it('inserted pixels blend with their neighbor, the input stays and the amount is limited', () => {
+		const img = image(6, 1, (x) => [x * 40, 0, 0, 255]);
+		const copy = Array.from(img.data);
+		const out = enlarge_width(img, 2);
+		expect(out.width).toBe(8);
+		expect(Array.from(img.data)).toEqual(copy);
+		//the values still never decrease along the row (the blended pixels sit between neighbors)
+		for (let x = 1; x < 8; x++) {
+			expect(out.data[x * 4]).toBeGreaterThanOrEqual(out.data[(x - 1) * 4]);
+		}
+		expect(enlarge_width(img, 100).width).toBe(11);
+		expect(enlarge_width(img, -2).width).toBe(6);
+	});
+
+	it('content_aware_scale enlarges to just under twice and in both directions', () => {
+		const img = image(8, 6, (x, y) => (x == 3 || y == 2 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
+		const out = content_aware_scale(img, 10, 9) as any;
+		expect(out.width).toBe(10);
+		expect(out.height).toBe(9);
+		expect(content_aware_scale(img, 1000, 1000)?.width).toBe(15);
 	});
 });

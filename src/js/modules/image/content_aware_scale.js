@@ -8,7 +8,7 @@ import { t } from '../tools/translate.js';
 
 /**
  * Image > Content-Aware Scale - makes the active image layer narrower and / or lower by removing the seams with the
- * least detail instead of squeezing everything (see libs/seam-carving.js); it only shrinks, one undo step
+ * least detail (or adding seams) instead of squeezing / stretching everything (see libs/seam-carving.js), one undo step
  */
 class Image_content_aware_scale_class {
 
@@ -33,8 +33,8 @@ class Image_content_aware_scale_class {
 		new Dialog_class().show({
 			title: 'Content-Aware Scale',
 			params: [
-				{name: 'width_percent', title: 'Width (%):', value: 80, range: [10, 100]},
-				{name: 'height_percent', title: 'Height (%):', value: 100, range: [10, 100]},
+				{name: 'width_percent', title: 'Width (%):', value: 80, range: [10, 200]},
+				{name: 'height_percent', title: 'Height (%):', value: 100, range: [10, 200]},
 			],
 			on_finish: (params) => this.scale_handler(layer.id, params),
 		});
@@ -49,8 +49,8 @@ class Image_content_aware_scale_class {
 		if (!layer || layer.type != 'image') {
 			return;
 		}
-		const width_share = Math.min(100, Math.max(10, parseFloat(params.width_percent) || 100)) / 100;
-		const height_share = Math.min(100, Math.max(10, parseFloat(params.height_percent) || 100)) / 100;
+		const width_share = Math.min(200, Math.max(10, parseFloat(params.width_percent) || 100)) / 100;
+		const height_share = Math.min(200, Math.max(10, parseFloat(params.height_percent) || 100)) / 100;
 		if (width_share == 1 && height_share == 1) {
 			return;
 		}

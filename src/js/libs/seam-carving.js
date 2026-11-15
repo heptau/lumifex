@@ -118,6 +118,71 @@ export function carve_width(image, count) {
 }
 
 /**
+ * Adds `count` columns: the seams that would be removed first are found on a working copy (every seam is followed
+ * back to the original columns), and each of them is duplicated in the original, the copy being the mean of the
+ * pixel and its right neighbor so that it blends in. At most width - 1 columns are added.
+ *
+ * @param {Image_data} image
+ * @param {number} count how many columns to add
+ * @returns {Image_data} a new image, the input is not changed
+ */
+export function enlarge_width(image, count) {
+	const add = Math.min(Math.max(0, Math.floor(count) || 0), image.width - 1);
+	const width = image.width;
+	const height = image.height;
+	if (add == 0) {
+		return {data: new Uint8ClampedArray(image.data), width, height};
+	}
+	let current = image.width;
+	let data = new Uint8ClampedArray(image.data);
+	//origin[y * width + x] = the column of the original that is now at x
+	let origin = new Int32Array(width * height);
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			origin[y * width + x] = x;
+		}
+	}
+	//marked[y * width + c] = the original column c is on a seam
+	const marked = new Uint8Array(width * height);
+	for (let n = 0; n < add; n++) {
+		const seam = find_vertical_seam(seam_energy(data, current, height), current, height);
+		const next = new Uint8ClampedArray((current - 1) * height * 4);
+		const next_origin = new Int32Array((current - 1) * height);
+		for (let y = 0; y < height; y++) {
+			const cut = seam[y];
+			marked[y * width + origin[y * current + cut]] = 1;
+			const row = y * current * 4;
+			const out = y * (current - 1) * 4;
+			next.set(data.subarray(row, row + cut * 4), out);
+			next.set(data.subarray(row + (cut + 1) * 4, row + current * 4), out + cut * 4);
+			for (let x = 0; x < current - 1; x++) {
+				next_origin[y * (current - 1) + x] = origin[y * current + (x < cut ? x : x + 1)];
+			}
+		}
+		data = next;
+		origin = next_origin;
+		current--;
+	}
+	const result = new Uint8ClampedArray((width + add) * height * 4);
+	for (let y = 0; y < height; y++) {
+		let out = y * (width + add) * 4;
+		for (let x = 0; x < width; x++) {
+			const from = (y * width + x) * 4;
+			result.set(image.data.subarray(from, from + 4), out);
+			out += 4;
+			if (marked[y * width + x]) {
+				const right = (y * width + Math.min(width - 1, x + 1)) * 4;
+				for (let c = 0; c < 4; c++) {
+					result[out + c] = Math.round((image.data[from + c] + image.data[right + c]) / 2);
+				}
+				out += 4;
+			}
+		}
+	}
+	return {data: result, width: width + add, height};
+}
+
+/**
  * @param {Image_data} image
  * @returns {Image_data} the picture turned over its diagonal (rows become columns), so a vertical seam of the
  *  transposed picture is a horizontal seam of the original; transposing twice gives the original back
@@ -139,22 +204,29 @@ export function transpose(image) {
 }
 
 /**
- * Makes the picture smaller by seam carving
+ * Resizes one axis of the picture: carving when it gets smaller, seam insertion when it gets larger
+ */
+function resize_axis(image, target) {
+	return target < image.width ? carve_width(image, image.width - target) : enlarge_width(image, target - image.width);
+}
+
+/**
+ * Scales the picture by seam carving (smaller) or seam insertion (larger, just under twice the size on an axis)
  *
  * @param {Image_data} image
- * @param {number} new_width the wanted width (1 .. current width; larger values keep the width)
- * @param {number} new_height the wanted height (1 .. current height; larger values keep the height)
+ * @param {number} new_width the wanted width
+ * @param {number} new_height the wanted height
  * @returns {Image_data|null} a new image, null when the picture has more than MAX_CARVE_PIXELS pixels
  */
 export function content_aware_scale(image, new_width, new_height) {
 	if (image.width * image.height > MAX_CARVE_PIXELS) {
 		return null;
 	}
-	const target_width = Math.min(image.width, Math.max(1, Math.round(new_width) || image.width));
-	const target_height = Math.min(image.height, Math.max(1, Math.round(new_height) || image.height));
-	let result = carve_width(image, image.width - target_width);
-	if (target_height < image.height) {
-		result = transpose(carve_width(transpose(result), image.height - target_height));
+	const target_width = Math.min(image.width * 2, Math.max(1, Math.round(new_width) || image.width));
+	const target_height = Math.min(image.height * 2, Math.max(1, Math.round(new_height) || image.height));
+	let result = resize_axis(image, target_width);
+	if (target_height != image.height) {
+		result = transpose(resize_axis(transpose(result), target_height));
 	}
 	return result;
 }
