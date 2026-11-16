@@ -1,3 +1,4 @@
+import { stroke_steps } from './../libs/stroke-steps.js';
 import app from './../app.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
@@ -61,6 +62,7 @@ class Blur_class extends Base_tools_class {
 
 		//do blur
 		this.blur_general('click', mouse, params.size, params.strength);
+		this.last_position = {x: mouse.x, y: mouse.y};
 
 		//register tmp canvas for faster redraw
 		config.layer.link_canvas = this.tmpCanvas;
@@ -80,7 +82,11 @@ class Blur_class extends Base_tools_class {
 		}
 
 		//do blur
-		this.blur_general('move', mouse, params.size, params.strength);
+		//a stamp every third of the size along the way, so a fast stroke has no gaps
+		stroke_steps(this.last_position, {x: mouse.x, y: mouse.y}, params.size / 3).forEach((place) => {
+			this.blur_general('move', place, params.size, params.strength);
+		});
+		this.last_position = {x: mouse.x, y: mouse.y};
 
 		//draw draft preview
 		config.need_render = true;
@@ -91,6 +97,7 @@ class Blur_class extends Base_tools_class {
 			return;
 		}
 		delete config.layer.link_canvas;
+		this.last_position = null;
 
 		app.State.do_action(
 			new app.Actions.Bundle_action('blur_tool', 'Blur Tool', [
@@ -128,9 +135,9 @@ class Blur_class extends Base_tools_class {
 
 		if (type == 'move') {
 			strength = strength / 2;
-			if (strength < 1)
-				strength = 1;
 		}
+		//the radius of the stack blur must be a whole number (an odd strength halved crashed it)
+		strength = Math.max(1, Math.round(strength));
 
 		const imageData = ctx.getImageData(center_x, center_y, size_w, size_h);
 		const filtered = ImageFilters.StackBlur(imageData, strength); //add effect

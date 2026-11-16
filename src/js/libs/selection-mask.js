@@ -246,6 +246,111 @@ export function morph_mask(mask, amount) {
 	return {width: w, height: h, data: out};
 }
 
+/** Select > Color Range: what to select. "Sampled Colors" is the color that was picked, the others are ranges of hues */
+export const COLOR_RANGE_PRESETS = ['Sampled Colors', 'Skin Tones', 'Reds', 'Yellows', 'Greens', 'Cyans', 'Blues', 'Magentas'];
+
+const PRESET_HUES = {Reds: 0, Yellows: 60, Greens: 120, Cyans: 180, Blues: 240, Magentas: 300};
+
+/**
+ * @param {string} preset one of COLOR_RANGE_PRESETS
+ * @returns {number|null} the middle hue in degrees of a range of hues, null for Sampled Colors and anything unknown
+ */
+export function preset_hue(preset) {
+	return Object.prototype.hasOwnProperty.call(PRESET_HUES, preset) ? PRESET_HUES[preset] : null;
+}
+
+/**
+ * Skin Tones (Photoshop's Color Range, simplified): the pixels whose color is that of human skin in daylight, found by
+ * the usual rule of thumb: red is the strongest channel and clearly above green, green above blue, neither too dark nor
+ * too pale, and the colors are not gray. A soft edge: the closer a pixel is to the limits, the weaker it is selected.
+ *
+ * @param {{data: Uint8ClampedArray, width: number, height: number}} image
+ * @param {number} fuzziness 0-200: how wide the soft edge around the limits is (0 = a hard rule, 200 = a wide soft one)
+ * @returns {Mask}
+ */
+export function skin_tone_mask(image, fuzziness) {
+	const soft = clamp(parseFloat(fuzziness) || 0, 0, 200) / 200 * 25 + 1;
+	//how far a value is inside its limit: the edge is a ramp from `soft` units outside the limit (0) to `soft` units inside (1)
+	const inside = (value) => clamp((value + soft) / (2 * soft), 0, 1);
+	const mask = create_mask(image.width, image.height);
+	const data = image.data;
+	for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+		if (data[i + 3] == 0) {
+			continue;
+		}
+		const r = data[i], g = data[i + 1], b = data[i + 2];
+		const spread = Math.max(r, g, b) - Math.min(r, g, b);
+		//the weakest rule decides
+		const value = Math.min(
+			inside(r - 80), inside(g - 30), inside(b - 15), //not too dark
+			inside(r - g - 8), inside(r - b - 8), inside(g - b + 10), //red above green, green about the blue
+			inside(spread - 12), //not gray
+			inside(r - Math.min(g, b) - 20) //clearly red
+		);
+		mask.data[p] = value * data[i + 3];
+	}
+	return mask;
+}
+
+/**
+ * Selects a range of hues (Reds, Greens...) whatever their brightness: the pixels whose hue is close to the middle of
+ * the range, the more the more saturated they are (grays have no hue and are left out), with a soft edge. Alpha is
+ * respected.
+ *
+ * @param {{data: Uint8ClampedArray, width: number, height: number}} image
+ * @param {number} hue the middle of the range in degrees (any number, it wraps around)
+ * @param {number} fuzziness 0-200: how far from the middle the range reaches (about 10-25 degrees fully, 30-90 softly)
+ * @returns {Mask}
+ */
+export function hue_range_mask(image, hue, fuzziness) {
+	const fuzz = clamp(parseFloat(fuzziness) || 0, 0, 200);
+	const middle = ((Number(hue) || 0) % 360 + 360) % 360;
+	const solid = 10 + fuzz * 0.075;
+	const reach = 30 + fuzz * 0.3;
+	const mask = create_mask(image.width, image.height);
+	const data = image.data;
+	for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+		if (data[i + 3] == 0) {
+			continue;
+		}
+		const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+		const max = Math.max(r, g, b);
+		const min = Math.min(r, g, b);
+		const chroma = max - min;
+		if (chroma == 0) {
+			continue;
+		}
+		let h;
+		if (max == r) {
+			h = ((g - b) / chroma + 6) % 6;
+		}
+		else if (max == g) {
+			h = (b - r) / chroma + 2;
+		}
+		else {
+			h = (r - g) / chroma + 4;
+		}
+		h *= 60;
+		let distance = Math.abs(h - middle);
+		distance = Math.min(distance, 360 - distance);
+		let value;
+		if (distance <= solid) {
+			value = 1;
+		}
+		else if (distance >= reach) {
+			value = 0;
+		}
+		else {
+			value = (reach - distance) / (reach - solid);
+		}
+		const saturation = max == 0 ? 0 : chroma / max;
+		//grays and almost grays have no reliable hue
+		value *= clamp((saturation - 0.08) / 0.2, 0, 1);
+		mask.data[p] = value * 255 * data[i + 3] / 255;
+	}
+	return mask;
+}
+
 /**
  * Mask from pixels with a color similar to the given one. Fully transparent pixels are never selected.
  * Pixels within fuzziness / 2 distance are fully selected, selection fades out until fuzziness.
@@ -882,13 +987,51 @@ export function refine_mask(mask, params, guide) {
  */
 export function stroke_mask(mask, width, location) {
 	width = clamp(Math.round(width) || 1, 1, 100);
+	//the edge of the picture is an edge too (Select All + Stroke Inside makes a frame): the mask is padded with
+	//unselected pixels, the stroke is made there and the padding is cut off again
+	const padded = pad_mask(mask, width);
+	let result;
 	if (location == 'inside') {
-		return combine_masks(mask, morph_mask(mask, -width), 'subtract');
+		result = combine_masks(padded, morph_mask(padded, -width), 'subtract');
 	}
-	if (location == 'outside') {
-		return combine_masks(morph_mask(mask, width), mask, 'subtract');
+	else if (location == 'outside') {
+		result = combine_masks(morph_mask(padded, width), padded, 'subtract');
 	}
-	return border_mask(mask, width);
+	else {
+		result = border_mask(padded, width);
+	}
+	return crop_mask(result, width, mask.width, mask.height);
+}
+
+/**
+ * @param {Mask} mask
+ * @param {number} pad pixels added on every side (unselected)
+ * @returns {Mask} a bigger mask
+ */
+function pad_mask(mask, pad) {
+	const w = mask.width + pad * 2;
+	const h = mask.height + pad * 2;
+	const data = new Uint8ClampedArray(w * h);
+	for (let y = 0; y < mask.height; y++) {
+		data.set(mask.data.subarray(y * mask.width, (y + 1) * mask.width), (y + pad) * w + pad);
+	}
+	return {width: w, height: h, data};
+}
+
+/**
+ * @param {Mask} mask a padded mask
+ * @param {number} pad the padding to cut off
+ * @param {number} width the size of the result
+ * @param {number} height
+ * @returns {Mask}
+ */
+function crop_mask(mask, pad, width, height) {
+	const data = new Uint8ClampedArray(width * height);
+	for (let y = 0; y < height; y++) {
+		const from = (y + pad) * mask.width + pad;
+		data.set(mask.data.subarray(from, from + width), y * width);
+	}
+	return {width, height, data};
 }
 
 /**

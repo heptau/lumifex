@@ -10,6 +10,7 @@
  */
 import * as Adjustments from './adjustments.js';
 import * as Filters from './filters.js';
+import * as Distort from './distort.js';
 import { ADJUSTMENTS } from './adjustment-layers.js';
 import { deserialize_layer_mask, shape_layer_mask } from './layer-mask.js';
 import { resize_mask } from './selection-mask.js';
@@ -133,6 +134,169 @@ Object.assign(SMART_FILTERS, {
 		title: 'Find Edges',
 		params: [],
 		apply: (img) => Filters.findEdges(img),
+	},
+	cutout: {
+		title: 'Cutout',
+		params: [
+			{name: 'levels', title: 'Levels:', value: 4, range: [2, 8]},
+			{name: 'simplicity', title: 'Simplicity:', value: 4, range: [0, 10]},
+		],
+		apply: (img, s) => Filters.cutout(img, s),
+	},
+	poster_edges: {
+		title: 'Poster Edges',
+		params: [
+			{name: 'levels', title: 'Levels:', value: 4, range: [2, 8]},
+			{name: 'simplicity', title: 'Simplicity:', value: 2, range: [0, 10]},
+			{name: 'edge', title: 'Edge threshold:', value: 30, range: [0, 255]},
+			{name: 'intensity', title: 'Intensity:', value: 80, range: [0, 100]},
+		],
+		apply: (img, s) => Filters.posterEdges(img, s),
+	},
+	stamp: {
+		title: 'Stamp',
+		params: [
+			{name: 'balance', title: 'Light/dark balance:', value: 50, range: [0, 100]},
+			{name: 'smoothness', title: 'Smoothness:', value: 5, range: [0, 20]},
+			{name: 'ink', title: 'Ink:', value: '#000000', type: 'color'},
+			{name: 'paper', title: 'Paper:', value: '#ffffff', type: 'color'},
+		],
+		apply: (img, s) => Filters.stamp(img, s),
+	},
+	stained_glass: {
+		title: 'Stained Glass',
+		params: [
+			{name: 'size', title: 'Cell size:', value: 6, range: [1, 30]},
+			{name: 'border', title: 'Border:', value: 2, range: [1, 6]},
+			{name: 'color', title: 'Border color:', value: '#141414', type: 'color'},
+			{name: 'seed', title: 'Seed:', value: 1, range: [0, 999]},
+		],
+		apply: (img, s) => Distort.stainedGlass(img, s),
+	},
+	texturizer: {
+		title: 'Texturizer',
+		params: [
+			{name: 'scaling', title: 'Scaling:', value: 8, range: [2, 40]},
+			{name: 'relief', title: 'Relief:', value: 40, range: [0, 100]},
+			{name: 'light', title: 'Light angle:', value: 135, range: [-180, 360]},
+		],
+		apply: (img, s) => Filters.texturizer(img, s),
+	},
+	crosshatch: {
+		title: 'Crosshatch',
+		params: [
+			{name: 'spacing', title: 'Line spacing:', value: 6, range: [3, 30]},
+			{name: 'thickness', title: 'Line thickness:', value: 1, range: [1, 6]},
+			{name: 'smoothness', title: 'Smoothness:', value: 2, range: [0, 10]},
+			{name: 'ink', title: 'Ink:', value: '#000000', type: 'color'},
+			{name: 'paper', title: 'Paper:', value: '#ffffff', type: 'color'},
+		],
+		apply: (img, s) => Filters.crosshatch(img, s),
+	},
+	spatter: {
+		title: 'Spatter',
+		params: [
+			{name: 'radius', title: 'Spray radius:', value: 10, range: [0, 30]},
+			{name: 'smoothness', title: 'Smoothness:', value: 5, range: [1, 15]},
+			{name: 'seed', title: 'Seed:', value: 1, range: [0, 100]},
+		],
+		apply: (img, s) => Filters.spatter(img, s),
+	},
+	angled_strokes: {
+		title: 'Angled Strokes',
+		params: [
+			{name: 'angle', title: 'Angle:', value: 45, range: [-180, 180]},
+			{name: 'length', title: 'Stroke length:', value: 10, range: [1, 50]},
+		],
+		apply: (img, s) => Filters.angledStrokes(img, s),
+	},
+	sprayed_strokes: {
+		title: 'Sprayed Strokes',
+		params: [
+			{name: 'angle', title: 'Angle:', value: 45, range: [-180, 180]},
+			{name: 'length', title: 'Stroke length:', value: 12, range: [0, 40]},
+			{name: 'seed', title: 'Seed:', value: 1, range: [0, 100]},
+		],
+		apply: (img, s) => Filters.sprayedStrokes(img, s),
+	},
+	ink_outlines: {
+		title: 'Ink Outlines',
+		params: [
+			{name: 'smoothness', title: 'Smoothness:', value: 2, range: [0, 10]},
+			{name: 'threshold', title: 'Edge threshold:', value: 40, range: [0, 254]},
+			{name: 'intensity', title: 'Intensity:', value: 100, range: [0, 100]},
+			{name: 'ink', title: 'Ink:', value: '#000000', type: 'color'},
+		],
+		apply: (img, s) => Filters.inkOutlines(img, s),
+	},
+	chrome: {
+		title: 'Chrome',
+		params: [
+			{name: 'detail', title: 'Detail:', value: 3, range: [1, 10]},
+			{name: 'smoothness', title: 'Smoothness:', value: 4, range: [0, 20]},
+		],
+		apply: (img, s) => Filters.chrome(img, s),
+	},
+	neon_glow: {
+		title: 'Neon Glow',
+		params: [
+			{name: 'size', title: 'Glow size:', value: 5, range: [1, 20]},
+			{name: 'brightness', title: 'Glow brightness:', value: 60, range: [0, 100]},
+			{name: 'darken', title: 'Darken:', value: 50, range: [0, 100]},
+			{name: 'color', title: 'Glow color:', value: '#00ffff', type: 'color'},
+		],
+		apply: (img, s) => Filters.neonGlow(img, s),
+	},
+	bas_relief: {
+		title: 'Bas Relief',
+		params: [
+			{name: 'detail', title: 'Detail:', value: 5, range: [1, 15]},
+			{name: 'smoothness', title: 'Smoothness:', value: 2, range: [0, 10]},
+			{name: 'light', title: 'Light angle:', value: 135, range: [0, 359]},
+			{name: 'dark', title: 'Dark:', value: '#000000', type: 'color'},
+			{name: 'light_color', title: 'Light:', value: '#ffffff', type: 'color'},
+		],
+		apply: (img, s) => Filters.basRelief(img, s),
+	},
+	diffuse_glow: {
+		title: 'Diffuse Glow',
+		params: [
+			{name: 'graininess', title: 'Graininess:', value: 6, range: [0, 10]},
+			{name: 'glow', title: 'Glow amount:', value: 10, range: [0, 20]},
+			{name: 'size', title: 'Glow size:', value: 6, range: [1, 20]},
+			{name: 'color', title: 'Glow color:', value: '#ffffff', type: 'color'},
+			{name: 'seed', title: 'Seed:', value: 1, range: [0, 9999]},
+		],
+		apply: (img, s) => Filters.diffuseGlow(img, s),
+	},
+	glass: {
+		title: 'Glass',
+		params: [
+			{name: 'distortion', title: 'Distortion:', value: 8, range: [0, 50]},
+			{name: 'scale', title: 'Scale:', value: 10, range: [2, 100]},
+			{name: 'seed', title: 'Seed:', value: 1, range: [0, 9999]},
+		],
+		apply: (img, s) => Distort.glass(img, s),
+	},
+	lens_blur: {
+		title: 'Lens Blur',
+		params: [
+			{name: 'radius', title: 'Radius:', value: 6, range: [1, 20]},
+			{name: 'highlights', title: 'Highlights:', value: 30, range: [0, 100]},
+			{name: 'threshold', title: 'Threshold:', value: 200, range: [0, 254]},
+		],
+		apply: (img, s) => Filters.lensBlur(img, s),
+	},
+	charcoal: {
+		title: 'Charcoal',
+		params: [
+			{name: 'detail', title: 'Detail:', value: 3, range: [1, 5]},
+			{name: 'edge', title: 'Edge weight:', value: 60, range: [0, 100]},
+			{name: 'tone', title: 'Tone weight:', value: 40, range: [0, 100]},
+			{name: 'charcoal', title: 'Charcoal:', value: '#000000', type: 'color'},
+			{name: 'paper', title: 'Paper:', value: '#ffffff', type: 'color'},
+		],
+		apply: (img, s) => Filters.charcoal(img, s),
 	},
 	add_noise: {
 		title: 'Add Noise',

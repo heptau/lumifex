@@ -37,18 +37,20 @@ class Quick_select_class extends Base_mask_tool_class {
 			return;
 		}
 		const layer = config.layer;
-		if (layer.type != 'image') {
+		//Sample all: the tool looks at the visible picture, so it works on any layer
+		const sample_all = Boolean(this.getParams().sample_all);
+		if (!sample_all && layer.type != 'image') {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
 			return;
 		}
-		if (layer.rotate) {
+		if (!sample_all && layer.rotate) {
 			alertify.error(t('Rotate is not supported on this type of object. Convert to raster?'));
 			return;
 		}
 		if (this.Edit_selection == null) {
 			this.Edit_selection = new Edit_selection_class();
 		}
-		this.image = this.Edit_selection.layer_on_canvas(layer);
+		this.image = sample_all ? this.visible_picture() : this.Edit_selection.layer_on_canvas(layer);
 		if (this.image.width * this.image.height > 12000000) {
 			alertify.error(t('The image is too large for this tool.'));
 			return;

@@ -2,7 +2,7 @@ import config from './../config.js';
 import Base_mask_tool_class from './../core/base-mask-tool.js';
 import Helper_class from './../libs/helpers.js';
 import { polygon_mask } from './../libs/selection-mask.js';
-import { edge_strength, build_path_tree, trace_path } from './../libs/magnetic-path.js';
+import { edge_strength, build_path_tree, trace_path, take_back_anchor } from './../libs/magnetic-path.js';
 import Base_layers_class from './../core/base-layers.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
@@ -27,6 +27,7 @@ class Lasso_class extends Base_mask_tool_class {
 		this.tree = null; //cheapest paths from the last click
 		this.live = null; //the path from the last click to the pointer
 		this.points = null; //path being drawn
+		this.marks = []; //the length of the path after every anchor, so Backspace can take the last one back
 		this.cursor = null;
 		this.drawing = false;
 	}
@@ -49,10 +50,28 @@ class Lasso_class extends Base_mask_tool_class {
 				//enter - close polygon
 				this.finish(event);
 			}
+			else if (event.keyCode == 8 && this.drawing && this.is_polygonal()) {
+				//backspace - take back the last anchor (the path returns to the one before it)
+				event.preventDefault();
+				this.take_back();
+			}
 			else if (event.keyCode == 46 && !this.drawing) {
 				this.Selection.delete_selection();
 			}
 		}, false);
+	}
+
+	take_back() {
+		const back = take_back_anchor(this.marks);
+		if (back == null) {
+			return;
+		}
+		this.marks = back.marks;
+		this.points.length = back.length;
+		if (this.is_magnetic()) {
+			this.start_tree(this.points[this.points.length - 1]);
+		}
+		config.need_render = true;
 	}
 
 	is_magnetic() {
@@ -120,6 +139,7 @@ class Lasso_class extends Base_mask_tool_class {
 			const magnetic = this.is_magnetic();
 			if (this.drawing == false) {
 				this.points = [point];
+				this.marks = [1];
 				this.drawing = true;
 				if (magnetic) {
 					this.start_tree(point);
@@ -136,10 +156,12 @@ class Lasso_class extends Base_mask_tool_class {
 			else if (magnetic) {
 				//the stretch to the click follows the edges, the next one starts from here
 				this.points.push(...trace_path(this.tree, point.x, point.y).slice(1));
+				this.marks.push(this.points.length);
 				this.start_tree(point);
 			}
 			else {
 				this.points.push(point);
+				this.marks.push(this.points.length);
 			}
 		}
 		else {
@@ -200,6 +222,7 @@ class Lasso_class extends Base_mask_tool_class {
 
 	cancel() {
 		this.points = null;
+		this.marks = [];
 		this.edges = null;
 		this.tree = null;
 		this.live = null;

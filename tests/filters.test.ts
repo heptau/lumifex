@@ -1,4 +1,4 @@
-import { gaussianBlur, smartSharpen, diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
+import { box_sizes_for_gaussian, GAUSSIAN_EXACT_LIMIT, lensBlur, gaussianBlur, smartSharpen, diffuseGlow, dryBrush, patchwork, facet, basRelief, neonGlow, stamp, crosshatch, spatter, angledStrokes, inkOutlines, sprayedStrokes, chrome, texturizer, posterEdges, cutout, photocopy, charcoal, blurMore, sharpenMore, glowingEdges, mezzotint, fragment, despeckle, customKernel, traceContour, wind, average, tiles, oilPaint, diffuse, pixelate, unsharpMask, highPass, median, maxMin, offset, motionBlur, clarity, mirror, smartBlur } from '../src/js/libs/filters.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -707,5 +707,378 @@ describe('gaussianBlur', () => {
 		expect(out.data[3 * 4 + 3]).toBeLessThan(255);
 		expect(out.data[3 * 4]).toBe(0);
 		expect(out.data[3 * 4 + 2]).toBe(255);
+	});
+});
+
+describe('lensBlur', () => {
+	it('zero radius changes nothing and a flat picture stays flat with its alpha', () => {
+		const img = image(5, 5, (x) => [x * 40, 10, 20, 90]);
+		const copy = Array.from(img.data);
+		expect(Array.from(lensBlur(img, {radius: 0}).data)).toEqual(copy);
+		const flat = lensBlur(image(9, 9, () => [90, 120, 30, 200]), {radius: 3, highlights: 50});
+		for (let i = 0; i < flat.data.length; i += 4) {
+			expect(Array.from(flat.data.slice(i, i + 4))).toEqual([90, 120, 30, 200]);
+		}
+	});
+
+	it('spreads a light point into a disc with a hard edge, not a soft ramp', () => {
+		const size = 21;
+		const dot = image(size, size, (x, y) => (x == 10 && y == 10 ? [255, 255, 255, 255] : [0, 0, 0, 255]));
+		const out = lensBlur(dot, {radius: 4, highlights: 0});
+		const at = (x: number, y: number) => out.data[(y * size + x) * 4];
+		//inside the disc all pixels are equal, outside there is nothing
+		expect(at(10, 10)).toBe(at(12, 10));
+		expect(at(10, 10)).toBe(at(10, 7));
+		expect(at(10, 10)).toBeGreaterThan(0);
+		expect(at(10 + 6, 10)).toBe(0);
+	});
+
+	it('bright pixels weigh more with highlights, so they stay brighter', () => {
+		const make = () => image(11, 11, (x, y) => (x == 5 && y == 5 ? [255, 255, 255, 255] : [60, 60, 60, 255]));
+		const plain = lensBlur(make(), {radius: 3, highlights: 0});
+		const boosted = lensBlur(make(), {radius: 3, highlights: 100, threshold: 150});
+		expect(boosted.data[(5 * 11 + 6) * 4]).toBeGreaterThan(plain.data[(5 * 11 + 6) * 4]);
+	});
+
+	it('the color of transparent pixels does not bleed into the edge', () => {
+		const img = image(9, 1, (x) => (x < 4 ? [255, 0, 0, 0] : [0, 0, 255, 255]));
+		const out = lensBlur(img, {radius: 2});
+		expect(out.data[4 * 4 + 3]).toBeLessThan(255);
+		expect(out.data[4 * 4 + 3]).toBeGreaterThan(0);
+		expect(out.data[4 * 4]).toBe(0);
+		expect(out.data[4 * 4 + 2]).toBe(255);
+	});
+});
+
+describe('median (histogram) against a plain sort', () => {
+	//the straightforward version: sort the whole neighborhood of every channel
+	function reference(image: { data: Uint8ClampedArray; width: number; height: number }, radius: number) {
+		const { width: w, height: h } = image;
+		const src = new Uint8ClampedArray(image.data);
+		const out = new Uint8ClampedArray(src);
+		const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				for (let c = 0; c < 3; c++) {
+					const values: number[] = [];
+					for (let dy = -radius; dy <= radius; dy++) {
+						for (let dx = -radius; dx <= radius; dx++) {
+							values.push(src[(clamp(y + dy, 0, h - 1) * w + clamp(x + dx, 0, w - 1)) * 4 + c]);
+						}
+					}
+					values.sort((a, b) => a - b);
+					out[(y * w + x) * 4 + c] = values[values.length >> 1];
+				}
+			}
+		}
+		return out;
+	}
+
+	const noise = (w: number, h: number, seed: number) => {
+		const data = new Uint8ClampedArray(w * h * 4);
+		let s = seed;
+		for (let i = 0; i < data.length; i++) {
+			s = (s * 1103515245 + 12345) & 0x7fffffff;
+			data[i] = (s >> 8) & 255;
+		}
+		return { data, width: w, height: h };
+	};
+
+	it('gives exactly the same picture for every radius, also on tiny pictures', () => {
+		for (const [w, h] of [[17, 13], [3, 3], [1, 8], [9, 1], [30, 4]]) {
+			for (const radius of [1, 2, 3, 5]) {
+				const img = noise(w, h, w * 31 + h + radius);
+				const expected = reference(img, radius);
+				const out = median(img, radius);
+				expect(Array.from(out.data)).toEqual(Array.from(expected));
+			}
+		}
+	});
+
+	it('keeps alpha, and a bad radius counts as 1 and a large one as 5', () => {
+		const img = noise(10, 10, 7);
+		const alpha = Array.from(img.data).filter((_, i) => i % 4 == 3);
+		const out = median(noise(10, 10, 7), 'x' as any);
+		expect(Array.from(out.data).filter((_, i) => i % 4 == 3)).toEqual(alpha);
+		expect(Array.from(out.data)).toEqual(Array.from(reference(noise(10, 10, 7), 1)));
+		expect(Array.from(median(noise(10, 10, 7), 99).data)).toEqual(Array.from(reference(noise(10, 10, 7), 5)));
+	});
+});
+
+describe('lensBlur (running sums) against the plain disc', () => {
+	//the straightforward version: every pixel of the disc is visited
+	function reference(image: { data: Uint8ClampedArray; width: number; height: number }, radius: number, highlights: number, threshold: number) {
+		const { width: w, height: h, data } = image;
+		const boost = highlights / 100 * 9;
+		const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+		const weight = new Float64Array(w * h);
+		for (let p = 0; p < w * h; p++) {
+			const luma = data[p * 4] * 0.299 + data[p * 4 + 1] * 0.587 + data[p * 4 + 2] * 0.114;
+			const t = clamp((luma - threshold) / (255 - threshold), 0, 1);
+			weight[p] = 1 + boost * t * t * (3 - 2 * t);
+		}
+		const out = new Uint8ClampedArray(data.length);
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				let r = 0, g = 0, b = 0, a = 0, total = 0;
+				for (let dy = -radius; dy <= radius; dy++) {
+					for (let dx = -radius; dx <= radius; dx++) {
+						if (dx * dx + dy * dy > radius * radius + radius * 0.5) {
+							continue;
+						}
+						const p = clamp(y + dy, 0, h - 1) * w + clamp(x + dx, 0, w - 1);
+						const alpha = data[p * 4 + 3] / 255;
+						r += data[p * 4] * alpha * weight[p];
+						g += data[p * 4 + 1] * alpha * weight[p];
+						b += data[p * 4 + 2] * alpha * weight[p];
+						a += alpha * weight[p];
+						total += weight[p];
+					}
+				}
+				const i = (y * w + x) * 4;
+				if (a > 0) {
+					out[i] = Math.round(r / a);
+					out[i + 1] = Math.round(g / a);
+					out[i + 2] = Math.round(b / a);
+				}
+				out[i + 3] = Math.round(a / total * 255);
+			}
+		}
+		return out;
+	}
+
+	const noise = (w: number, h: number, seed: number) => {
+		const data = new Uint8ClampedArray(w * h * 4);
+		let s = seed;
+		for (let i = 0; i < data.length; i++) {
+			s = (s * 1103515245 + 12345) & 0x7fffffff;
+			data[i] = (s >> 8) & 255;
+		}
+		return { data, width: w, height: h };
+	};
+
+	it('gives the same picture (within one level) for several radii, sizes and highlights', () => {
+		for (const [w, h] of [[23, 17], [5, 4], [1, 9], [12, 1]]) {
+			for (const [radius, highlights] of [[1, 0], [3, 50], [6, 100], [9, 30]]) {
+				const img = noise(w, h, w * 7 + h * 3 + radius);
+				const expected = reference(img, radius, highlights, 200);
+				const out = lensBlur(noise(w, h, w * 7 + h * 3 + radius), {radius, highlights, threshold: 200});
+				for (let i = 0; i < out.data.length; i++) {
+					expect(Math.abs(out.data[i] - expected[i])).toBeLessThanOrEqual(1);
+				}
+			}
+		}
+	});
+});
+
+describe('gaussianBlur with box blurs for a large radius', () => {
+	it('the three box widths are odd and give about the variance of the Gaussian', () => {
+		for (const sigma of [13, 20, 45, 100]) {
+			const sizes = box_sizes_for_gaussian(sigma);
+			expect(sizes.length).toBe(3);
+			sizes.forEach((size) => expect(size % 2).toBe(1));
+			const variance = sizes.reduce((sum, size) => sum + (size * size - 1) / 12, 0);
+			expect(Math.abs(Math.sqrt(variance) - sigma) / sigma).toBeLessThan(0.05);
+		}
+	});
+
+	it('is close to the exact kernel (a step edge, 20 px radius) and keeps flat areas, alpha and the total light', () => {
+		const w = 120;
+		const step = () => image(w, 3, (x) => (x < 60 ? [0, 0, 0, 255] : [255, 255, 255, 255]));
+		const blurred = gaussianBlur(step(), {radius: 20});
+		//the exact blur of an edge is an error function: 50 % at the edge, about 84 % one sigma away
+		const at = (x: number) => blurred.data[x * 4];
+		expect(Math.abs(at(59) - 127)).toBeLessThan(8);
+		expect(Math.abs(at(80) - 255 * 0.84)).toBeLessThan(14);
+		expect(Math.abs(at(40) - 255 * 0.16)).toBeLessThan(14);
+		for (let x = 0; x < w; x++) {
+			expect(blurred.data[x * 4 + 3]).toBe(255);
+		}
+		const flat = gaussianBlur(image(40, 40, () => [90, 120, 30, 200]), {radius: 25});
+		for (let i = 0; i < flat.data.length; i += 4) {
+			expect(Array.from(flat.data.slice(i, i + 4))).toEqual([90, 120, 30, 200]);
+		}
+		expect(GAUSSIAN_EXACT_LIMIT).toBe(12);
+	});
+
+	it('switches from the exact kernel to the boxes without a jump', () => {
+		const make = () => image(100, 1, (x) => (x < 50 ? [0, 0, 0, 255] : [255, 255, 255, 255]));
+		const exact = gaussianBlur(make(), {radius: GAUSSIAN_EXACT_LIMIT});
+		const boxes = gaussianBlur(make(), {radius: GAUSSIAN_EXACT_LIMIT + 0.5});
+		for (let x = 0; x < 100; x++) {
+			expect(Math.abs(exact.data[x * 4] - boxes.data[x * 4])).toBeLessThan(12);
+		}
+	});
+});
+
+describe('crosshatch', () => {
+	it('white stays paper and black gets all four line families', () => {
+		const white = crosshatch(image(12, 12, () => [255, 255, 255, 255]), {spacing: 4, thickness: 1, smoothness: 0});
+		expect(white.data.every((v: number, i: number) => i % 4 == 3 || v == 255)).toBe(true);
+		const black = crosshatch(image(12, 12, () => [0, 0, 0, 255]), {spacing: 4, thickness: 1, smoothness: 0, ink: '#112233', paper: '#ffffff'});
+		const at = (x: number, y: number) => black.data[(y * 12 + x) * 4];
+		expect(at(0, 0)).toBe(0x11); //on every family
+		expect(at(1, 1)).toBe(0x11); //the horizontal line? y = 1 is not, but x - y = 0 is
+		expect(at(2, 1)).toBe(255); //x + y = 3, x - y = 1, y = 1, x = 2: none
+	});
+
+	it('keeps alpha and a darker area has more ink', () => {
+		const count = (v: number) => {
+			const out = crosshatch(image(16, 16, () => [v, v, v, 77]), {spacing: 4, thickness: 1, smoothness: 0, ink: '#000000'});
+			expect(out.data[3]).toBe(77);
+			return out.data.filter((c: number, i: number) => i % 4 == 0 && c == 0).length;
+		};
+		expect(count(180)).toBeLessThan(count(120));
+		expect(count(120)).toBeLessThan(count(20));
+		expect(count(250)).toBe(0);
+	});
+});
+
+describe('spatter', () => {
+	const make = () => image(20, 20, (x, y) => [x * 10, y * 10, 5, 200]);
+
+	it('is deterministic, keeps the palette of the source and radius 0 changes nothing', () => {
+		const a = spatter(make(), {radius: 6, smoothness: 3, seed: 4});
+		const b = spatter(make(), {radius: 6, smoothness: 3, seed: 4});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		expect(Array.from(spatter(make(), {radius: 0}).data)).toEqual(Array.from(make().data));
+		expect(a.data.every((v: number, i: number) => i % 4 != 2 ? v % 10 == 0 : v == 5 || i % 4 == 3 ? true : v == 5)).toBe(true);
+	});
+
+	it('moves pixels at most by the radius and a seed changes the result', () => {
+		const out = spatter(make(), {radius: 3, smoothness: 4, seed: 1});
+		for (let y = 0; y < 20; y++) {
+			for (let x = 0; x < 20; x++) {
+				const i = (y * 20 + x) * 4;
+				expect(Math.abs(out.data[i] / 10 - x)).toBeLessThanOrEqual(3);
+				expect(Math.abs(out.data[i + 1] / 10 - y)).toBeLessThanOrEqual(3);
+			}
+		}
+		const other = spatter(make(), {radius: 3, smoothness: 4, seed: 2});
+		expect(Array.from(other.data)).not.toEqual(Array.from(out.data));
+	});
+});
+
+describe('angledStrokes', () => {
+	it('light pixels are smeared along the angle, dark ones across it', () => {
+		// a vertical white line on gray: horizontal strokes (angle 0) smear it sideways, only light pixels stroke along the angle
+		const make = () => image(9, 9, (x) => (x == 4 ? [255, 255, 255, 255] : [100, 100, 100, 255]));
+		const out = angledStrokes(make(), {angle: 0, length: 3});
+		// light centre pixel: horizontal mean of (100, 255, 100)
+		expect(out.data[(4 * 9 + 4) * 4]).toBe(Math.round((100 + 255 + 100) / 3));
+		// dark neighbour strokes vertically across the line: all 100
+		expect(out.data[(4 * 9 + 3) * 4]).toBe(100);
+	});
+
+	it('a flat picture stays, length 1 changes nothing and alpha is kept', () => {
+		const flat = angledStrokes(image(6, 6, () => [200, 50, 20, 120]), {angle: 30, length: 7});
+		expect(Array.from(flat.data.slice(0, 4))).toEqual([200, 50, 20, 120]);
+		const one = image(3, 3, (x, y) => [x * 80, y * 80, 9, 255]);
+		expect(Array.from(angledStrokes(image(3, 3, (x, y) => [x * 80, y * 80, 9, 255]), {length: 1}).data)).toEqual(Array.from(one.data));
+	});
+});
+
+describe('inkOutlines', () => {
+	const make = () => image(10, 10, (x) => (x < 5 ? [230, 230, 230, 200] : [40, 40, 40, 200]));
+
+	it('draws ink on an edge, leaves flat areas alone and keeps alpha', () => {
+		const out = inkOutlines(make(), {smoothness: 0, threshold: 10, intensity: 100, ink: '#000000'});
+		const px = (x: number) => out.data[(5 * 10 + x) * 4];
+		expect(px(4)).toBe(0);
+		expect(px(5)).toBe(0);
+		expect(px(0)).toBe(230);
+		expect(px(9)).toBe(40);
+		expect(out.data[3]).toBe(200);
+	});
+
+	it('intensity 0 changes nothing and a high threshold finds no edge', () => {
+		expect(Array.from(inkOutlines(make(), {smoothness: 0, threshold: 10, intensity: 0}).data)).toEqual(Array.from(make().data));
+		expect(Array.from(inkOutlines(make(), {smoothness: 0, threshold: 254}).data)).toEqual(Array.from(make().data));
+	});
+});
+
+describe('sprayedStrokes', () => {
+	const make = () => image(30, 30, (x, y) => [x * 8, y * 8, 5, 200]);
+
+	it('moves pixels only along the angle, within the length, deterministically', () => {
+		const out = sprayedStrokes(make(), {angle: 0, length: 5, seed: 3});
+		let moved = 0;
+		for (let y = 0; y < 30; y++) {
+			for (let x = 0; x < 30; x++) {
+				const i = (y * 30 + x) * 4;
+				expect(out.data[i + 1]).toBe(y * 8); //horizontal spray keeps the row
+				expect(Math.abs(out.data[i] / 8 - x)).toBeLessThanOrEqual(5);
+				if (out.data[i] != x * 8) {
+					moved++;
+				}
+			}
+		}
+		expect(moved).toBeGreaterThan(300);
+		expect(Array.from(sprayedStrokes(make(), {angle: 0, length: 5, seed: 3}).data)).toEqual(Array.from(out.data));
+	});
+
+	it('length 0 changes nothing', () => {
+		expect(Array.from(sprayedStrokes(make(), {length: 0}).data)).toEqual(Array.from(make().data));
+	});
+});
+
+describe('chrome', () => {
+	it('maps brightness through a sine: gray output, mid brightness stays mid, alpha kept', () => {
+		const out = chrome(image(3, 1, (x) => [[0, 0, 0, 77], [128, 128, 128, 77], [255, 255, 255, 77]][x]), {detail: 1, smoothness: 0});
+		expect(out.data[0]).toBe(out.data[1]);
+		expect(out.data[1]).toBe(out.data[2]);
+		expect(out.data[3]).toBe(77);
+		expect(Math.abs(out.data[4] - 128)).toBeLessThanOrEqual(1); //sin(0) = 0 -> 127.5
+		expect(out.data[0]).toBe(0); //sin(-pi/2) = -1
+		expect(out.data[8]).toBe(255); //sin(pi/2) = 1
+	});
+
+	it('more detail makes the brightness go up and down again', () => {
+		const ramp = image(64, 1, (x) => [x * 4, x * 4, x * 4, 255]);
+		const out = chrome(ramp, {detail: 3, smoothness: 0});
+		let turns = 0;
+		let last = 0;
+		for (let x = 1; x < 64; x++) {
+			const diff = Math.sign(out.data[x * 4] - out.data[(x - 1) * 4]); //plateaus at the extremes are skipped
+			if (diff != 0) {
+				if (last != 0 && diff != last) {
+					turns++;
+				}
+				last = diff;
+			}
+		}
+		expect(turns).toBeGreaterThanOrEqual(2);
+	});
+});
+
+describe('texturizer', () => {
+	const flat = () => image(32, 32, () => [128, 128, 128, 90]);
+
+	it('relief 0 changes nothing, alpha is kept, gray stays gray', () => {
+		expect(Array.from(texturizer(flat(), {relief: 0}).data)).toEqual(Array.from(flat().data));
+		const out = texturizer(flat(), {scaling: 8, relief: 60});
+		for (let i = 0; i < out.data.length; i += 4) {
+			expect(out.data[i + 3]).toBe(90);
+			expect(out.data[i]).toBe(out.data[i + 1]);
+			expect(out.data[i]).toBe(out.data[i + 2]);
+		}
+	});
+
+	it('repeats and gets deeper with relief', () => {
+		const a = texturizer(flat(), {scaling: 8, relief: 50});
+		//the over-under weave repeats after two thread distances
+		expect(a.data[(5 * 32 + 3) * 4]).toBe(a.data[(5 * 32 + 19) * 4]);
+		expect(a.data[(5 * 32 + 3) * 4]).toBe(a.data[(21 * 32 + 3) * 4]);
+		const spread = (relief: number) => {
+			const out = texturizer(flat(), {scaling: 8, relief});
+			let lo = 255, hi = 0;
+			for (let i = 0; i < out.data.length; i += 4) {
+				lo = Math.min(lo, out.data[i]);
+				hi = Math.max(hi, out.data[i]);
+			}
+			return hi - lo;
+		};
+		expect(spread(80)).toBeGreaterThan(spread(20));
+		expect(spread(20)).toBeGreaterThan(0);
 	});
 });

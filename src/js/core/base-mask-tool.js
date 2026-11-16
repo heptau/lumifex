@@ -6,6 +6,7 @@ import { draw_mask_ants, ant_phase } from './../libs/marching-ants.js';
 import Selection_mask_class from './selection-mask-state.js';
 import Selection_class from './../tools/selection.js';
 import Edit_selection_class from './../modules/edit/selection.js';
+import Base_layers_class from './base-layers.js';
 import { feather_mask, combine_masks } from './../libs/selection-mask.js';
 
 /**
@@ -40,6 +41,21 @@ class Base_mask_tool_class extends Base_tools_class {
 	/**
 	 * Draws the tint of a custom mask; plain rectangles use the selection fill.
 	 */
+	/**
+	 * For the tools that read pixels and have "Sample all": the whole visible picture of the document, the way it is
+	 * shown, as a picture of the size of the document
+	 *
+	 * @returns {ImageData}
+	 */
+	visible_picture() {
+		const canvas = document.createElement('canvas');
+		canvas.width = config.WIDTH;
+		canvas.height = config.HEIGHT;
+		const ctx = canvas.getContext('2d', {willReadFrequently: true});
+		new Base_layers_class().convert_layers_to_canvas(ctx, null, false);
+		return ctx.getImageData(0, 0, canvas.width, canvas.height);
+	}
+
 	render_mask_overlay(ctx) {
 		const current = this.Selection_mask.get();
 		const preview = this.Selection_mask.get_preview();

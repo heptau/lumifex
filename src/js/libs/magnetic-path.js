@@ -179,3 +179,19 @@ export function trace_path(tree, x, y) {
 	}
 	return points.reverse();
 }
+
+/**
+ * Backspace while a polygonal or magnetic path is being drawn takes back the last anchor: the path goes back to
+ * how long it was after the anchor before it.
+ *
+ * @param {number[]} marks the length of the path after every anchor, the first is the start (1)
+ * @returns {{marks: number[], length: number}|null} the shorter list and the length the path is cut to; null when only
+ *  the start is left (nothing to take back)
+ */
+export function take_back_anchor(marks) {
+	if (!Array.isArray(marks) || marks.length < 2) {
+		return null;
+	}
+	const rest = marks.slice(0, -1);
+	return {marks: rest, length: rest[rest.length - 1]};
+}

@@ -16,7 +16,7 @@ describe('blend mode cycling', () => {
 	it('a missing or unknown mode counts as Normal', () => {
 		expect(cycle_blend_mode(undefined, 1)).toBe('darken');
 		expect(cycle_blend_mode(null, -1)).toBe('luminosity');
-		expect(cycle_blend_mode('lighter', 1)).toBe('darken');
+		expect(cycle_blend_mode('plus-darker', 1)).toBe('darken');
 	});
 
 	it('a full circle returns to the start', () => {

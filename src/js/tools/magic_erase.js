@@ -2,6 +2,7 @@ import app from './../app.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
 import Base_layers_class from './../core/base-layers.js';
+import { fill_region } from './../libs/flood-fill.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
@@ -83,8 +84,7 @@ class Magic_erase_class extends Base_tools_class {
 
 		//change
 		this.working = true;
-		this.magic_erase_general(ctx, config.WIDTH, config.HEIGHT,
-			mouse_x, mouse_y, params.power, params.anti_aliasing, params.contiguous);
+		this.magic_erase_general(ctx, mouse_x, mouse_y, params.power, params.anti_aliasing, params.contiguous);
 
 		app.State.do_action(
 			new app.Actions.Bundle_action('magic_erase_tool', 'Magic Eraser Tool', [
@@ -97,117 +97,43 @@ class Magic_erase_class extends Base_tools_class {
 	}
 
 	/**
-	 * apply magic erase
+	 * apply magic erase: the pixels like the clicked one (see libs/flood-fill.js) become transparent
 	 *
-	 * @param {ctx} context
-	 * @param {int} W
-	 * @param {int} H
-	 * @param {int} x
+	 * @param {CanvasRenderingContext2D} context the layer picture
+	 * @param {int} x the click in pixels of the layer picture
 	 * @param {int} y
-	 * @param {int} sensitivity max 100
-	 * @param {Boolean} anti_aliasing
+	 * @param {int} tolerance max 100
+	 * @param {Boolean} anti_aliasing soften the edge of the erased area
+	 * @param {Boolean} contiguous only the area connected with the click
+	 * @returns {boolean} false when there was nothing to erase
 	 */
-	magic_erase_general(context, W, H, x, y, sensitivity, anti_aliasing, contiguous = false) {
-		let i;
-		sensitivity = sensitivity * 255 / 100; //convert to 0-255 interval
-		x = parseInt(x);
-		y = parseInt(y);
+	magic_erase_general(context, x, y, tolerance, anti_aliasing, contiguous) {
+		const W = context.canvas.width;
+		const H = context.canvas.height;
+		x = Math.round(x);
+		y = Math.round(y);
+		const img = context.getImageData(0, 0, W, H);
+		if (x < 0 || y < 0 || x >= W || y >= H || img.data[(y * W + x) * 4 + 3] == 0) {
+			return false; //outside, or already transparent
+		}
+		const mask = fill_region(img.data, W, H, x, y, tolerance, contiguous);
+		const erased = new ImageData(W, H);
+		for (let p = 0; p < mask.length; p++) {
+			if (mask[p]) {
+				erased.data[p * 4 + 3] = 255;
+			}
+		}
+		//destination-out + blur = anti-aliasing
 		const canvasTemp = document.createElement('canvas');
 		canvasTemp.width = W;
 		canvasTemp.height = H;
-		const ctxTemp = canvasTemp.getContext("2d");
-
-		ctxTemp.rect(0, 0, W, H);
-		ctxTemp.fillStyle = "rgba(255, 255, 255, 0)";
-		ctxTemp.fill();
-
-		const img_tmp = ctxTemp.getImageData(0, 0, W, H);
-		const imgData_tmp = img_tmp.data;
-
-		const img = context.getImageData(0, 0, W, H);
-		const imgData = img.data;
-		let k = ((y * (img.width * 4)) + (x * 4));
-		const dx = [0, -1, +1, 0];
-		const dy = [-1, 0, 0, +1];
-		const color_to = {
-			r: 255,
-			g: 255,
-			b: 255,
-			a: 255
-		};
-		const color_from = {
-			r: imgData[k + 0],
-			g: imgData[k + 1],
-			b: imgData[k + 2],
-			a: imgData[k + 3]
-		};
-		if (color_from.r == color_to.r &&
-			color_from.g == color_to.g &&
-			color_from.b == color_to.b &&
-			color_from.a == 0) {
-			return false;
-		}
-		if (contiguous == false) {
-			//check only nearest pixels
-			const stack = [];
-			stack.push([x, y]);
-			while (stack.length > 0) {
-				const curPoint = stack.pop();
-				for (i = 0; i < 4; i++) {
-					const nextPointX = curPoint[0] + dx[i];
-					const nextPointY = curPoint[1] + dy[i];
-					if (nextPointX < 0 || nextPointY < 0 || nextPointX >= W || nextPointY >= H)
-						continue;
-					k = (nextPointY * W + nextPointX) * 4;
-					if (imgData_tmp[k + 3] != 0)
-						continue; //already parsed
-
-					if (Math.abs(imgData[k] - color_from.r) <= sensitivity
-						&& Math.abs(imgData[k + 1] - color_from.g) <= sensitivity
-						&& Math.abs(imgData[k + 2] - color_from.b) <= sensitivity
-						&& Math.abs(imgData[k + 3] - color_from.a) <= sensitivity) {
-						//erase
-						imgData_tmp[k] = color_to.r; //r
-						imgData_tmp[k + 1] = color_to.g; //g
-						imgData_tmp[k + 2] = color_to.b; //b
-						imgData_tmp[k + 3] = color_to.a; //a
-
-						stack.push([nextPointX, nextPointY]);
-					}
-				}
-			}
-		}
-		else {
-			//global mode - contiguous
-			for (i = 0; i < imgData.length; i += 4) {
-				if (imgData[i + 3] == 0)
-					continue;	//transparent
-
-				//imgData[i] + 0.7152 * imgData[i + 1] + 0.0722 * imgData[i + 2]);
-
-				for (let j = 0; j < 4; j++) {
-					k = i + j;
-
-					if (Math.abs(imgData[k] - color_from.r) <= sensitivity
-						&& Math.abs(imgData[k + 1] - color_from.g) <= sensitivity
-						&& Math.abs(imgData[k + 2] - color_from.b) <= sensitivity
-						&& Math.abs(imgData[k + 3] - color_from.a) <= sensitivity) {
-						imgData_tmp[k] = color_to.r; //r
-						imgData_tmp[k + 1] = color_to.g; //g
-						imgData_tmp[k + 2] = color_to.b; //b
-						imgData_tmp[k + 3] = color_to.a; //a
-					}
-				}
-			}
-		}
-
-		//destination-out + blur = anti-aliasing
-		ctxTemp.putImageData(img_tmp, 0, 0);
+		canvasTemp.getContext('2d').putImageData(erased, 0, 0);
 		context.globalCompositeOperation = "destination-out";
 		if (anti_aliasing == true) {
 			context.filter = 'blur(1px)';
 		}
 		context.drawImage(canvasTemp, 0, 0);
+		return true;
 	}
 
 }

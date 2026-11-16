@@ -5,7 +5,7 @@ import Dialog_class from './../../libs/popup.js';
 import Helper_class from './../../libs/helpers.js';
 import { grow_rect } from './../../libs/selection-area.js';
 import {
-	invert_mask, ellipse_mask, feather_mask, morph_mask, mask_bounds, color_range_mask, alpha_mask, keep_with_mask, resize_mask, combine_masks, select_similar_mask, select_subject_mask, luminosity_mask, channel_mask, edges_mask, select_sky_mask, rect_mask, rounded_rect_mask, transform_mask, smooth_mask, border_mask, refine_mask, stroke_mask, translate_mask
+	invert_mask, ellipse_mask, feather_mask, morph_mask, mask_bounds, color_range_mask, hue_range_mask, skin_tone_mask, preset_hue, COLOR_RANGE_PRESETS, alpha_mask, keep_with_mask, resize_mask, combine_masks, select_similar_mask, select_subject_mask, luminosity_mask, channel_mask, edges_mask, select_sky_mask, rect_mask, rounded_rect_mask, transform_mask, smooth_mask, border_mask, refine_mask, stroke_mask, translate_mask
 } from './../../libs/selection-mask.js';
 import { selection_to_layer_rect } from './../../libs/selection-area.js';
 import { deserialize_layer_mask, apply_layer_mask } from './../../libs/layer-mask.js';
@@ -13,6 +13,7 @@ import {
 	serialize_selections, parse_selections, unique_name, mask_to_pixels, image_to_mask
 } from './../../libs/selection-file.js';
 import { parseHex } from './../../libs/adjustments.js';
+import { FILL_MODES } from './../../libs/fill-options.js';
 import Base_layers_class from './../../core/base-layers.js';
 import Selection_mask_class from './../../core/selection-mask-state.js';
 import Selection_class from './../../tools/selection.js';
@@ -124,6 +125,9 @@ class Edit_selection_class {
 			params: [
 				{name: "width", title: "Width:", value: 3, range: [1, 100]},
 				{name: "location", title: "Location:", type: 'select', values: ['Inside', 'Center', 'Outside'], value: 'Center'},
+				{name: "color", title: "Color:", value: config.COLOR, type: 'color'},
+				{name: "mode", title: "Mode:", type: 'select', values: FILL_MODES, value: FILL_MODES[0]},
+				{name: "opacity", title: "Opacity:", value: 100, range: [1, 100]},
 			],
 			on_finish: (params) => {
 				const current = this.get_mask();
@@ -131,7 +135,7 @@ class Edit_selection_class {
 					return;
 				}
 				const outline = stroke_mask(current.mask, params.width, String(params.location).toLowerCase());
-				new Edit_fill_class().fill(outline);
+				new Edit_fill_class().fill(outline, {color: params.color, mode: params.mode, opacity: params.opacity});
 			},
 		});
 	}
@@ -235,6 +239,19 @@ class Edit_selection_class {
 	/**
 	 * Select > Color Range - selects pixels of the active layer similar to a color
 	 */
+	/**
+	 * @param {{data: Uint8ClampedArray, width: number, height: number}} image
+	 * @param {{range: string, color: string, fuzziness: number}} params the values of the Color Range dialog
+	 * @returns {object} the mask
+	 */
+	color_range_result(image, params) {
+		if (params.range == 'Skin Tones') {
+			return skin_tone_mask(image, params.fuzziness);
+		}
+		const hue = preset_hue(params.range);
+		return hue !== null ? hue_range_mask(image, hue, params.fuzziness) : color_range_mask(image, parseHex(params.color), params.fuzziness);
+	}
+
 	async color_range() {
 		const layer = this.get_image_layer();
 		if (layer == null) {
@@ -248,12 +265,14 @@ class Edit_selection_class {
 		this.preview_dialog({
 			title: 'Color Range',
 			params: [
+				{name: "range", title: "Select:", type: 'select', values: COLOR_RANGE_PRESETS, value: COLOR_RANGE_PRESETS[0]},
 				{name: "color", title: "Color:", value: config.COLOR, type: 'color'},
 				{name: "fuzziness", title: "Fuzziness:", value: 40, range: [0, 200]},
 			],
-			compute: (params) => color_range_mask(image, parseHex(params.color), params.fuzziness),
+			//skin tones, a range of hues, or the color that was picked (Sampled Colors)
+			compute: (params) => this.color_range_result(image, params),
 			on_finish: (params) => {
-				this.set_mask(color_range_mask(image, parseHex(params.color), params.fuzziness), true);
+				this.set_mask(this.color_range_result(image, params), true);
 			},
 		});
 	}

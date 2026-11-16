@@ -7,6 +7,7 @@ import config from './../config.js';
 import Base_layers_class from './base-layers.js';
 import Base_gui_class from './base-gui.js';
 import Helper_class from './../libs/helpers.js';
+import { clean_history_steps } from './../libs/history-limit.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import app from '../app.js';
 import { t } from '../modules/tools/translate.js';
@@ -34,7 +35,8 @@ class Base_state_class {
 		this.enabled = true;
 		this.action_history = [];
 		this.action_history_index = 0;
-		this.action_history_max = 50;
+		//the number of steps is a setting (Settings > Behavior > History steps)
+		this.action_history_max = clean_history_steps(this.Helper.getCookie('history_steps'));
 		this.original_canvas = null;
 
 		this.set_events();

@@ -448,6 +448,15 @@ describe('distort and blur filters', () => {
 		expect(bulge.data[0]).toBe(base.data[0]);
 	});
 
+	it('a negative amount (Pinch) pulls the picture towards the center: the opposite of the bulge', () => {
+		const base = gradient_image(41, 41);
+		const pinch = spherize(gradient_image(41, 41), { amount: -80 });
+		const i = (20 * 41 + 30) * 4;
+		//a point halfway to the edge shows what was farther from the center
+		expect(pinch.data[i]).toBeGreaterThan(base.data[i]);
+		expect(pinch.data[0]).toBe(base.data[0]);
+	});
+
 	it('zigzag keeps size and alpha, leaves the corners and does nothing with zero amount', () => {
 		const base = gradient_image(41, 41);
 		expect(Array.from(zigzag(gradient_image(41, 41), { amount: 0 }).data)).toEqual(Array.from(base.data));
@@ -1900,6 +1909,7 @@ describe('Photoshop files', () => {
 	it('maps the blend modes and ignores unknown ones', () => {
 		expect(blend_mode('norm')).toBe('source-over');
 		expect(blend_mode('scrn')).toBe('screen');
+		expect(blend_mode('lddg')).toBe('lighter');
 		expect(blend_mode('xxxx')).toBe('source-over');
 		expect(blend_mode('constructor')).toBe('source-over');
 	});
@@ -2866,5 +2876,21 @@ describe('spotlight', () => {
 		const red = spotlight(grey(), {color: '#ff0000', ambient: 0});
 		expect(red.data[(20 * 41 + 20) * 4 + 1]).toBe(0);
 		expect(() => spotlight(grey(), {x: 'a', radius: 'b', color: 'x'})).not.toThrow();
+	});
+});
+
+describe('Linear Dodge (Add)', () => {
+	it('is a blend mode of the list, follows Color Dodge and cycles with the others', async () => {
+		const { BLEND_MODES, cycle_blend_mode } = await import('../src/js/libs/blend-modes.js');
+		const keys = BLEND_MODES.map((m: string[]) => m[0]);
+		expect(keys[keys.indexOf('color-dodge') + 1]).toBe('lighter');
+		expect(cycle_blend_mode('color-dodge', 1)).toBe('lighter');
+		expect(cycle_blend_mode('lighter', 1)).toBe('overlay');
+	});
+
+	it('is written to and read from a PSD as lddg', async () => {
+		const { blend_key } = await import('../src/js/libs/psd-write.js');
+		expect(blend_key('lighter')).toBe('lddg');
+		expect(blend_mode(blend_key('lighter'))).toBe('lighter');
 	});
 });

@@ -101,3 +101,35 @@ describe('Smart filter mask', () => {
 		expect(result.data[9]).toBe(50);
 	});
 });
+
+describe('Smart filters made from the artistic and blur filters', () => {
+	const keys = ['cutout', 'poster_edges', 'stamp', 'neon_glow', 'bas_relief', 'diffuse_glow', 'glass', 'lens_blur', 'charcoal', 'gaussian_blur', 'smart_sharpen', 'crosshatch', 'spatter', 'angled_strokes', 'sprayed_strokes', 'ink_outlines', 'chrome', 'stained_glass', 'texturizer'];
+
+	it('are registered with their default settings', () => {
+		keys.forEach((key) => {
+			expect(is_smart_filter(key)).toBe(true);
+			expect(Object.keys(default_smart_settings(key)).length).toBeGreaterThan(0);
+		});
+	});
+
+	it('every one runs on a picture, keeps its size and alpha, and gives the same result twice', () => {
+		const make = () => image(14, 10, (x, y) => [x * 18, y * 25, 120, 170]);
+		keys.forEach((key) => {
+			const list = [{ key, settings: default_smart_settings(key) }];
+			const a = run_smart_filters(make(), list);
+			const b = run_smart_filters(make(), list);
+			expect([a.width, a.height]).toEqual([14, 10]);
+			expect(Array.from(a.data)).toEqual(Array.from(b.data));
+			for (let i = 3; i < a.data.length; i += 4) {
+				expect(a.data[i]).toBeGreaterThan(0);
+			}
+		});
+	});
+
+	it('text colors and numbers from a project are cleaned like the others', () => {
+		const settings = clean_smart_settings('stamp', { balance: 9999, ink: 'red', paper: '#abcdef', junk: 1 });
+		expect(settings.balance).toBe(100);
+		expect(settings.paper).toBe('#abcdef');
+		expect('junk' in settings).toBe(false);
+	});
+});

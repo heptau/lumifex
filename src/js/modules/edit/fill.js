@@ -5,6 +5,8 @@ import Selection_class from './../../tools/selection.js';
 import Helper_class from './../../libs/helpers.js';
 import Edit_selection_class from './selection.js';
 import { blend_with_mask } from './../../libs/selection-mask.js';
+import Dialog_class from './../../libs/popup.js';
+import { FILL_CONTENTS, FILL_MODES, fill_operation, fill_color, clean_fill_options } from './../../libs/fill-options.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../tools/translate.js';
 
@@ -70,6 +72,30 @@ class Edit_fill_class {
 	}
 
 	/**
+	 * Edit > Fill... (Photoshop): the contents (the colors, the pattern, black, white, 50 % gray), the blend mode and the
+	 * opacity of the fill, then the same fill as the quick commands (selection, soft masks, empty layer)
+	 */
+	fill_dialog() {
+		new Dialog_class().show({
+			title: 'Fill',
+			params: [
+				{name: 'contents', title: 'Contents:', type: 'select', values: FILL_CONTENTS, value: FILL_CONTENTS[0]},
+				{name: 'mode', title: 'Mode:', type: 'select', values: FILL_MODES, value: FILL_MODES[0]},
+				{name: 'opacity', title: 'Opacity:', value: 100, range: [1, 100]},
+			],
+			on_finish: (params) => {
+				this.options = clean_fill_options(params);
+				try {
+					return this.fill();
+				}
+				finally {
+					this.options = null;
+				}
+			},
+		});
+	}
+
+	/**
 	 * Edit > Fill with Background Color (Ctrl+Backspace)
 	 */
 	fill_background() {
@@ -84,8 +110,9 @@ class Edit_fill_class {
 
 	/**
 	 * @param {object|null} [mask] fill through this mask instead of the current selection (Edit > Stroke Selection)
+	 * @param {object|null} [extra] contents / color, mode and opacity as the Fill dialog returns them (cleaned here)
 	 */
-	fill(mask) {
+	fill(mask, extra) {
 		const layer = config.layer;
 		if (layer.type != 'image' && layer.type !== null) {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
@@ -116,11 +143,23 @@ class Edit_fill_class {
 			canvas.height = config.HEIGHT;
 		}
 
-		const color = this.Helper.hexToRgb(this.use_background ? config.COLOR_BG : config.COLOR);
-		const alpha = this.use_background ? 1 : config.ALPHA / 255;
+		//the dialog sets this.options, the quick commands use the colors with their own opacity
+		const options = extra ? clean_fill_options(extra) : (this.options || null);
+		const use_background = options ? options.contents == 'Background Color' : this.use_background;
+		const own = options ? (options.color || fill_color(options.contents, config.COLOR, config.COLOR_BG)) : null;
+		const color = this.Helper.hexToRgb(own || (use_background ? config.COLOR_BG : config.COLOR));
+		const alpha = options ? 1 : (this.use_background ? 1 : config.ALPHA / 255);
 		ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
-		if (this.use_pattern && pattern_canvas) {
+		if ((options ? options.contents == 'Pattern' : this.use_pattern) && pattern_canvas) {
 			ctx.fillStyle = ctx.createPattern(pattern_canvas, 'repeat');
+		}
+		else if (options && options.contents == 'Pattern') {
+			alertify.warning(t('Define a pattern first (Edit > Define Pattern).'));
+			return;
+		}
+		if (options) {
+			ctx.globalAlpha = options.opacity / 100;
+			ctx.globalCompositeOperation = fill_operation(options.mode);
 		}
 
 		const selection = this.Selection.selection;

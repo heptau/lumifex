@@ -807,6 +807,276 @@ export function stamp(image, params) {
 }
 
 /**
+ * Crosshatch (pen and ink) - the picture is redrawn with lines on paper: light areas get one family of diagonal lines,
+ * darker ones add the second diagonal, the horizontal and the vertical family. Which families are used depends on the
+ * (optionally smoothed) brightness. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params spacing (3-30 px between lines, default 6), thickness (1-6 px, default 1), smoothness (0-10,
+ *  default 2), ink and paper (#rrggbb, default black on white)
+ * @returns {Image_data}
+ */
+export function crosshatch(image, params) {
+	const spacing = clamp(Math.round(parseFloat(params.spacing ?? 6)) || 6, 3, 30);
+	const thickness = clamp(Math.round(parseFloat(params.thickness ?? 1)) || 1, 1, Math.min(6, spacing - 1));
+	const radius = clamp(Math.round(parseFloat(params.smoothness ?? 2)) || 0, 0, 10);
+	const hex = (value, fallback) => {
+		const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(value || '');
+		return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : fallback;
+	};
+	const ink = hex(params.ink, [0, 0, 0]);
+	const paper = hex(params.paper, [255, 255, 255]);
+	const w = image.width;
+	const data = image.data;
+	const source = radius > 0 ? box_blur(image, radius) : data;
+	const mod = (n) => ((n % spacing) + spacing) % spacing;
+	for (let p = 0, i = 0; p < data.length / 4; p++, i += 4) {
+		const x = p % w;
+		const y = (p - x) / w;
+		const luma = source[i] * 0.299 + source[i + 1] * 0.587 + source[i + 2] * 0.114;
+		const on = (luma < 200 && mod(x + y) < thickness)
+			|| (luma < 150 && mod(x - y) < thickness)
+			|| (luma < 100 && mod(y) < thickness)
+			|| (luma < 50 && mod(x) < thickness);
+		const color = on ? ink : paper;
+		data[i] = color[0];
+		data[i + 1] = color[1];
+		data[i + 2] = color[2];
+	}
+	return image;
+}
+
+/**
+ * Spatter (Photoshop, simplified) - the picture looks sprayed: every pixel is taken from a randomly shifted place. The
+ * shift is a value noise (a hash of the grid point + the seed, interpolated), so a higher smoothness gives larger,
+ * softer splashes and the result is the same for the same input. Alpha is shifted with the colors.
+ *
+ * @param {Image_data} image
+ * @param {object} params radius (0-30 px, how far a pixel can come from, default 10), smoothness (1-15, size of the
+ *  splashes, default 5), seed
+ * @returns {Image_data}
+ */
+export function spatter(image, params) {
+	const radius = clamp(parseFloat(params.radius ?? 10) || 0, 0, 30);
+	const cell = clamp(Math.round(parseFloat(params.smoothness ?? 5)) || 1, 1, 15);
+	const seed = parseInt(params.seed) || 0;
+	if (radius == 0) {
+		return image;
+	}
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const source = new Uint8ClampedArray(data);
+	const hash = (x, y, salt) => {
+		let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed + salt, 1274126177)) | 0;
+		n = Math.imul(n ^ (n >>> 13), 1274126177);
+		return ((n ^ (n >>> 16)) >>> 0) / 4294967296 * 2 - 1;
+	};
+	const noise = (x, y, salt) => {
+		const gx = Math.floor(x / cell);
+		const gy = Math.floor(y / cell);
+		const fx = x / cell - gx;
+		const fy = y / cell - gy;
+		const a = hash(gx, gy, salt) * (1 - fx) + hash(gx + 1, gy, salt) * fx;
+		const b = hash(gx, gy + 1, salt) * (1 - fx) + hash(gx + 1, gy + 1, salt) * fx;
+		return a * (1 - fy) + b * fy;
+	};
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			// a fine hash on top of the smooth noise gives the sprayed grain
+			const sx = clamp(Math.round(x + (noise(x, y, 1) * 0.7 + hash(x, y, 5) * 0.3) * radius), 0, w - 1);
+			const sy = clamp(Math.round(y + (noise(x, y, 2) * 0.7 + hash(x, y, 6) * 0.3) * radius), 0, h - 1);
+			const from = (sy * w + sx) * 4;
+			const to = (y * w + x) * 4;
+			data[to] = source[from];
+			data[to + 1] = source[from + 1];
+			data[to + 2] = source[from + 2];
+			data[to + 3] = source[from + 3];
+		}
+	}
+	return image;
+}
+
+/**
+ * Angled Strokes (Photoshop, simplified) - diagonal brush strokes: every pixel becomes the mean of a short line of
+ * pixels. Light areas (brightness above the middle) are stroked in one direction, dark ones in the perpendicular one.
+ * Alpha is averaged with the colors (premultiplied).
+ *
+ * @param {Image_data} image
+ * @param {object} params angle (-180..180 degrees of the light strokes, default 45), length (1-50 px, default 10)
+ * @returns {Image_data}
+ */
+export function angledStrokes(image, params) {
+	const angle = (parseFloat(params.angle ?? 45) || 0) * Math.PI / 180;
+	const length = clamp(Math.round(parseFloat(params.length ?? 10)) || 1, 1, 50);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const source = new Uint8ClampedArray(data);
+	const dirs = [[Math.cos(angle), Math.sin(angle)], [-Math.sin(angle), Math.cos(angle)]];
+	const half = (length - 1) / 2;
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			const luma = source[i] * 0.299 + source[i + 1] * 0.587 + source[i + 2] * 0.114;
+			const dir = dirs[luma >= 128 ? 0 : 1];
+			let r = 0, g = 0, b = 0, a = 0;
+			for (let k = 0; k < length; k++) {
+				const t = k - half;
+				const sx = clamp(Math.round(x + dir[0] * t), 0, w - 1);
+				const sy = clamp(Math.round(y + dir[1] * t), 0, h - 1);
+				const j = (sy * w + sx) * 4;
+				const alpha = source[j + 3];
+				r += source[j] * alpha;
+				g += source[j + 1] * alpha;
+				b += source[j + 2] * alpha;
+				a += alpha;
+			}
+			if (a > 0) {
+				data[i] = r / a;
+				data[i + 1] = g / a;
+				data[i + 2] = b / a;
+			}
+			data[i + 3] = a / length;
+		}
+	}
+	return image;
+}
+
+/**
+ * Ink Outlines (Photoshop, simplified) - the picture is smoothed and its edges are drawn over it as ink lines: the
+ * Sobel gradient of the brightness, above the threshold, mixes the pixel with the ink color. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params smoothness (0-10 px of box blur, default 2), threshold (0-255 gradient where the ink starts,
+ *  default 40), intensity (0-100 %, how much ink the strongest edge gets, default 100), ink (#rrggbb, default black)
+ * @returns {Image_data}
+ */
+export function inkOutlines(image, params) {
+	const radius = clamp(Math.round(parseFloat(params.smoothness ?? 2)) || 0, 0, 10);
+	const threshold = clamp(parseFloat(params.threshold ?? 40) || 0, 0, 254);
+	const strength = clamp(parseFloat(params.intensity ?? 100), 0, 100) / 100;
+	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(params.ink || '');
+	const ink = m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0, 0, 0];
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const soft = radius > 0 ? box_blur(image, radius) : new Uint8ClampedArray(data);
+	const luma = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		luma[p] = soft[p * 4] * 0.299 + soft[p * 4 + 1] * 0.587 + soft[p * 4 + 2] * 0.114;
+	}
+	const at = (x, y) => luma[clamp(y, 0, h - 1) * w + clamp(x, 0, w - 1)];
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const gx = at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1);
+			const gy = at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1);
+			const edge = Math.min(1, Math.max(0, (Math.hypot(gx, gy) / 4 - threshold) / (255 - threshold)) * 4);
+			const k = edge * strength;
+			const i = (y * w + x) * 4;
+			data[i] = soft[i] + (ink[0] - soft[i]) * k;
+			data[i + 1] = soft[i + 1] + (ink[1] - soft[i + 1]) * k;
+			data[i + 2] = soft[i + 2] + (ink[2] - soft[i + 2]) * k;
+		}
+	}
+	return image;
+}
+
+/**
+ * Sprayed Strokes (Photoshop, simplified) - like Spatter, but the pixels are thrown along one direction only: every
+ * pixel is taken from a random place on a line through it (a hash of the position + the seed, so the result is
+ * deterministic). Alpha moves with the colors.
+ *
+ * @param {Image_data} image
+ * @param {object} params angle (-180..180 degrees, default 45), length (0-40 px, the farthest place, default 12), seed
+ * @returns {Image_data}
+ */
+export function sprayedStrokes(image, params) {
+	const angle = (parseFloat(params.angle ?? 45) || 0) * Math.PI / 180;
+	const length = clamp(parseFloat(params.length ?? 12) || 0, 0, 40);
+	const seed = parseInt(params.seed) || 0;
+	if (length == 0) {
+		return image;
+	}
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	const source = new Uint8ClampedArray(data);
+	const dx = Math.cos(angle);
+	const dy = Math.sin(angle);
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed + 7, 1274126177)) | 0;
+			n = Math.imul(n ^ (n >>> 13), 1274126177);
+			const t = (((n ^ (n >>> 16)) >>> 0) / 4294967296 * 2 - 1) * length;
+			const sx = clamp(Math.round(x + dx * t), 0, w - 1);
+			const sy = clamp(Math.round(y + dy * t), 0, h - 1);
+			const from = (sy * w + sx) * 4;
+			const to = (y * w + x) * 4;
+			data[to] = source[from];
+			data[to + 1] = source[from + 1];
+			data[to + 2] = source[from + 2];
+			data[to + 3] = source[from + 3];
+		}
+	}
+	return image;
+}
+
+/**
+ * Chrome (Photoshop, simplified) - a shiny metal surface: the smoothed brightness is treated as a height and mapped
+ * through a sine, so it rises and falls like a reflection (detail = how many times). The result is gray. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params detail (1-10 reflections, default 3), smoothness (0-20 px of box blur, default 4)
+ * @returns {Image_data}
+ */
+export function chrome(image, params) {
+	const detail = clamp(Math.round(parseFloat(params.detail ?? 3)) || 1, 1, 10);
+	const radius = clamp(Math.round(parseFloat(params.smoothness ?? 4)) || 0, 0, 20);
+	const data = image.data;
+	const soft = radius > 0 ? box_blur(image, radius) : new Uint8ClampedArray(data);
+	for (let i = 0; i < data.length; i += 4) {
+		const luma = (soft[i] * 0.299 + soft[i + 1] * 0.587 + soft[i + 2] * 0.114) / 255;
+		const v = 127.5 + 127.5 * Math.sin((luma - 0.5) * Math.PI * detail);
+		data[i] = data[i + 1] = data[i + 2] = v;
+	}
+	return image;
+}
+
+/**
+ * Texturizer (Photoshop, simplified) - a woven canvas: a height map of crossing threads is lit from one direction
+ * and the shading is added to the picture. Alpha is kept.
+ *
+ * @param {Image_data} image
+ * @param {object} params scaling (2-40 px, the distance between threads, default 8), relief (0-100, depth of the
+ *  weave, default 40), light (angle of the light in degrees, default 135 = from the top left)
+ * @returns {Image_data}
+ */
+export function texturizer(image, params) {
+	const period = clamp(parseFloat(params.scaling ?? 8) || 8, 2, 40);
+	const relief = clamp(parseFloat(params.relief ?? 40), 0, 100) / 100 * 90;
+	const light = (parseFloat(params.light ?? 135) || 0) * Math.PI / 180;
+	const lx = Math.cos(light);
+	const ly = Math.sin(light);
+	const w = image.width;
+	const data = image.data;
+	const k = Math.PI * 2 / period;
+	// over-under weave: threads of one direction rise where the other sinks
+	const height = (x, y) => Math.sin(x * k) * Math.max(0, Math.sin(y * k * 0.5 + 0.5)) + Math.sin(y * k) * Math.max(0, Math.sin(x * k * 0.5 + 0.5));
+	for (let p = 0, i = 0; p < data.length / 4; p++, i += 4) {
+		const x = p % w;
+		const y = (p - x) / w;
+		const dx = height(x + 0.5, y) - height(x - 0.5, y);
+		const dy = height(x, y + 0.5) - height(x, y - 0.5);
+		const shade = (dx * lx + dy * ly) * relief;
+		data[i] += shade;
+		data[i + 1] += shade;
+		data[i + 2] += shade;
+	}
+	return image;
+}
+
+/**
  * Neon Glow (Photoshop, simplified) - the picture is darkened and its edges glow in a color: the Sobel edges of the
  * brightness are blurred into a halo and added (screen) over the darkened image. Alpha is kept.
  *
@@ -1069,9 +1339,120 @@ export function smartSharpen(image, params) {
 	return image;
 }
 
+/** Up to this radius the Gaussian blur uses the exact kernel, above it three box blurs (about 3 % off, far faster) */
+export const GAUSSIAN_EXACT_LIMIT = 12;
+
+/**
+ * The exact Gaussian blur of four interleaved float channels: a kernel of three standard deviations, two passes
+ *
+ * @param {Float32Array} source RGBA, premultiplied
+ * @param {number} w
+ * @param {number} h
+ * @param {number} sigma
+ * @returns {Float32Array}
+ */
+function gaussian_exact(source, w, h, sigma) {
+	const reach = Math.max(1, Math.ceil(sigma * 3));
+	const kernel = new Float32Array(reach * 2 + 1);
+	let total = 0;
+	for (let k = -reach; k <= reach; k++) {
+		kernel[k + reach] = Math.exp(-(k * k) / (2 * sigma * sigma));
+		total += kernel[k + reach];
+	}
+	for (let k = 0; k < kernel.length; k++) {
+		kernel[k] /= total;
+	}
+	const pass = (from, horizontal) => {
+		const out = new Float32Array(from.length);
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				let r = 0, g = 0, b = 0, a = 0;
+				for (let k = -reach; k <= reach; k++) {
+					const xx = horizontal ? clamp(x + k, 0, w - 1) : x;
+					const yy = horizontal ? y : clamp(y + k, 0, h - 1);
+					const weight = kernel[k + reach];
+					const j = (yy * w + xx) * 4;
+					r += from[j] * weight;
+					g += from[j + 1] * weight;
+					b += from[j + 2] * weight;
+					a += from[j + 3] * weight;
+				}
+				const o = (y * w + x) * 4;
+				out[o] = r;
+				out[o + 1] = g;
+				out[o + 2] = b;
+				out[o + 3] = a;
+			}
+		}
+		return out;
+	};
+	return pass(pass(source, true), false);
+}
+
+/**
+ * The sizes of three box blurs whose sum is close to a Gaussian of the given standard deviation
+ *
+ * @param {number} sigma
+ * @returns {number[]} three odd widths
+ */
+export function box_sizes_for_gaussian(sigma) {
+	const passes = 3;
+	const ideal = Math.sqrt(12 * sigma * sigma / passes + 1);
+	let lower = Math.floor(ideal);
+	if (lower % 2 == 0) {
+		lower--;
+	}
+	const upper = lower + 2;
+	const mean = Math.round((12 * sigma * sigma - passes * lower * lower - 4 * passes * lower - 3 * passes) / (-4 * lower - 4));
+	const sizes = [];
+	for (let i = 0; i < passes; i++) {
+		sizes.push(i < mean ? lower : upper);
+	}
+	return sizes;
+}
+
+/**
+ * A Gaussian blur made of three box blurs (running sums, so the cost does not depend on the radius)
+ *
+ * @param {Float32Array} source RGBA, premultiplied
+ * @param {number} w
+ * @param {number} h
+ * @param {number} sigma
+ * @returns {Float32Array}
+ */
+function gaussian_boxes(source, w, h, sigma) {
+	let current = source;
+	for (const size of box_sizes_for_gaussian(sigma)) {
+		const radius = (size - 1) / 2;
+		for (const horizontal of [true, false]) {
+			const out = new Float32Array(current.length);
+			const lines = horizontal ? h : w;
+			const length = horizontal ? w : h;
+			const step = horizontal ? 4 : w * 4; //between two pixels of a line
+			for (let line = 0; line < lines; line++) {
+				const base = horizontal ? line * w * 4 : line * 4;
+				for (let c = 0; c < 4; c++) {
+					//the window runs over the pixels line - radius .. line + radius, the edge pixel repeats beyond the edge
+					let sum = 0;
+					for (let k = -radius; k <= radius; k++) {
+						sum += current[base + clamp(k, 0, length - 1) * step + c];
+					}
+					for (let i = 0; i < length; i++) {
+						out[base + i * step + c] = sum / size;
+						sum += current[base + clamp(i + radius + 1, 0, length - 1) * step + c];
+						sum -= current[base + clamp(i - radius, 0, length - 1) * step + c];
+					}
+				}
+			}
+			current = out;
+		}
+	}
+	return current;
+}
+
 /**
  * Gaussian Blur (Photoshop) - a true Gaussian blur: two passes (horizontal, vertical) with a kernel whose standard
- * deviation is the radius. The color is blurred premultiplied by alpha, so a transparent area does not bleed its
+ * deviation is the radius (above GAUSSIAN_EXACT_LIMIT three box blurs stand in for it, about 3 % off). The color is blurred premultiplied by alpha, so a transparent area does not bleed its
  * (invisible) color into the edge, and alpha is blurred too. The kernel reaches three radii; edge pixels are clamped.
  *
  * @param {Image_data} image
@@ -1082,16 +1463,6 @@ export function gaussianBlur(image, params) {
 	const sigma = clamp(parseFloat(params.radius) || 0, 0, 100);
 	if (sigma < 0.1) {
 		return image;
-	}
-	const reach = Math.max(1, Math.ceil(sigma * 3));
-	const kernel = new Float32Array(reach * 2 + 1);
-	let total = 0;
-	for (let k = -reach; k <= reach; k++) {
-		kernel[k + reach] = Math.exp(-(k * k) / (2 * sigma * sigma));
-		total += kernel[k + reach];
-	}
-	for (let k = 0; k < kernel.length; k++) {
-		kernel[k] /= total;
 	}
 	const w = image.width;
 	const h = image.height;
@@ -1104,31 +1475,9 @@ export function gaussianBlur(image, params) {
 		premultiplied[i + 2] = data[i + 2] * a;
 		premultiplied[i + 3] = data[i + 3];
 	}
-	const pass = (source, horizontal) => {
-		const out = new Float32Array(source.length);
-		for (let y = 0; y < h; y++) {
-			for (let x = 0; x < w; x++) {
-				let r = 0, g = 0, b = 0, a = 0;
-				for (let k = -reach; k <= reach; k++) {
-					const xx = horizontal ? clamp(x + k, 0, w - 1) : x;
-					const yy = horizontal ? y : clamp(y + k, 0, h - 1);
-					const weight = kernel[k + reach];
-					const j = (yy * w + xx) * 4;
-					r += source[j] * weight;
-					g += source[j + 1] * weight;
-					b += source[j + 2] * weight;
-					a += source[j + 3] * weight;
-				}
-				const o = (y * w + x) * 4;
-				out[o] = r;
-				out[o + 1] = g;
-				out[o + 2] = b;
-				out[o + 3] = a;
-			}
-		}
-		return out;
-	};
-	const blurred = pass(pass(premultiplied, true), false);
+	const blurred = sigma <= GAUSSIAN_EXACT_LIMIT
+		? gaussian_exact(premultiplied, w, h, sigma)
+		: gaussian_boxes(premultiplied, w, h, sigma);
 	for (let i = 0; i < data.length; i += 4) {
 		const alpha = blurred[i + 3];
 		const a = alpha / 255;
@@ -1139,6 +1488,99 @@ export function gaussianBlur(image, params) {
 		}
 		data[i + 3] = clamp(Math.round(alpha), 0, 255);
 	}
+	return image;
+}
+
+/**
+ * Lens Blur (Photoshop, simplified) - the blur of a camera lens: every pixel is the average of a disc of pixels, so
+ * a point of light spreads into a round bokeh instead of a soft blob. The bright pixels count more in the average
+ * (specular highlights), so they stay round and bright. The color is averaged premultiplied by alpha. The cost grows
+ * with the area of the disc.
+ *
+ * @param {Image_data} image
+ * @param {object} params radius (1-20 px, default 6), highlights (0-100 %, how much more the pixels brighter than the
+ *  threshold weigh, default 0), threshold (0-255, brightness from which a pixel counts as a highlight, default 200)
+ * @returns {Image_data}
+ */
+export function lensBlur(image, params) {
+	const radius = clamp(Math.round(parseFloat(params.radius ?? 6)) || 0, 0, 20);
+	if (radius < 1) {
+		return image;
+	}
+	const boost = clamp(parseFloat(params.highlights ?? 0) || 0, 0, 100) / 100 * 9;
+	const threshold = clamp(parseFloat(params.threshold ?? 200), 0, 254);
+	const w = image.width;
+	const h = image.height;
+	const data = image.data;
+	//the disc as horizontal spans: for every row above and below the center, how far the disc reaches to the sides
+	const spans = [];
+	for (let dy = -radius; dy <= radius; dy++) {
+		const reach = Math.floor(Math.sqrt(radius * radius + radius * 0.5 - dy * dy));
+		if (reach >= 0 && dy * dy <= radius * radius + radius * 0.5) {
+			spans.push([dy, reach]);
+		}
+	}
+	//the weight of every pixel: 1, more for the highlights
+	const weight = new Float32Array(w * h);
+	for (let p = 0; p < w * h; p++) {
+		const luma = data[p * 4] * 0.299 + data[p * 4 + 1] * 0.587 + data[p * 4 + 2] * 0.114;
+		const t = clamp((luma - threshold) / (255 - threshold), 0, 1);
+		weight[p] = 1 + boost * t * t * (3 - 2 * t);
+	}
+	//running sums along a row (premultiplied color times weight, alpha times weight, weight), made when the row is first
+	//needed and dropped when the disc has moved past it
+	const rows = new Map();
+	const sums_of = (row) => {
+		let sums = rows.get(row);
+		if (sums == null) {
+			sums = new Float64Array((w + 1) * 5);
+			for (let x = 0; x < w; x++) {
+				const p = row * w + x;
+				const wt = weight[p];
+				const alpha = data[p * 4 + 3] / 255;
+				const o = x * 5;
+				sums[o + 5] = sums[o] + data[p * 4] * alpha * wt;
+				sums[o + 6] = sums[o + 1] + data[p * 4 + 1] * alpha * wt;
+				sums[o + 7] = sums[o + 2] + data[p * 4 + 2] * alpha * wt;
+				sums[o + 8] = sums[o + 3] + alpha * wt;
+				sums[o + 9] = sums[o + 4] + wt;
+			}
+			rows.set(row, sums);
+		}
+		return sums;
+	};
+	const out = new Uint8ClampedArray(data.length);
+	const total = new Float64Array(5);
+	for (let y = 0; y < h; y++) {
+		if (y > 0) {
+			rows.delete(y - 1 - radius);
+		}
+		for (let x = 0; x < w; x++) {
+			total.fill(0);
+			for (let k = 0; k < spans.length; k++) {
+				const sums = sums_of(clamp(y + spans[k][0], 0, h - 1));
+				const reach = spans[k][1];
+				const left = Math.max(0, x - reach);
+				const right = Math.min(w - 1, x + reach);
+				//the pixels of the span that lie outside the picture are the edge pixel again and again
+				const before = Math.max(0, reach - x);
+				const after = Math.max(0, x + reach - (w - 1));
+				for (let c = 0; c < 5; c++) {
+					total[c] += sums[(right + 1) * 5 + c] - sums[left * 5 + c]
+						+ before * (sums[5 + c] - sums[c])
+						+ after * (sums[w * 5 + c] - sums[(w - 1) * 5 + c]);
+				}
+			}
+			const i = (y * w + x) * 4;
+			if (total[3] > 0) {
+				out[i] = Math.round(total[0] / total[3]);
+				out[i + 1] = Math.round(total[1] / total[3]);
+				out[i + 2] = Math.round(total[2] / total[3]);
+			}
+			out[i + 3] = Math.round(total[3] / total[4] * 255);
+		}
+	}
+	data.set(out);
 	return image;
 }
 
@@ -1199,19 +1641,54 @@ export function median(image, radius) {
 	const h = image.height;
 	const src = new Uint8ClampedArray(image.data);
 	const data = image.data;
-	const values = [];
+	const size = radius * 2 + 1;
+	const half = (size * size) >> 1; //the median is the value with this many smaller values before it
+	const hist = new Uint32Array(256);
+	//the columns that are in the window of a pixel, clamped at the edges of the picture like the pixels themselves
+	const column = (x) => clamp(x, 0, w - 1);
 	for (let y = 0; y < h; y++) {
-		for (let x = 0; x < w; x++) {
-			for (let c = 0; c < 3; c++) {
-				values.length = 0;
+		for (let c = 0; c < 3; c++) {
+			//the histogram of the window of the first pixel of the row
+			hist.fill(0);
+			for (let dy = -radius; dy <= radius; dy++) {
+				const row = clamp(y + dy, 0, h - 1) * w;
+				for (let dx = -radius; dx <= radius; dx++) {
+					hist[src[(row + column(dx)) * 4 + c]]++;
+				}
+			}
+			//the median found from the histogram, moved along as the window moves
+			let med = 0;
+			let less = 0;
+			while (less + hist[med] <= half) {
+				less += hist[med];
+				med++;
+			}
+			data[(y * w) * 4 + c] = med;
+			for (let x = 1; x < w; x++) {
+				const out_column = column(x - 1 - radius);
+				const in_column = column(x + radius);
 				for (let dy = -radius; dy <= radius; dy++) {
-					const yy = clamp(y + dy, 0, h - 1);
-					for (let dx = -radius; dx <= radius; dx++) {
-						values.push(src[(yy * w + clamp(x + dx, 0, w - 1)) * 4 + c]);
+					const row = clamp(y + dy, 0, h - 1) * w;
+					const leaving = src[(row + out_column) * 4 + c];
+					const arriving = src[(row + in_column) * 4 + c];
+					hist[leaving]--;
+					if (leaving < med) {
+						less--;
+					}
+					hist[arriving]++;
+					if (arriving < med) {
+						less++;
 					}
 				}
-				values.sort((a, b) => { return a - b; });
-				data[(y * w + x) * 4 + c] = values[values.length >> 1];
+				while (less > half) {
+					med--;
+					less -= hist[med];
+				}
+				while (less + hist[med] <= half) {
+					less += hist[med];
+					med++;
+				}
+				data[(y * w + x) * 4 + c] = med;
 			}
 		}
 	}

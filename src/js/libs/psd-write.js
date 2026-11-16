@@ -14,7 +14,7 @@
 //canvas composite operations as the blend keys of Photoshop (the reverse of the table of libs/psd.js)
 const BLEND_KEYS = {
 	'source-over': 'norm', 'darken': 'dark', 'multiply': 'mul ', 'color-burn': 'idiv', 'lighten': 'lite', 'screen': 'scrn',
-	'color-dodge': 'div ', 'overlay': 'over', 'soft-light': 'sLit', 'hard-light': 'hLit', 'difference': 'diff',
+	'color-dodge': 'div ', 'lighter': 'lddg', 'overlay': 'over', 'soft-light': 'sLit', 'hard-light': 'hLit', 'difference': 'diff',
 	'exclusion': 'smud', 'hue': 'hue ', 'saturation': 'sat ', 'color': 'colr', 'luminosity': 'lum ',
 };
 

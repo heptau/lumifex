@@ -586,3 +586,114 @@ describe('channel_mask', () => {
 		expect(Array.from(channel_mask(image, 'x' as any).data)).toEqual([255, 0, 0, 128]);
 	});
 });
+
+import { hue_range_mask, skin_tone_mask, preset_hue, COLOR_RANGE_PRESETS } from '../src/js/libs/selection-mask.js';
+
+describe('hue_range_mask', () => {
+	const pixels = (colors: number[][]) => {
+		const data = new Uint8ClampedArray(colors.length * 4);
+		colors.forEach((c, i) => data.set(c.length == 3 ? [...c, 255] : c, i * 4));
+		return {data, width: colors.length, height: 1};
+	};
+
+	it('the presets are Sampled Colors and the six hues', () => {
+		expect(COLOR_RANGE_PRESETS[0]).toBe('Sampled Colors');
+		expect(COLOR_RANGE_PRESETS.length).toBe(8);
+		expect(COLOR_RANGE_PRESETS[1]).toBe('Skin Tones');
+		expect(preset_hue('Reds')).toBe(0);
+		expect(preset_hue('Cyans')).toBe(180);
+		expect(preset_hue('Sampled Colors')).toBeNull();
+		expect(preset_hue('constructor')).toBeNull();
+	});
+
+	it('selects the hue whatever its brightness, and not the other hues or grays', () => {
+		const out = hue_range_mask(pixels([[255, 0, 0], [120, 10, 10], [0, 255, 0], [0, 0, 255], [128, 128, 128], [255, 255, 255]]), 0, 40);
+		expect(out.data[0]).toBe(255);
+		expect(out.data[1]).toBe(255);
+		expect(out.data[2]).toBe(0);
+		expect(out.data[3]).toBe(0);
+		expect(out.data[4]).toBe(0);
+		expect(out.data[5]).toBe(0);
+	});
+
+	it('the red range wraps around: a slightly magenta red counts too', () => {
+		const out = hue_range_mask(pixels([[255, 0, 40]]), 0, 40);
+		expect(out.data[0]).toBeGreaterThan(200);
+	});
+
+	it('the edge is soft and a larger fuzziness reaches farther', () => {
+		//orange is 30 degrees away from red
+		const orange = pixels([[255, 128, 0]]);
+		const narrow = hue_range_mask(orange, 0, 0).data[0];
+		const wide = hue_range_mask(orange, 0, 200).data[0];
+		expect(wide).toBeGreaterThan(narrow);
+		expect(wide).toBeGreaterThan(0);
+	});
+
+	it('transparent pixels are not selected and the alpha counts; a bad hue wraps', () => {
+		const out = hue_range_mask(pixels([[255, 0, 0, 0], [255, 0, 0, 128]]), 360, 40);
+		expect(out.data[0]).toBe(0);
+		expect(out.data[1]).toBeGreaterThan(100);
+		expect(out.data[1]).toBeLessThan(140);
+		expect(hue_range_mask(pixels([[255, 0, 0, 255]]), NaN, 40).data[0]).toBe(255);
+	});
+});
+
+describe('skin_tone_mask', () => {
+	const pixels = (colors: number[][]) => {
+		const data = new Uint8ClampedArray(colors.length * 4);
+		colors.forEach((c, i) => data.set(c.length == 3 ? [...c, 255] : c, i * 4));
+		return {data, width: colors.length, height: 1};
+	};
+
+	it('selects the colors of skin, light and dark', () => {
+		const out = skin_tone_mask(pixels([[241, 194, 125], [224, 172, 105], [198, 134, 66], [141, 85, 36], [255, 205, 148]]), 40);
+		for (let i = 0; i < 5; i++) {
+			expect(out.data[i]).toBeGreaterThan(150);
+		}
+	});
+
+	it('does not select blue, green, gray, white, black or a saturated pure red', () => {
+		const out = skin_tone_mask(pixels([[0, 0, 255], [0, 200, 0], [128, 128, 128], [255, 255, 255], [0, 0, 0], [10, 200, 220]]), 40);
+		for (let i = 0; i < 6; i++) {
+			expect(out.data[i]).toBe(0);
+		}
+	});
+
+	it('a larger fuzziness lets in colors just outside the limit and transparent pixels stay out', () => {
+		//the green is 2 below the limit of the rule that red must be above green by 8 (r - g = 6)
+		const outside = pixels([[200, 194, 120]]);
+		expect(skin_tone_mask(outside, 0).data[0]).toBe(0);
+		expect(skin_tone_mask(outside, 200).data[0]).toBeGreaterThan(0);
+		expect(skin_tone_mask(pixels([[224, 172, 105, 0]]), 40).data[0]).toBe(0);
+		expect(skin_tone_mask(pixels([[224, 172, 105]]), NaN).data[0]).toBeGreaterThan(0);
+	});
+});
+
+describe('stroke_mask at the edge of the picture', () => {
+	const everything = () => ({width: 12, height: 12, data: new Uint8ClampedArray(144).fill(255)});
+	const at = (m: {width: number; data: Uint8ClampedArray}, x: number, y: number) => m.data[y * m.width + x];
+
+	it('Stroke Inside of a selection that covers the whole picture makes a frame', () => {
+		const m = stroke_mask(everything(), 3, 'inside');
+		expect(at(m, 0, 6)).toBe(255);
+		expect(at(m, 2, 6)).toBe(255);
+		expect(at(m, 3, 6)).toBe(0);
+		expect(at(m, 6, 0)).toBe(255);
+		expect(at(m, 6, 11)).toBe(255);
+		expect(at(m, 6, 6)).toBe(0);
+	});
+
+	it('the center stroke is a frame of half the width inside, the outside has no room', () => {
+		const m = stroke_mask(everything(), 4, 'center');
+		expect(at(m, 0, 6)).toBe(255);
+		expect(at(m, 6, 6)).toBe(0);
+	});
+
+	it('Stroke Outside of a selection that covers everything is empty, and the size does not change', () => {
+		const m = stroke_mask(everything(), 3, 'outside');
+		expect(m.width).toBe(12);
+		expect(m.height).toBe(12);
+		expect(Array.from(m.data).every((v) => v == 0)).toBe(true);
+	});
+});

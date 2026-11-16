@@ -1,3 +1,4 @@
+import { stroke_steps } from './../libs/stroke-steps.js';
 import app from './../app.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
@@ -61,6 +62,7 @@ class Sharpen_class extends Base_tools_class {
 
 		//do sharpen
 		this.sharpen_general('click', mouse, params.size);
+		this.last_position = {x: mouse.x, y: mouse.y};
 
 		//register tmp canvas for faster redraw
 		config.layer.link_canvas = this.tmpCanvas;
@@ -80,7 +82,11 @@ class Sharpen_class extends Base_tools_class {
 		}
 
 		//do sharpen
-		this.sharpen_general('move', mouse, params.size);
+		//a stamp every third of the size along the way, so a fast stroke has no gaps
+		stroke_steps(this.last_position, {x: mouse.x, y: mouse.y}, params.size / 3).forEach((place) => {
+			this.sharpen_general('move', place, params.size);
+		});
+		this.last_position = {x: mouse.x, y: mouse.y};
 
 		//draw draft preview
 		config.need_render = true;
@@ -91,6 +97,7 @@ class Sharpen_class extends Base_tools_class {
 			return;
 		}
 		delete config.layer.link_canvas;
+		this.last_position = null;
 
 		app.State.do_action(
 			new app.Actions.Bundle_action('sharpen_tool', 'Sharpen Tool', [

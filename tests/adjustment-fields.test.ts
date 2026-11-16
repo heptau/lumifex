@@ -1,4 +1,4 @@
-import { property_fields, field_value } from '../src/js/libs/adjustment-fields.js';
+import { property_fields, smart_property_fields, fields_from_params, field_value } from '../src/js/libs/adjustment-fields.js';
 import { ADJUSTMENTS } from '../src/js/libs/adjustment-layers.js';
 
 describe('property_fields', () => {
@@ -24,6 +24,23 @@ describe('property_fields', () => {
 			const named = ADJUSTMENTS[key].params.filter((p: any) => p.name);
 			expect(property_fields(key).length).toBe(named.length);
 		});
+	});
+});
+
+describe('smart_property_fields', () => {
+	it('has fields for the settings of a smart filter, also the ones that are not adjustments', () => {
+		expect(smart_property_fields('unsharp_mask').map((f) => f.name)).toEqual(['amount', 'radius', 'threshold']);
+		expect(smart_property_fields('gaussian_blur')[0]).toMatchObject({kind: 'range', step: 0.1});
+		expect(smart_property_fields('add_noise').some((f) => f.kind == 'checkbox')).toBe(true);
+	});
+
+	it('curves are not a smart filter, an unknown key has no fields', () => {
+		expect(smart_property_fields('curves')).toEqual([]);
+		expect(smart_property_fields('nope')).toEqual([]);
+	});
+
+	it('fields_from_params skips headings and entries it cannot show', () => {
+		expect(fields_from_params([{heading: 'H'} as any, {name: 'a', title: 'A', value: 1}, {name: 'b', title: 'B', value: 1, range: [0, 2]}]).map((f) => f.name)).toEqual(['b']);
 	});
 });
 

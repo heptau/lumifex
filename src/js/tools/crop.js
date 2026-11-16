@@ -6,6 +6,7 @@ import GUI_tools_class from './../core/gui/gui-tools.js';
 import Base_gui_class from './../core/base-gui.js';
 import Base_selection_class from './../core/base-selection.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
+import { ratio_value, fit_to_ratio } from './../libs/crop-ratio.js';
 import { t } from '../modules/tools/translate.js';
 
 class Crop_class extends Base_tools_class {
@@ -63,6 +64,9 @@ class Crop_class extends Base_tools_class {
 
 		this.mousedown_selection = JSON.parse(JSON.stringify(this.selection));
 
+		//with a ratio chosen the handles of the frame keep the proportions the frame has (it was made with them)
+		this.Base_selection.find_settings().keep_ratio = ratio_value(this.getParams().ratio, config.WIDTH, config.HEIGHT) !== null;
+
 		if (this.Base_selection.mouse_lock !== null) {
 			return;
 		}
@@ -86,24 +90,12 @@ class Crop_class extends Base_tools_class {
 		let width = mouse.x - mouse.click_x;
 		let height = mouse.y - mouse.click_y;
 
-		if(e.ctrlKey == true || e.metaKey){
-			//ctrl is pressed - crop will be calculated based on global width and height ratio
-			const ratio = config.WIDTH / config.HEIGHT;
-			const width_new = Math.round(height * ratio);
-			const height_new = Math.round(width / ratio);
-
-			if(Math.abs(width * 100 / width_new) > Math.abs(height * 100 / height_new)){
-				if (width * 100 / width_new > 0)
-					height = height_new;
-				else
-					height = -height_new;
-			}
-			else{
-				if (height * 100 / height_new > 0)
-					width = width_new;
-				else
-					width = -width_new;
-			}
+		//the ratio option, or Ctrl: the proportions of the document
+		const ratio = (e.ctrlKey == true || e.metaKey)
+			? ratio_value('Original', config.WIDTH, config.HEIGHT)
+			: ratio_value(this.getParams().ratio, config.WIDTH, config.HEIGHT);
+		if (ratio !== null) {
+			({width, height} = fit_to_ratio(width, height, ratio));
 		}
 
 		this.Base_selection.set_selection(null, null, width, height);

@@ -21,7 +21,7 @@ export const MAX_SIDE = 30000;
 //blend modes of Photoshop as canvas composite operations (unknown ones are drawn normally)
 const BLEND_MODES = {
 	'norm': 'source-over', 'pass': 'source-over', 'dark': 'darken', 'mul ': 'multiply', 'idiv': 'color-burn', 'lite': 'lighten',
-	'scrn': 'screen', 'div ': 'color-dodge', 'over': 'overlay', 'sLit': 'soft-light', 'hLit': 'hard-light', 'diff': 'difference',
+	'scrn': 'screen', 'div ': 'color-dodge', 'lddg': 'lighter', 'over': 'overlay', 'sLit': 'soft-light', 'hLit': 'hard-light', 'diff': 'difference',
 	'smud': 'exclusion', 'hue ': 'hue', 'sat ': 'saturation', 'colr': 'color', 'lum ': 'luminosity',
 };
 

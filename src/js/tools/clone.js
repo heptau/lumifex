@@ -4,6 +4,7 @@ import Base_tools_class from './../core/base-tools.js';
 import Base_layers_class from './../core/base-layers.js';
 import Layer_raster_class from './../modules/layer/raster.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
+import { flow_of } from './../libs/brush-dynamics.js';
 import { t } from '../modules/tools/translate.js';
 
 class Clone_class extends Base_tools_class {
@@ -224,6 +225,7 @@ class Clone_class extends Base_tools_class {
 
 		//clone
 		this.clone_general(this.tmpCanvas, this.tmpCanvas, 'click', mouse);
+		this.last_position = {x: mouse.x, y: mouse.y};
 
 		//register tmp canvas for progress redraw
 		config.layer.link_canvas = this.tmpCanvas;
@@ -242,8 +244,21 @@ class Clone_class extends Base_tools_class {
 			return;
 		}
 
-		//clone
-		this.clone_general(this.tmpCanvas, this.tmpCanvas, 'move', mouse);
+		//clone: a stamp every few pixels along the way, so a fast stroke has no gaps (the stamps overlap, the flow builds up)
+		const size = Math.max(1, parseFloat(this.getParams().size) || 1);
+		const spacing = Math.max(1, size / 4);
+		const from = this.last_position || {x: mouse.x, y: mouse.y};
+		const steps = Math.max(1, Math.ceil(Math.hypot(mouse.x - from.x, mouse.y - from.y) / spacing));
+		for (let s = 1; s <= steps; s++) {
+			const point = {
+				x: from.x + (mouse.x - from.x) * s / steps,
+				y: from.y + (mouse.y - from.y) * s / steps,
+				click_x: mouse.click_x,
+				click_y: mouse.click_y,
+			};
+			this.clone_general(this.tmpCanvas, this.tmpCanvas, 'move', point);
+		}
+		this.last_position = {x: mouse.x, y: mouse.y};
 
 		//draw draft preview
 		config.need_render = true;
@@ -254,6 +269,7 @@ class Clone_class extends Base_tools_class {
 			return;
 		}
 		delete config.layer.link_canvas;
+		this.last_position = null;
 
 		app.State.do_action(
 			new app.Actions.Bundle_action('clone_tool', 'Clone Tool', [
@@ -323,8 +339,12 @@ class Clone_class extends Base_tools_class {
 			ctx_source.globalCompositeOperation = 'source-over';
 		}
 
-		//finish
-		canvas_to.getContext("2d").drawImage(canvas_source, mouse_x - half, mouse_y - half);
+		//finish (a flow below 100 puts down only part of the paint with every stamp)
+		const target = canvas_to.getContext("2d");
+		target.save();
+		target.globalAlpha = flow_of(params);
+		target.drawImage(canvas_source, mouse_x - half, mouse_y - half);
+		target.restore();
 	}
 
 }

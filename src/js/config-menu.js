@@ -297,6 +297,11 @@ const menuDefinition = [
 				divider: true
 			},
 			{
+				name: 'Fill',
+				ellipsis: true,
+				target: 'edit/fill.fill_dialog'
+			},
+			{
 				name: 'Fill with Foreground Color',
 				shortcut: 'Alt+Backspace',
 				target: 'edit/fill.fill'
@@ -652,6 +657,10 @@ const menuDefinition = [
 				target: 'image/resize.resize'
 			},
 			{
+				name: 'Perspective Crop',
+				target: 'image/perspective_crop.start'
+			},
+			{
 				name: 'Content-Aware Scale',
 				ellipsis: true,
 				target: 'image/content_aware_scale.scale'
@@ -930,6 +939,28 @@ const menuDefinition = [
 					{ name: 'Emboss', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'emboss' },
 					{ name: 'Find Edges', target: 'layer/smart_filter.add', parameter: 'find_edges' },
 					{ name: 'Add Noise', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'add_noise' },
+					{
+						name: 'Artistic',
+						children: [
+							{ name: 'Cutout', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'cutout' },
+							{ name: 'Poster Edges', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'poster_edges' },
+							{ name: 'Stamp', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'stamp' },
+							{ name: 'Neon Glow', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'neon_glow' },
+							{ name: 'Bas Relief', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'bas_relief' },
+							{ name: 'Charcoal', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'charcoal' },
+							{ name: 'Diffuse Glow', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'diffuse_glow' },
+							{ name: 'Glass', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'glass' },
+							{ name: 'Stained Glass', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'stained_glass' },
+							{ name: 'Texturizer', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'texturizer' },
+							{ name: 'Crosshatch', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'crosshatch' },
+							{ name: 'Spatter', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'spatter' },
+							{ name: 'Angled Strokes', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'angled_strokes' },
+							{ name: 'Sprayed Strokes', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'sprayed_strokes' },
+							{ name: 'Ink Outlines', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'ink_outlines' },
+							{ name: 'Chrome', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'chrome' },
+							{ name: 'Lens Blur', ellipsis: true, target: 'layer/smart_filter.add', parameter: 'lens_blur' }
+						]
+					},
 					{ divider: true },
 					{ name: 'Filter Mask from Selection', target: 'layer/smart_filter.mask_from_selection' },
 					{ name: 'Filter Mask to Selection', target: 'layer/smart_filter.mask_to_selection' },
@@ -1732,6 +1763,11 @@ const menuDefinition = [
 						target: 'image/adjustments.gaussian_blur'
 					},
 					{
+						name: 'Lens Blur',
+						ellipsis: true,
+						target: 'image/adjustments.lens_blur'
+					},
+					{
 						name: 'Box Blur',
 						ellipsis: true,
 						target: 'effects/box_blur.box_blur'
@@ -1765,6 +1801,11 @@ const menuDefinition = [
 						name: 'Spherize',
 						ellipsis: true,
 						target: 'image/adjustments.spherize'
+					},
+					{
+						name: 'Pinch',
+						ellipsis: true,
+						target: 'image/adjustments.pinch'
 					},
 					{
 						name: 'Diffuse Glow',
@@ -1897,6 +1938,16 @@ const menuDefinition = [
 						target: 'image/adjustments.crystallize'
 					},
 					{
+						name: 'Stained Glass',
+						ellipsis: true,
+						target: 'image/adjustments.stained_glass'
+					},
+					{
+						name: 'Texturizer',
+						ellipsis: true,
+						target: 'image/adjustments.texturizer'
+					},
+					{
 						name: 'Halftone',
 						ellipsis: true,
 						target: 'image/photo_effects.halftone'
@@ -2024,6 +2075,36 @@ const menuDefinition = [
 						name: 'Stamp',
 						ellipsis: true,
 						target: 'image/adjustments.stamp'
+					},
+					{
+						name: 'Crosshatch',
+						ellipsis: true,
+						target: 'image/adjustments.crosshatch'
+					},
+					{
+						name: 'Spatter',
+						ellipsis: true,
+						target: 'image/adjustments.spatter'
+					},
+					{
+						name: 'Angled Strokes',
+						ellipsis: true,
+						target: 'image/adjustments.angled_strokes'
+					},
+					{
+						name: 'Ink Outlines',
+						ellipsis: true,
+						target: 'image/adjustments.ink_outlines'
+					},
+					{
+						name: 'Sprayed Strokes',
+						ellipsis: true,
+						target: 'image/adjustments.sprayed_strokes'
+					},
+					{
+						name: 'Chrome',
+						ellipsis: true,
+						target: 'image/adjustments.chrome'
 					},
 					{
 						name: 'Neon Glow',

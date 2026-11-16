@@ -3,6 +3,7 @@ import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
 import Base_layers_class from './../core/base-layers.js';
 import Helper_class from './../libs/helpers.js';
+import { fill_region } from './../libs/flood-fill.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
@@ -98,8 +99,7 @@ class Fill_class extends Base_tools_class {
 
 		//change
 		this.working = true;
-		this.fill_general(ctx, config.WIDTH, config.HEIGHT,
-			mouse_x, mouse_y, color_to, params.power, params.anti_aliasing, params.contiguous);
+		this.fill_general(ctx, mouse_x, mouse_y, color_to, params.power, params.anti_aliasing, params.contiguous);
 
 		if (config.layer.type != null) {
 			//update
@@ -131,100 +131,48 @@ class Fill_class extends Base_tools_class {
 		this.working = false;
 	}
 
-	fill_general(context, W, H, x, y, color_to, sensitivity, anti_aliasing, contiguous = false) {
-		let i;
-		sensitivity = sensitivity * 255 / 100; //convert to 0-255 interval
-		x = parseInt(x);
-		y = parseInt(y);
+	/**
+	 * Paints the color over the pixels that fill_region picks (the ones like the clicked pixel), on the picture of the layer
+	 *
+	 * @param {CanvasRenderingContext2D} context the layer picture
+	 * @param {number} x the click in pixels of the layer picture
+	 * @param {number} y
+	 * @param {{r: number, g: number, b: number, a: number}} color_to
+	 * @param {number} tolerance 0-100 %
+	 * @param {boolean} anti_aliasing soften the edge of the filled area
+	 * @param {boolean} contiguous only the area connected with the click
+	 * @returns {boolean} false when the clicked pixel already has the color
+	 */
+	fill_general(context, x, y, color_to, tolerance, anti_aliasing, contiguous) {
+		const W = context.canvas.width;
+		const H = context.canvas.height;
+		x = Math.round(x);
+		y = Math.round(y);
+		const img = context.getImageData(0, 0, W, H);
+		const k = (y * W + x) * 4;
+		if (x >= 0 && y >= 0 && x < W && y < H
+			&& img.data[k] == color_to.r && img.data[k + 1] == color_to.g && img.data[k + 2] == color_to.b && img.data[k + 3] == color_to.a) {
+			return false;
+		}
+		const mask = fill_region(img.data, W, H, x, y, tolerance, contiguous);
+		const painted = new ImageData(W, H);
+		for (let p = 0; p < mask.length; p++) {
+			if (mask[p]) {
+				painted.data[p * 4] = color_to.r;
+				painted.data[p * 4 + 1] = color_to.g;
+				painted.data[p * 4 + 2] = color_to.b;
+				painted.data[p * 4 + 3] = color_to.a;
+			}
+		}
 		const canvasTemp = document.createElement('canvas');
 		canvasTemp.width = W;
 		canvasTemp.height = H;
-		const ctxTemp = canvasTemp.getContext("2d");
-
-		ctxTemp.rect(0, 0, W, H);
-		ctxTemp.fillStyle = "rgba(255, 255, 255, 0)";
-		ctxTemp.fill();
-
-		const img_tmp = ctxTemp.getImageData(0, 0, W, H);
-		const imgData_tmp = img_tmp.data;
-
-		const img = context.getImageData(0, 0, W, H);
-		const imgData = img.data;
-		let k = ((y * (img.width * 4)) + (x * 4));
-		const dx = [0, -1, +1, 0];
-		const dy = [-1, 0, 0, +1];
-		const color_from = {
-			r: imgData[k + 0],
-			g: imgData[k + 1],
-			b: imgData[k + 2],
-			a: imgData[k + 3]
-		};
-		if (color_from.r == color_to.r && color_from.g == color_to.g
-			&& color_from.b == color_to.b && color_from.a == color_to.a) {
-			return false;
-		}
-
-		if (contiguous == false) {
-			//check only nearest pixels
-			const stack = [];
-			stack.push([x, y]);
-			while (stack.length > 0) {
-				const curPoint = stack.pop();
-				for (i = 0; i < 4; i++) {
-					const nextPointX = curPoint[0] + dx[i];
-					const nextPointY = curPoint[1] + dy[i];
-					if (nextPointX < 0 || nextPointY < 0 || nextPointX >= W || nextPointY >= H)
-						continue;
-					k = (nextPointY * W + nextPointX) * 4;
-					if (imgData_tmp[k + 3] != 0)
-						continue; //already parsed
-
-					//check
-					if (Math.abs(imgData[k + 0] - color_from.r) <= sensitivity &&
-						Math.abs(imgData[k + 1] - color_from.g) <= sensitivity &&
-						Math.abs(imgData[k + 2] - color_from.b) <= sensitivity &&
-						Math.abs(imgData[k + 3] - color_from.a) <= sensitivity) {
-
-						//fill pixel
-						imgData_tmp[k] = color_to.r; //r
-						imgData_tmp[k + 1] = color_to.g; //g
-						imgData_tmp[k + 2] = color_to.b; //b
-						imgData_tmp[k + 3] = color_to.a; //a
-
-						stack.push([nextPointX, nextPointY]);
-					}
-				}
-			}
-		}
-		else {
-			//global mode - contiguous
-			for (i = 0; i < imgData.length; i += 4) {
-				if (imgData[i + 3] == 0)
-					continue;	//transparent
-
-				//imgData[i] + 0.7152 * imgData[i + 1] + 0.0722 * imgData[i + 2]);
-
-				for (let j = 0; j < 4; j++) {
-					k = i + j;
-
-					if (Math.abs(imgData[k] - color_from.r) <= sensitivity
-						&& Math.abs(imgData[k + 1] - color_from.g) <= sensitivity
-						&& Math.abs(imgData[k + 2] - color_from.b) <= sensitivity
-						&& Math.abs(imgData[k + 3] - color_from.a) <= sensitivity) {
-						imgData_tmp[k] = color_to.r; //r
-						imgData_tmp[k + 1] = color_to.g; //g
-						imgData_tmp[k + 2] = color_to.b; //b
-						imgData_tmp[k + 3] = color_to.a; //a
-					}
-				}
-			}
-		}
-
-		ctxTemp.putImageData(img_tmp, 0, 0);
+		canvasTemp.getContext('2d').putImageData(painted, 0, 0);
 		if (anti_aliasing == true) {
 			context.filter = 'blur(1px)';
 		}
 		context.drawImage(canvasTemp, 0, 0);
+		return true;
 	}
 
 }

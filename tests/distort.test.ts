@@ -1,4 +1,4 @@
-import { lightingEffects, displace, glass, remap, twirl, wave, cloud_noise, clouds, lensFlare } from '../src/js/libs/distort.js';
+import { lightingEffects, displace, glass, remap, twirl, wave, cloud_noise, clouds, lensFlare, stainedGlass } from '../src/js/libs/distort.js';
 
 function image(width: number, height: number, fill: (x: number, y: number) => number[]) {
 	const data = new Uint8ClampedArray(width * height * 4);
@@ -279,5 +279,44 @@ describe('lightingEffects', () => {
 			expect(odd.data[i]).toBeLessThanOrEqual(255);
 			expect(odd.data[i + 3]).toBe(255);
 		}
+	});
+});
+
+describe('stainedGlass', () => {
+	const make = () => {
+		const data = new Uint8ClampedArray(40 * 40 * 4);
+		for (let p = 0; p < 40 * 40; p++) {
+			data.set([(p % 40) * 6, Math.floor(p / 40) * 6, 90, 180], p * 4);
+		}
+		return {data, width: 40, height: 40} as any;
+	};
+
+	it('has borders of the chosen color between cells, keeps alpha and is deterministic', () => {
+		const a = stainedGlass(make(), {size: 20, border: 1, color: '#ff0000', seed: 5});
+		const b = stainedGlass(make(), {size: 20, border: 1, color: '#ff0000', seed: 5});
+		expect(Array.from(a.data)).toEqual(Array.from(b.data));
+		let border = 0;
+		for (let p = 0; p < 1600; p++) {
+			expect(a.data[p * 4 + 3]).toBe(180);
+			if (a.data[p * 4] == 255 && a.data[p * 4 + 1] == 0 && a.data[p * 4 + 2] == 0) {
+				border++;
+			}
+		}
+		expect(border).toBeGreaterThan(30);
+		expect(border).toBeLessThan(800);
+	});
+
+	it('a thicker border covers more pixels', () => {
+		const count = (width: number) => {
+			const out = stainedGlass(make(), {size: 20, border: width, color: '#ff0000', seed: 5});
+			let n = 0;
+			for (let p = 0; p < 1600; p++) {
+				if (out.data[p * 4] == 255 && out.data[p * 4 + 1] == 0) {
+					n++;
+				}
+			}
+			return n;
+		};
+		expect(count(3)).toBeGreaterThan(count(1));
 	});
 });

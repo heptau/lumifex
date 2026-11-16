@@ -171,6 +171,7 @@ config.TOOLS = [
 				max: 255,
 			},
 			contiguous: true,
+			sample_all: false,
 			feather: {
 				value: 0,
 				min: 0,
@@ -190,6 +191,7 @@ config.TOOLS = [
 				min: 1,
 				max: 100,
 			},
+			sample_all: false,
 			feather: {
 				value: 0,
 				min: 0,
@@ -319,7 +321,7 @@ config.TOOLS = [
 		attributes: {
 			power: 15,
 			anti_aliasing: true,
-			contiguous: false,
+			contiguous: true,
 		},
 	},
 	{
@@ -327,7 +329,7 @@ config.TOOLS = [
 		attributes: {
 			power: 5,
 			anti_aliasing: false,
-			contiguous: false,
+			contiguous: true,
 		},
 	},
 	{
@@ -630,6 +632,11 @@ config.TOOLS = [
 		name: 'clone',
 		attributes: {
 			size: 30,
+			flow: {
+				value: 100,
+				min: 1,
+				max: 100,
+			},
 			anti_aliasing: true,
 			source_layer: {
 				value: 'Current',
@@ -642,6 +649,10 @@ config.TOOLS = [
 		on_update: 'on_params_update',
 		on_leave: 'on_leave',
 		attributes: {
+			ratio: {
+				value: 'Free',
+				values: ['Free', 'Original', '1:1', '4:3', '3:2', '16:9', '5:4', '3:4', '2:3', '9:16'],
+			},
 			grid_overlay: {
 				value: 'Thirds',
 				values: ['None', 'Thirds', 'Golden Ratio', 'Diagonals', 'Grid'],

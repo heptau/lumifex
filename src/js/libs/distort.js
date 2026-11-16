@@ -968,3 +968,54 @@ export function crystallize(image, params) {
 	}
 	return image;
 }
+
+/**
+ * Stained Glass (Photoshop, simplified) - Crystallize cells of one color each, separated by borders of a chosen color.
+ * A border is every pixel within `border` pixels of a place where the color changes from one cell to the next.
+ *
+ * @param {Image_data} image
+ * @param {object} params size (1-30 % of the shorter side, cell size), border (1-6 px, default 2), color (#rrggbb,
+ *  default near black), seed
+ * @returns {Image_data}
+ */
+export function stainedGlass(image, params) {
+	const w = image.width;
+	const h = image.height;
+	const thickness = clamp(Math.round(parseFloat(params.border ?? 2)) || 1, 1, 6);
+	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(params.color || '');
+	const color = m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [20, 20, 20];
+	crystallize(image, params);
+	const data = image.data;
+	const edge = new Uint8Array(w * h);
+	const differs = (a, b) => data[a * 4] != data[b * 4] || data[a * 4 + 1] != data[b * 4 + 1] || data[a * 4 + 2] != data[b * 4 + 2];
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const p = y * w + x;
+			if ((x + 1 < w && differs(p, p + 1)) || (y + 1 < h && differs(p, p + w))) {
+				edge[p] = 1;
+			}
+		}
+	}
+	const reach = thickness - 1;
+	const border = new Uint8Array(w * h);
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			if (!edge[y * w + x]) {
+				continue;
+			}
+			for (let yy = Math.max(0, y - reach); yy <= Math.min(h - 1, y + reach); yy++) {
+				for (let xx = Math.max(0, x - reach); xx <= Math.min(w - 1, x + reach); xx++) {
+					border[yy * w + xx] = 1;
+				}
+			}
+		}
+	}
+	for (let p = 0; p < w * h; p++) {
+		if (border[p]) {
+			data[p * 4] = color[0];
+			data[p * 4 + 1] = color[1];
+			data[p * 4 + 2] = color[2];
+		}
+	}
+	return image;
+}

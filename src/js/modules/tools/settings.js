@@ -1,7 +1,9 @@
+import app from './../../app.js';
 import config from './../../config.js';
 import Dialog_class from './../../libs/popup.js';
 import Helper_class from './../../libs/helpers.js';
 import Base_gui_class from './../../core/base-gui.js';
+import { clean_history_steps, DEFAULT_HISTORY_STEPS } from './../../libs/history-limit.js';
 import { TRANSPARENCY_TYPES, normalize_transparency_type } from './../../libs/transparency-types.js';
 import { AUTO, get_system_languages, order_languages } from './../../libs/system-preferences.js';
 import Tools_translate_class, { LANGUAGE_NAMES, t } from './../tools/translate.js';
@@ -41,6 +43,7 @@ class Tools_settings_class {
 		const open_in_new_tab = this.get_setting('open_in_new_tab');
 		const use_file_picker = this.get_setting('use_file_picker');
 		const large_ui = this.get_setting('large_ui');
+		const history_steps = clean_history_steps(this.get_setting('history_steps'));
 
 		//language: automatic (system) + own language names
 		const auto_name = t('Automatic (System)');
@@ -74,6 +77,7 @@ class Tools_settings_class {
 				{name: "enable_autoresize", title: "Enable autoresize:", value: enable_autoresize},
 				{name: "open_in_new_tab", title: "Open files in a new document:", value: open_in_new_tab},
 				{name: "use_file_picker", title: "Ask where to save files:", value: use_file_picker},
+				{name: "history_steps", title: "History steps:", value: history_steps, range: [10, 200]},
 				{heading: "Keyboard", icon: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>'},
 			],
 			on_load: (params, popup) => {
@@ -150,6 +154,9 @@ class Tools_settings_class {
 		this.save_setting('open_in_new_tab', params.open_in_new_tab);
 		this.save_setting('use_file_picker', params.use_file_picker);
 		this.save_setting('large_ui', params.large_ui);
+		this.save_setting('history_steps', clean_history_steps(params.history_steps));
+		//the new limit counts from now on (steps beyond it are dropped when the next one is made)
+		app.State.action_history_max = clean_history_steps(params.history_steps);
 		this.Base_gui.apply_large_ui();
 
 		//update config
@@ -212,6 +219,7 @@ class Tools_settings_class {
 			'open_in_new_tab': true,
 			'use_file_picker': false,
 			'large_ui': false,
+			'history_steps': DEFAULT_HISTORY_STEPS,
 		};
 
 		if ((key == 'default_units' || key == 'default_units_short') && !raw && config.UNITS && this.default_units_config[config.UNITS]) {

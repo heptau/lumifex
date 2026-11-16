@@ -14,6 +14,7 @@ import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.j
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import { clean_mask_density, clean_mask_feather } from './../../libs/layer-mask.js';
 import GUI_adjustment_props_class from './gui-adjustment-props.js';
+import GUI_smart_props_class from './gui-smart-props.js';
 
 const template = `
 	<div class="row">
@@ -51,6 +52,7 @@ const template = `
 		<input style="padding: 0px;" type="color" id="detail_color" />
 	</div>
 	<div id="adjustment_detail_params" hidden></div>
+	<div id="smart_detail_params" hidden></div>
 	<div id="mask_detail_params" hidden>
 		<hr />
 		<div class="row">
@@ -155,6 +157,7 @@ class GUI_details_class {
 		this.layer_details_active = false;
 		this.Tools_translate = new Tools_translate_class();
 		this.Adjustment_props = new GUI_adjustment_props_class();
+		this.Smart_props = new GUI_smart_props_class();
 	}
 
 	render_main_details() {
@@ -167,6 +170,7 @@ class GUI_details_class {
 		document.addEventListener('minipaint:history', () => {
 			this.render_mask(false);
 			this.Adjustment_props.render();
+			this.Smart_props.render();
 		});
 	}
 
@@ -185,6 +189,7 @@ class GUI_details_class {
 		this.render_reset(events);
 		this.render_mask(events);
 		this.Adjustment_props.render();
+		this.Smart_props.render();
 
 		//text - special case
 		if (config.layer != undefined && config.layer.type == 'text') {

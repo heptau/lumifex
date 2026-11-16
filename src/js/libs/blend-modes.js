@@ -10,6 +10,7 @@ export const BLEND_MODES = [
 	['lighten', 'Lighten'],
 	['screen', 'Screen'],
 	['color-dodge', 'Color Dodge'],
+	['lighter', 'Linear Dodge (Add)'],
 	['overlay', 'Overlay'],
 	['soft-light', 'Soft Light'],
 	['hard-light', 'Hard Light'],

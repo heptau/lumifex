@@ -4,6 +4,7 @@
  * functions, no DOM.
  */
 import { ADJUSTMENTS, is_adjustment } from './adjustment-layers.js';
+import { SMART_FILTERS, is_smart_filter } from './smart-filters.js';
 
 /**
  * @typedef {{name: string, title: string, kind: 'range'|'select'|'color'|'checkbox', range?: number[], step?: number,
@@ -11,17 +12,14 @@ import { ADJUSTMENTS, is_adjustment } from './adjustment-layers.js';
  */
 
 /**
- * @param {string} key an adjustment
- * @returns {Field[]} the inputs of its settings (headings and the settings edited by their own editor, such as the curves
- *  graph, have none); an unknown adjustment has no fields
+ * @param {{name?: string, title?: string, value?: any, values?: string[], range?: number[], step?: number, type?: string}[]} params
+ *  the settings as the dialogs define them
+ * @returns {Field[]} one field for every named setting that has an input (headings have none)
  */
-export function property_fields(key) {
-	if (!is_adjustment(key)) {
-		return [];
-	}
+export function fields_from_params(params) {
 	/** @type {Field[]} */
 	const fields = [];
-	ADJUSTMENTS[key].params.forEach((param) => {
+	params.forEach((param) => {
 		if (!param.name) {
 			return;
 		}
@@ -44,6 +42,23 @@ export function property_fields(key) {
 		}
 	});
 	return fields;
+}
+
+/**
+ * @param {string} key an adjustment
+ * @returns {Field[]} the inputs of its settings (the settings edited by their own editor, such as the curves graph,
+ *  have none); an unknown adjustment has no fields
+ */
+export function property_fields(key) {
+	return is_adjustment(key) ? fields_from_params(ADJUSTMENTS[key].params) : [];
+}
+
+/**
+ * @param {string} key a smart filter
+ * @returns {Field[]} the inputs of its settings; an unknown filter has no fields
+ */
+export function smart_property_fields(key) {
+	return is_smart_filter(key) ? fields_from_params(SMART_FILTERS[key].params) : [];
 }
 
 /**

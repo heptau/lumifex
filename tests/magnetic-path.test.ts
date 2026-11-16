@@ -1,4 +1,4 @@
-import { edge_strength, build_path_tree, trace_path } from '../src/js/libs/magnetic-path.js';
+import { edge_strength, build_path_tree, trace_path, take_back_anchor } from '../src/js/libs/magnetic-path.js';
 
 function picture(w: number, h: number, value: (x: number, y: number) => number) {
 	const data = new Uint8ClampedArray(w * h * 4);
@@ -59,5 +59,24 @@ describe('magnetic path', () => {
 		const clamped = build_path_tree(edge(), 20, 30, -50, 999, NaN);
 		expect(clamped.ax).toBe(0);
 		expect(clamped.ay).toBe(29);
+	});
+});
+
+describe('take_back_anchor', () => {
+	it('returns to the path as it was after the previous anchor', () => {
+		expect(take_back_anchor([1, 12, 30])).toEqual({marks: [1, 12], length: 12});
+		expect(take_back_anchor([1, 12])).toEqual({marks: [1], length: 1});
+	});
+
+	it('does nothing when only the start is left or the input is bad', () => {
+		expect(take_back_anchor([1])).toBeNull();
+		expect(take_back_anchor([])).toBeNull();
+		expect(take_back_anchor(null as any)).toBeNull();
+	});
+
+	it('does not change the list it gets', () => {
+		const marks = [1, 5, 9];
+		take_back_anchor(marks);
+		expect(marks).toEqual([1, 5, 9]);
 	});
 });

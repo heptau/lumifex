@@ -7,7 +7,8 @@ import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 
 /**
- * Magic wand - click selects pixels of the active layer similar to the clicked one.
+ * Magic wand - click selects pixels of the active layer (or, with Sample all layers, of the visible picture) similar to the
+ * clicked one.
  * Shift adds to the current selection, Alt subtracts from it, Shift+Alt intersects.
  * The result is stored as a selection mask, see core/selection-mask-state.js.
  */
@@ -38,20 +39,22 @@ class Magic_wand_class extends Base_mask_tool_class {
 			return;
 		}
 		const layer = config.layer;
-		if (layer.type != 'image') {
+		const params = this.getParams();
+		//Sample all layers: the wand looks at the visible picture, so it works on any layer
+		const sample_all = Boolean(params.sample_all);
+		if (!sample_all && layer.type != 'image') {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
 			return;
 		}
-		if (layer.rotate) {
+		if (!sample_all && layer.rotate) {
 			alertify.error(t('Rotate is not supported on this type of object. Convert to raster?'));
 			return;
 		}
 
-		const params = this.getParams();
 		this.working = true;
 		try {
 			const Edit_selection = this.Edit_selection || (this.Edit_selection = new Edit_selection_class());
-			const image = Edit_selection.layer_on_canvas(layer);
+			const image = sample_all ? this.visible_picture() : Edit_selection.layer_on_canvas(layer);
 			const mask = magic_wand_mask(image, mouse.x, mouse.y, params.tolerance, Boolean(params.contiguous));
 			await this.commit_mask(mask, e);
 		}

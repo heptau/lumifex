@@ -106,6 +106,63 @@ class Image_adjustments_class {
 		], (img, params) => Filters.stamp(img, params));
 	}
 
+	crosshatch() {
+		this.show_dialog('Crosshatch', [
+			{name: "spacing", title: "Line spacing:", value: 6, range: [3, 30]},
+			{name: "thickness", title: "Line thickness:", value: 1, range: [1, 6]},
+			{name: "smoothness", title: "Smoothness:", value: 2, range: [0, 10]},
+			{name: "ink", title: "Ink:", value: '#000000', type: 'color'},
+			{name: "paper", title: "Paper:", value: '#ffffff', type: 'color'},
+		], (img, params) => Filters.crosshatch(img, params));
+	}
+
+	spatter() {
+		this.show_dialog('Spatter', [
+			{name: "radius", title: "Spray radius:", value: 10, range: [0, 30]},
+			{name: "smoothness", title: "Smoothness:", value: 5, range: [1, 15]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 100]},
+		], (img, params) => Filters.spatter(img, params));
+	}
+
+	angled_strokes() {
+		this.show_dialog('Angled Strokes', [
+			{name: "angle", title: "Angle:", value: 45, range: [-180, 180]},
+			{name: "length", title: "Stroke length:", value: 10, range: [1, 50]},
+		], (img, params) => Filters.angledStrokes(img, params));
+	}
+
+	ink_outlines() {
+		this.show_dialog('Ink Outlines', [
+			{name: "smoothness", title: "Smoothness:", value: 2, range: [0, 10]},
+			{name: "threshold", title: "Edge threshold:", value: 40, range: [0, 254]},
+			{name: "intensity", title: "Intensity:", value: 100, range: [0, 100]},
+			{name: "ink", title: "Ink:", value: '#000000', type: 'color'},
+		], (img, params) => Filters.inkOutlines(img, params));
+	}
+
+	sprayed_strokes() {
+		this.show_dialog('Sprayed Strokes', [
+			{name: "angle", title: "Angle:", value: 45, range: [-180, 180]},
+			{name: "length", title: "Stroke length:", value: 12, range: [0, 40]},
+			{name: "seed", title: "Seed:", value: 1, range: [0, 100]},
+		], (img, params) => Filters.sprayedStrokes(img, params));
+	}
+
+	chrome() {
+		this.show_dialog('Chrome', [
+			{name: "detail", title: "Detail:", value: 3, range: [1, 10]},
+			{name: "smoothness", title: "Smoothness:", value: 4, range: [0, 20]},
+		], (img, params) => Filters.chrome(img, params));
+	}
+
+	texturizer() {
+		this.show_dialog('Texturizer', [
+			{name: "scaling", title: "Scaling:", value: 8, range: [2, 40]},
+			{name: "relief", title: "Relief:", value: 40, range: [0, 100]},
+			{name: "light", title: "Light angle:", value: 135, range: [-180, 360]},
+		], (img, params) => Filters.texturizer(img, params));
+	}
+
 	neon_glow() {
 		this.show_dialog('Neon Glow', [
 			{name: "size", title: "Glow size:", value: 5, range: [1, 20]},
@@ -392,6 +449,14 @@ class Image_adjustments_class {
 		], (img, params) => Filters.pixelate(img, params.size));
 	}
 
+	lens_blur() {
+		this.show_dialog('Lens Blur', [
+			{name: "radius", title: "Radius:", value: 6, range: [1, 20]},
+			{name: "highlights", title: "Highlights:", value: 30, range: [0, 100]},
+			{name: "threshold", title: "Threshold:", value: 200, range: [0, 254]},
+		], (img, params) => Filters.lensBlur(img, params));
+	}
+
 	gaussian_blur() {
 		this.show_dialog('Gaussian Blur', [
 			{name: "radius", title: "Radius:", value: 3, range: [0, 100], step: 0.1},
@@ -588,6 +653,13 @@ class Image_adjustments_class {
 		], (img, params) => Distort.spherize(img, params));
 	}
 
+	pinch() {
+		this.show_dialog('Pinch', [
+			{name: "amount", title: "Amount:", value: 50, range: [-100, 100]},
+			{name: "radius", title: "Radius:", value: 100, range: [10, 100]},
+		], (img, params) => Distort.spherize(img, {amount: -(parseFloat(params.amount) || 0), radius: params.radius}));
+	}
+
 	polar_coordinates() {
 		this.show_dialog('Polar Coordinates', [
 			{name: "mode", title: "Mode:", values: Distort.POLAR_MODES, value: Distort.POLAR_MODES[0]},
@@ -677,6 +749,15 @@ class Image_adjustments_class {
 			{name: "radius", title: "Radius:", value: 3, range: [1, 10]},
 			{name: "threshold", title: "Threshold:", value: 30, range: [1, 255]},
 		], (img, params) => Filters.surfaceBlur(img, params));
+	}
+
+	stained_glass() {
+		this.show_dialog('Stained Glass', [
+			{name: "size", title: "Cell size:", value: 6, range: [1, 30]},
+			{name: "border", title: "Border:", value: 2, range: [1, 6]},
+			{name: "color", title: "Border color:", value: '#141414', type: 'color'},
+			{name: "seed", title: "Seed:", value: Math.floor(Math.random() * 1000), range: [0, 999]},
+		], (img, params) => Distort.stainedGlass(img, params));
 	}
 
 	crystallize() {
