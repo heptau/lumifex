@@ -1082,3 +1082,15 @@ describe('texturizer', () => {
 		expect(spread(20)).toBeGreaterThan(0);
 	});
 });
+
+describe('Invalid parameters', () => {
+	const make = () => image(6, 6, (x, y) => [200 + x, 180 + y, 160, 255]);
+	const no_nan = (img: { data: Uint8ClampedArray }) => Array.from(img.data).some((v) => v > 0);
+
+	it('lensBlur, inkOutlines and texturizer fall back to defaults for a non-numeric value', () => {
+		expect(no_nan(lensBlur(make(), { radius: 2, threshold: '' }))).toBe(true);
+		expect(no_nan(inkOutlines(make(), { smoothness: 0, intensity: 'x' }))).toBe(true);
+		expect(no_nan(texturizer(make(), { relief: '' }))).toBe(true);
+		expect(Array.from(lensBlur(make(), { radius: 2, threshold: '' }).data)).toEqual(Array.from(lensBlur(make(), { radius: 2 }).data));
+	});
+});

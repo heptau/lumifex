@@ -9,16 +9,33 @@ export const RASTER_TOOLS = [
 	'blur', 'sharpen', 'smudge', 'dodge_burn', 'sponge', 'bulge_pinch',
 ];
 
+//with the option "Sample all layers" these read the visible picture, so they work on any layer
+export const SAMPLE_ALL_TOOLS = ['magic_wand', 'quick_select'];
+
+/**
+ * @param {string} tool_name
+ * @param {Object|undefined} attributes the options of the tool (config.TOOLS[].attributes)
+ * @returns {boolean} the tool reads the visible picture of all layers instead of the active layer
+ */
+function samples_all(tool_name, attributes) {
+	if (!attributes || SAMPLE_ALL_TOOLS.includes(tool_name) == false) {
+		return false;
+	}
+	const option = attributes.sample_all;
+	return Boolean(option !== null && typeof option === 'object' ? option.value : option);
+}
+
 //these refuse also an image that is still a vector (opened SVG) until it is converted to raster
 export const STRICT_RASTER_TOOLS = ['erase', 'magic_erase', 'fill'];
 
 /**
  * @param {string} tool_name
  * @param {{type: string|null, is_vector: boolean}|null} layer active layer
+ * @param {Object} [attributes] the options of the tool
  * @returns {boolean} the tool can not be used on the layer
  */
-export function is_tool_disabled(tool_name, layer) {
-	if (!layer || RASTER_TOOLS.includes(tool_name) == false) {
+export function is_tool_disabled(tool_name, layer, attributes) {
+	if (!layer || RASTER_TOOLS.includes(tool_name) == false || samples_all(tool_name, attributes)) {
 		return false;
 	}
 	//the empty first layer has no type yet and every tool can start on it
@@ -45,8 +62,10 @@ export function is_vector_layer(layer) {
  *
  * @param {string} tool_name
  * @param {{type: string|null, is_vector?: boolean}|null} layer active layer
+ * @param {Object} [attributes] the options of the tool
  * @returns {boolean}
  */
-export function needs_raster_layer(tool_name, layer) {
-	return Boolean(layer) && layer.type == null && RASTER_TOOLS.includes(tool_name);
+export function needs_raster_layer(tool_name, layer, attributes) {
+	return Boolean(layer) && layer.type == null && RASTER_TOOLS.includes(tool_name)
+		&& samples_all(tool_name, attributes) == false;
 }

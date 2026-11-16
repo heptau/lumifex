@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Si è verificato un problema durante la rimozione della cronologia degli annullamenti. It",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Si è verificato un problema durante la rimozione della cronologia degli annullamenti. Salva il lavoro e ricarica la pagina per liberare memoria.",
     "About": "Di",
     "Active": "Attivo",
     "Advanced": "Avanzate",
@@ -402,7 +402,6 @@
     "Tag Image File Format": "Etichetta il formato del file immagine",
     "Target:": "Bersaglio:",
     "The quick brown fox jumps over the lazy dog.": "La veloce volpe marrone salta sopra il cane pigro.",
-    "There": "Là",
     "There are no layers behind.": "Non ci sono strati dietro.",
     "There is only 1 layer.": "C'è solo 1 strato.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Il livello deve essere un'immagine, convertirlo in raster per applicare questo strumento.",
@@ -1302,6 +1301,7 @@
     "There is no layer below.": "Non c’è nessun livello sotto.",
     "New Adjustment Layer": "Nuovo livello di regolazione",
     "Edit Adjustment Layer": "Modifica livello di regolazione",
+    "Edit Smart Filter": "Modifica filtro avanzato",
     "Adjustment layer": "Livello di regolazione",
     "Select an adjustment layer first.": "Seleziona prima un livello di regolazione.",
     "Merge Down needs a picture layer below.": "Unisci sotto richiede un livello immagine sotto.",

@@ -217,10 +217,14 @@ class Base_gui_class {
 				console.warn('[SW] Error registering service worker:', err);
 			});
 
-			// Listen for controller change (new SW activated)
+			// Listen for controller change (new SW activated). On the very first visit the page
+			// has no controller and clients.claim() also fires controllerchange - reloading then
+			// would throw away whatever the user did in the first seconds, so only reload when
+			// an older worker controlled the page.
+			const had_controller = !!navigator.serviceWorker.controller;
 			let refreshing = false;
 			navigator.serviceWorker.addEventListener('controllerchange', () => {
-				if (refreshing) return;
+				if (refreshing || !had_controller) return;
 				refreshing = true;
 				window.location.reload();
 			});

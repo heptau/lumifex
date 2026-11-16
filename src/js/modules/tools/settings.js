@@ -155,7 +155,7 @@ class Tools_settings_class {
 		this.save_setting('use_file_picker', params.use_file_picker);
 		this.save_setting('large_ui', params.large_ui);
 		this.save_setting('history_steps', clean_history_steps(params.history_steps));
-		//the new limit counts from now on (steps beyond it are dropped when the next one is made)
+		//the new limit counts from now on (the oldest steps beyond it are dropped when the next one is made)
 		app.State.action_history_max = clean_history_steps(params.history_steps);
 		this.Base_gui.apply_large_ui();
 

@@ -9,6 +9,12 @@ function clamp(value, min, max) {
 	return Math.min(max, Math.max(min, value));
 }
 
+/** A number parsed from a parameter, or the fallback when it is not a finite number (0 stays 0). */
+function number_or(value, fallback) {
+	const number = parseFloat(value);
+	return Number.isFinite(number) ? number : fallback;
+}
+
 /**
  * Diffuse (Photoshop, Stylize) - every pixel is replaced by a pixel from a random place nearby, like frosted glass.
  * The randomness comes from a hash of the position and the seed, so the same input always gives the same result
@@ -955,7 +961,7 @@ export function angledStrokes(image, params) {
 export function inkOutlines(image, params) {
 	const radius = clamp(Math.round(parseFloat(params.smoothness ?? 2)) || 0, 0, 10);
 	const threshold = clamp(parseFloat(params.threshold ?? 40) || 0, 0, 254);
-	const strength = clamp(parseFloat(params.intensity ?? 100), 0, 100) / 100;
+	const strength = clamp(number_or(params.intensity, 100), 0, 100) / 100;
 	const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(params.ink || '');
 	const ink = m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0, 0, 0];
 	const w = image.width;
@@ -1054,7 +1060,7 @@ export function chrome(image, params) {
  */
 export function texturizer(image, params) {
 	const period = clamp(parseFloat(params.scaling ?? 8) || 8, 2, 40);
-	const relief = clamp(parseFloat(params.relief ?? 40), 0, 100) / 100 * 90;
+	const relief = clamp(number_or(params.relief, 40), 0, 100) / 100 * 90;
 	const light = (parseFloat(params.light ?? 135) || 0) * Math.PI / 180;
 	const lx = Math.cos(light);
 	const ly = Math.sin(light);
@@ -1508,7 +1514,7 @@ export function lensBlur(image, params) {
 		return image;
 	}
 	const boost = clamp(parseFloat(params.highlights ?? 0) || 0, 0, 100) / 100 * 9;
-	const threshold = clamp(parseFloat(params.threshold ?? 200), 0, 254);
+	const threshold = clamp(number_or(params.threshold, 200), 0, 254);
 	const w = image.width;
 	const h = image.height;
 	const data = image.data;

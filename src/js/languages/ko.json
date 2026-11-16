@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "실행 취소 기록을 제거하는 동안 문제가 발생했습니다. 그것",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "실행 취소 기록을 제거하는 동안 문제가 발생했습니다. 작업을 저장하고 페이지를 새로 고쳐 메모리를 확보하세요.",
     "About": "약",
     "Active": "유효한",
     "Aden": "아덴",
@@ -426,7 +426,6 @@
     "Tahoma": "타호 마",
     "Target:": "목표:",
     "The quick brown fox jumps over the lazy dog.": "날렵한 갈색여우가 게으른 개를 뛰어넘습니다.",
-    "There": "그곳에",
     "There are no layers behind.": "뒤에 레이어가 없습니다.",
     "There is only 1 layer.": "단 하나의 레이어가 있습니다.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "이 레이어에는 이미지가 있어야합니다. 이 도구를 적용하려면 래스터로 변환하십시오.",
@@ -1316,6 +1315,7 @@
     "There is no layer below.": "아래에 레이어가 없습니다.",
     "New Adjustment Layer": "새 조정 레이어",
     "Edit Adjustment Layer": "조정 레이어 편집",
+    "Edit Smart Filter": "고급 필터 편집",
     "Adjustment layer": "조정 레이어",
     "Select an adjustment layer first.": "먼저 조정 레이어를 선택하세요.",
     "Merge Down needs a picture layer below.": "아래로 병합하려면 아래에 이미지 레이어가 있어야 합니다.",

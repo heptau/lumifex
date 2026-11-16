@@ -5,6 +5,7 @@ import { property_fields, field_value } from './../../libs/adjustment-fields.js'
 import Layer_adjustment_class from './../../modules/layer/adjustment.js';
 import { create_field_row } from './gui-field-row.js';
 import { t } from './../../modules/tools/translate.js';
+import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 
 /**
  * The Properties section of an adjustment layer (Photoshop's Properties panel): the settings of the adjustment are
@@ -17,6 +18,7 @@ class GUI_adjustment_props_class {
 		this.signature = null; //which layer and adjustment the rows were built for
 		this.inputs = {}; //setting name -> input
 		this.start = null; //the params of the layer when an edit started
+		this.blocked = false; //an edit was refused because the layer is locked
 	}
 
 	/**
@@ -45,10 +47,17 @@ class GUI_adjustment_props_class {
 			this.build(box, layer, key);
 			this.signature = signature;
 		}
-		const settings = clean_settings(key, layer.params.settings);
+		this.show_values(clean_settings(key, layer.params.settings), false);
+	}
+
+	/**
+	 * @param {object} settings clean settings of the layer
+	 * @param {boolean} force also the input that has the focus (it is being edited otherwise)
+	 */
+	show_values(settings, force) {
 		Object.keys(this.inputs).forEach((name) => {
 			const input = this.inputs[name];
-			if (document.activeElement === input.main) {
+			if (!force && document.activeElement === input.main) {
 				return;
 			}
 			const value = settings[name];
@@ -109,6 +118,12 @@ class GUI_adjustment_props_class {
 			if (!layer || layer.type != 'adjustment' || !layer.params) {
 				return;
 			}
+			if (layer.locked === true) {
+				//the parameters of a locked layer can not change: no preview, the inputs go back
+				this.blocked = true;
+				this.show_values(clean_settings(layer.params.adjustment, layer.params.settings), true);
+				return;
+			}
 			if (this.start === null) {
 				this.start = layer.params;
 			}
@@ -125,6 +140,11 @@ class GUI_adjustment_props_class {
 		};
 		const commit = () => {
 			const layer = config.layer;
+			if (this.blocked) {
+				this.blocked = false;
+				alertify.error(t('Layer is locked.'));
+				return;
+			}
 			if (this.start === null || !layer) {
 				this.start = null;
 				return;

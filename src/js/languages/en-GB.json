@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Sorry, a problem occurred while removing the undo history.",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Sorry, a problem occurred while removing the undo history. It is suggested you save your work and refresh the page to free up memory.",
     "Application markup may have changed,": "The application markup may have changed",
     "Auto Adjust Colors": "Auto Adjust the Colours",
     "Can not animate 1 layer.": "Sorry, you can not animate just 1 layer, you need at least 2 layers.",

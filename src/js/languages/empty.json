@@ -4,7 +4,7 @@
     "90° Clockwise": "",
     "90° Counter Clockwise": "",
     "A new version is available. Refresh the page?": "",
-    "A problem occurred while removing undo history. It": "",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "",
     "About": "",
     "Activate Tool": "",
     "Active": "",
@@ -630,7 +630,6 @@
     "Temperature:": "",
     "The quick brown fox jumps over the lazy dog.": "",
     "Theme": "",
-    "There": "",
     "There are no layers behind.": "",
     "There is only 1 layer.": "",
     "There's nothing to redo": "",
@@ -1770,5 +1769,6 @@
     "Stained Glass": "",
     "Border:": "",
     "Texturizer": "",
-    "Scaling:": ""
+    "Scaling:": "",
+    "Edit Smart Filter": ""
 }

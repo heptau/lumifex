@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Un problème est survenu lors de la suppression de l'historique des annulations. Il",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Un problème est survenu lors de la suppression de l'historique des annulations. Enregistrez votre travail et actualisez la page pour libérer de la mémoire.",
     "About": "A propos",
     "Active": "actif",
     "Advanced": "Avancé",
@@ -401,7 +401,6 @@
     "Tag Image File Format": "Format de fichier image de balise",
     "Target:": "Cible :",
     "The quick brown fox jumps over the lazy dog.": "Le renard brun rapide saute par-dessus le chien paresseux.",
-    "There": "Là",
     "There are no layers behind.": "Il n'y a pas de couches derrière.",
     "There is only 1 layer.": "Il n'y a qu'une seule couche.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Le calque doit être image, le convertir en raster pour appliquer cet outil.",
@@ -1271,6 +1270,7 @@
     "There is no layer below.": "Il n’y a aucun calque en dessous.",
     "New Adjustment Layer": "Nouveau calque de réglage",
     "Edit Adjustment Layer": "Modifier le calque de réglage",
+    "Edit Smart Filter": "Modifier le filtre dynamique",
     "Adjustment layer": "Calque de réglage",
     "Select an adjustment layer first.": "Sélectionnez d’abord un calque de réglage.",
     "Merge Down needs a picture layer below.": "Fusionner vers le bas nécessite un calque d’image en dessous.",

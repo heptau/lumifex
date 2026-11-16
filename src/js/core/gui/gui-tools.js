@@ -227,6 +227,15 @@ class GUI_tools_class {
 	}
 
 	/**
+	 * @param {string} name
+	 * @returns {Object|undefined} the current options of the tool
+	 */
+	tool_attributes(name) {
+		const tool = config.TOOLS.find((item) => item.name == name);
+		return tool ? tool.attributes : undefined;
+	}
+
+	/**
 	 * disables tools that work only with raster layers while a vector layer is active
 	 */
 	update_disabled_tools() {
@@ -236,7 +245,7 @@ class GUI_tools_class {
 		}
 		const layer = config.layer;
 		container.querySelectorAll('.item').forEach((button) => {
-			const disabled = is_tool_disabled(button.id, layer);
+			const disabled = is_tool_disabled(button.id, layer, this.tool_attributes(button.id));
 			button.classList.toggle('disabled', disabled);
 			if (disabled) {
 				button.setAttribute('aria-disabled', 'true');
@@ -246,7 +255,7 @@ class GUI_tools_class {
 			}
 		});
 		//the empty first layer becomes a picture when the tool needs one
-		if (needs_raster_layer(this.active_tool, layer) && this.tool_switching != true) {
+		if (needs_raster_layer(this.active_tool, layer, this.tool_attributes(this.active_tool)) && this.tool_switching != true) {
 			this.tool_switching = true;
 			Promise.resolve(new Layer_raster_class().raster_empty()).finally(() => {
 				this.tool_switching = false;
@@ -254,7 +263,7 @@ class GUI_tools_class {
 			return;
 		}
 		//the active tool can not stay on a layer it does not work on
-		if (is_tool_disabled(this.active_tool, layer) && this.tool_switching != true) {
+		if (is_tool_disabled(this.active_tool, layer, this.tool_attributes(this.active_tool)) && this.tool_switching != true) {
 			this.tool_switching = true;
 			this.activate_tool('select').finally(() => {
 				this.tool_switching = false;
@@ -263,11 +272,11 @@ class GUI_tools_class {
 	}
 
 	async activate_tool(key) {
-		if (is_tool_disabled(key, config.layer)) {
+		if (is_tool_disabled(key, config.layer, this.tool_attributes(key))) {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
 			return;
 		}
-		if (needs_raster_layer(key, config.layer)) {
+		if (needs_raster_layer(key, config.layer, this.tool_attributes(key))) {
 			//the empty first layer has no pixels: it becomes a transparent picture and the tool is chosen, in one step of
 			//the history (one Undo takes back both)
 			const actions = new Layer_raster_class().empty_actions();
@@ -485,6 +494,10 @@ class GUI_tools_class {
 						const moduleKey = actionData.name;
 						const functionName = actionData.on_update;
 						this.tools_modules[moduleKey].object[functionName]({ key: id, value: new_value });
+					}
+					if (id == 'sample_all') {
+						//"Sample all layers" decides whether the tool works on a layer without pixels
+						this.update_disabled_tools();
 					}
 				});
 

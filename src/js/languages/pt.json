@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Ocorreu um problema ao remover o histórico de desfazer. isto",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Ocorreu um problema ao remover o histórico de desfazer. Salve seu trabalho e atualize a página para liberar memória.",
     "About": "Sobre",
     "Active": "Ativo",
     "Advanced": "Avançado",
@@ -392,7 +392,6 @@
     "Tag Image File Format": "Formato de Arquivo de Imagem Tag",
     "Target:": "Alvo:",
     "The quick brown fox jumps over the lazy dog.": "A rápida raposa marrom salta sobre o cachorro preguiçoso.",
-    "There": "Lá",
     "There are no layers behind.": "Não há camadas atrás.",
     "There is only 1 layer.": "Existe apenas uma camada.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Esta camada deve ser uma imagem, rasterize-a para aplicar esta ferramenta.",
@@ -1281,6 +1280,7 @@
     "There is no layer below.": "Não há nenhuma camada por baixo.",
     "New Adjustment Layer": "Nova camada de ajuste",
     "Edit Adjustment Layer": "Editar camada de ajuste",
+    "Edit Smart Filter": "Editar filtro inteligente",
     "Adjustment layer": "Camada de ajuste",
     "Select an adjustment layer first.": "Selecione primeiro uma camada de ajuste.",
     "Merge Down needs a picture layer below.": "Unir para baixo precisa de uma camada de imagem por baixo.",

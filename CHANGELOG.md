@@ -128,6 +128,16 @@ Only changes since version 5.0.0 are listed here.
 - Numeric transform bar in the options bar of the Move tool (also what Edit > Free Transform chooses): X, Y (center), W, H and Angle of the active layer, with a chain that keeps the proportions (on by default for pictures). A change is one undo step; the values follow the layer while it is dragged (`libs/transform-bar.js`, `core/gui/gui-transform-bar.js`).
 - Layer > Smart Filter: Unsharp Mask, High Pass, Clarity, Motion/Smart/Surface Blur, Median, Pixelate, Emboss, Find Edges, Add Noise and the color adjustments (Levels, Hue/Saturation, …) can be applied as non-destructive filters. The layer keeps its original picture and the settings; a click on the filter name in the Layers panel edits it, the dot next to it switches it off, the cross deletes it (`libs/smart-filters.js`, `modules/layer/smart_filter.js`).
 
+### Fixed
+
+- The page no longer reloads by itself a few seconds after the first visit (the service worker taking control did it).
+- Lowering History steps in Settings now trims the existing history with the next step, not only after a reload.
+- Magic Wand and Quick Selection with "Sample all layers" are no longer disabled on text, shape and other non-image layers.
+- Adjustment layer properties of a locked layer: the sliders no longer preview a change that is then dropped.
+- Backspace in the magnetic lasso also takes back automatic anchors.
+- Lens Blur, Ink Outlines and Texturizer no longer turn the picture black or transparent with a non-numeric parameter (e.g. from an imported action).
+- The "undo history" error message and "Edit Smart Filter" are translated.
+
 ## [26.3.0] - 2026-11-12
 
 ### Added

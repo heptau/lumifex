@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Ошибка при удалении истории отмен. Это",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Ошибка при удалении истории отмен. Сохраните работу и обновите страницу, чтобы освободить память.",
     "About": "О проекте",
     "Active": "Активный",
     "Advanced": "Продвинутый",
@@ -416,7 +416,6 @@
     "Tag Image File Format": "Формат файла изображения тега",
     "Target:": "Цель:",
     "The quick brown fox jumps over the lazy dog.": "Быстрая коричневая лиса прыгает через ленивую собаку.",
-    "There": "Там",
     "There are no layers behind.": "Позади нет слоев.",
     "There is only 1 layer.": "Есть только 1 слой.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Слой должен содержать изображение, растрируйте его, чтобы применить этот инструмент.",
@@ -1303,6 +1302,7 @@
     "There is no layer below.": "Под этим слоем нет слоя.",
     "New Adjustment Layer": "Новый корректирующий слой",
     "Edit Adjustment Layer": "Изменить корректирующий слой",
+    "Edit Smart Filter": "Изменить смарт-фильтр",
     "Adjustment layer": "Корректирующий слой",
     "Select an adjustment layer first.": "Сначала выберите корректирующий слой.",
     "Merge Down needs a picture layer below.": "Для объединения вниз ниже нужен растровый слой.",

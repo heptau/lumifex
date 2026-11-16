@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "删除撤销历史记录时发生问题。它",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "删除撤销历史记录时发生问题。建议保存您的工作并刷新页面以释放内存。",
     "About": "关于",
     "Active": "活动",
     "Advanced": "高级",
@@ -447,7 +447,6 @@
     "Tag Image File Format": "标记图像文件格式",
     "Target:": "目标：",
     "The quick brown fox jumps over the lazy dog.": "敏捷的棕色狐狸跳过了懒狗。",
-    "There": "那里",
     "There are no layers behind.": "背后没有图层。",
     "There is only 1 layer.": "只有1个图层。",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "此图层必须包含图像。请将其转换为光栅以应用此工具。",
@@ -1307,6 +1306,7 @@
     "There is no layer below.": "下方没有图层。",
     "New Adjustment Layer": "新建调整图层",
     "Edit Adjustment Layer": "编辑调整图层",
+    "Edit Smart Filter": "编辑智能滤镜",
     "Adjustment layer": "调整图层",
     "Select an adjustment layer first.": "请先选择调整图层。",
     "Merge Down needs a picture layer below.": "向下合并需要下方有图像图层。",

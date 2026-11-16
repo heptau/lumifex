@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Geri alma geçmişini kaldırırken bir sorun oluştu. O",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Geri alma geçmişini kaldırırken bir sorun oluştu. Belleği boşaltmak için çalışmanızı kaydedip sayfayı yenilemeniz önerilir.",
     "About": "hakkında",
     "Active": "Aktif",
     "Advanced": "ileri",
@@ -412,7 +412,6 @@
     "Tag Image File Format": "Etiket Görüntüsü Dosya Formatı",
     "Target:": "Hedef:",
     "The quick brown fox jumps over the lazy dog.": "Hızlı kahverengi tilki tembel köpeğin üzerinden atlıyor.",
-    "There": "Orada",
     "There are no layers behind.": "Arkada hiçbir katman yok.",
     "There is only 1 layer.": "Sadece bir tabaka var.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Katman görüntü olmalı, onu uygulamak için rastgele dönüştürmelidir.",
@@ -1300,6 +1299,7 @@
     "There is no layer below.": "Altında katman yok.",
     "New Adjustment Layer": "Yeni ayarlama katmanı",
     "Edit Adjustment Layer": "Ayarlama katmanını düzenle",
+    "Edit Smart Filter": "Akıllı filtreyi düzenle",
     "Adjustment layer": "Ayarlama katmanı",
     "Select an adjustment layer first.": "Önce bir ayarlama katmanı seçin.",
     "Merge Down needs a picture layer below.": "Aşağı birleştirmek için altında bir resim katmanı gerekir.",

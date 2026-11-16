@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "حدثت مشكلة أثناء إزالة محفوظات التراجع. هو - هي",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "حدثت مشكلة أثناء إزالة سجل التراجع. يُنصح بحفظ عملك وتحديث الصفحة لتحرير الذاكرة.",
     "About": "حول",
     "Active": "نشيط",
     "Aden": "عدن",
@@ -437,7 +437,6 @@
     "Tahoma": "تاهوما",
     "Target:": "استهداف:",
     "The quick brown fox jumps over the lazy dog.": "الثعلب البني السريع يقفز فوق الكلب الكسول.",
-    "There": "هناك",
     "There are no layers behind.": "لا توجد طبقات خلف.",
     "There is only 1 layer.": "هناك طبقة واحدة فقط.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "يجب أن تحتوي هذه الطبقة على صورة. يرجى تحويله إلى نقطية لتطبيق هذه الأداة.",
@@ -1321,6 +1320,7 @@
     "There is no layer below.": "لا توجد طبقة أسفل.",
     "New Adjustment Layer": "طبقة ضبط جديدة",
     "Edit Adjustment Layer": "تحرير طبقة الضبط",
+    "Edit Smart Filter": "تحرير المرشح الذكي",
     "Adjustment layer": "طبقة ضبط",
     "Select an adjustment layer first.": "حدد طبقة ضبط أولاً.",
     "Merge Down needs a picture layer below.": "الدمج للأسفل يحتاج إلى طبقة صورة أسفلها.",

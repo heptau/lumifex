@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "元に戻す履歴の削除中に問題が発生しました。それ",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "元に戻す履歴の削除中に問題が発生しました。作業を保存し、ページを再読み込みしてメモリを解放してください。",
     "About": "開発者について",
     "Active": "アクティブ",
     "Aden": "アデン",
@@ -430,7 +430,6 @@
     "Tahoma": "タホマ",
     "Target:": "ターゲット：",
     "The quick brown fox jumps over the lazy dog.": "素早い茶色のキツネが怠惰な犬を飛び越えます。",
-    "There": "そこ",
     "There are no layers behind.": "後ろに層がありません。",
     "There is only 1 layer.": "レイヤーは1つしかありません。",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "レイヤはイメージでなければならず、このツールを適用するにはラスタに変換する必要があります。",
@@ -1319,6 +1318,7 @@
     "There is no layer below.": "下にレイヤーがありません。",
     "New Adjustment Layer": "新規調整レイヤー",
     "Edit Adjustment Layer": "調整レイヤーを編集",
+    "Edit Smart Filter": "スマートフィルターを編集",
     "Adjustment layer": "調整レイヤー",
     "Select an adjustment layer first.": "先に調整レイヤーを選択してください。",
     "Merge Down needs a picture layer below.": "下のレイヤーと結合するには、下に画像レイヤーが必要です。",

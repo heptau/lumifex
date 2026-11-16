@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Pašalinant anuliavimo istoriją įvyko problema. Tai",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Šalinant anuliavimo istoriją įvyko problema. Išsaugokite darbą ir atnaujinkite puslapį, kad atlaisvintumėte atmintį.",
     "About": "Apie",
     "Active": "Aktyvus",
     "Advanced": "Pažangus",
@@ -408,7 +408,6 @@
     "Tag Image File Format": "Žymės vaizdo failo formatas",
     "Target:": "Tikslas:",
     "The quick brown fox jumps over the lazy dog.": "Greita rudoji lapė peršoka per tinginį šunį.",
-    "There": "Ten",
     "There are no layers behind.": "Už sluoksnių nėra.",
     "There is only 1 layer.": "Yra tik 1 sluoksnis.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Sluoksnis turi būti paveiksliukas, konvertuokite jį į rastrą, kad pritaikyti šį įrankį.",
@@ -1300,6 +1299,7 @@
     "There is no layer below.": "Žemiau nėra sluoksnio.",
     "New Adjustment Layer": "Naujas koregavimo sluoksnis",
     "Edit Adjustment Layer": "Redaguoti koregavimo sluoksnį",
+    "Edit Smart Filter": "Redaguoti išmanųjį filtrą",
     "Adjustment layer": "Koregavimo sluoksnis",
     "Select an adjustment layer first.": "Pirmiausia pasirinkite koregavimo sluoksnį.",
     "Merge Down needs a picture layer below.": "Sujungimui žemyn apačioje reikia vaizdo sluoksnio.",

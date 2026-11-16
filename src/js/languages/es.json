@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Ocurrió un problema al eliminar el historial de deshacer. Eso",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Ocurrió un problema al eliminar el historial de deshacer. Guarde su trabajo y actualice la página para liberar memoria.",
     "About": "Acerca de",
     "Active": "Activo",
     "Aden": "Adén",
@@ -411,7 +411,6 @@
     "Tag Image File Format": "Formato de archivo de imagen de etiqueta",
     "Target:": "Objetivo:",
     "The quick brown fox jumps over the lazy dog.": "El veloz zorro marrón salta sobre el perro perezoso.",
-    "There": "Allí",
     "There are no layers behind.": "No hay capas detrás",
     "There is only 1 layer.": "Solo hay 1 capa",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "La capa debe ser una imagen, conviértala a raster para aplicar esta herramienta.",
@@ -1280,6 +1279,7 @@
     "There is no layer below.": "No hay ninguna capa debajo.",
     "New Adjustment Layer": "Nueva capa de ajuste",
     "Edit Adjustment Layer": "Editar capa de ajuste",
+    "Edit Smart Filter": "Editar filtro inteligente",
     "Adjustment layer": "Capa de ajuste",
     "Select an adjustment layer first.": "Selecciona primero una capa de ajuste.",
     "Merge Down needs a picture layer below.": "Combinar hacia abajo necesita una capa de imagen debajo.",

@@ -106,16 +106,16 @@ class Base_state_class {
 			}
 		} else {
 			this.action_history.push(action);
-			if (this.action_history.length > this.action_history_max) {
+			//a loop, not a single step: the limit can be lowered in Settings while the history is longer
+			while (this.action_history.length > this.action_history_max) {
 				const action_to_free = this.action_history.shift();
 				try {
 					await action_to_free.free();
 				} catch {
 					error_during_free = true;
 				}
-			} else {
-				this.action_history_index++;
 			}
+			this.action_history_index = this.action_history.length;
 		}
 
 		// Chrome arbitrary method to determine memory usage, but most people use Chrome so...

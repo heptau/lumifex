@@ -185,6 +185,8 @@ class Lasso_class extends Base_mask_tool_class {
 				//a long stretch fixes itself: everything but its last pixels becomes part of the path and a new one starts there
 				const keep = this.live.slice(1, this.live.length - AUTO_ANCHOR_TAIL);
 				this.points.push(...keep);
+				//an automatic anchor is an anchor too: Backspace takes it back like a clicked one (Photoshop)
+				this.marks.push(this.points.length);
 				this.start_tree(keep[keep.length - 1]);
 				this.live = trace_path(this.tree, point.x, point.y);
 			}

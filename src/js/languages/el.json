@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Προέκυψε ένα πρόβλημα κατά την αφαίρεση του ιστορικού αναίρεσης",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Προέκυψε πρόβλημα κατά την αφαίρεση του ιστορικού αναίρεσης. Αποθηκεύστε την εργασία σας και ανανεώστε τη σελίδα για να ελευθερωθεί μνήμη.",
     "About": "Σχετικά",
     "Active": "Ενεργό",
     "Aden": "Άντεν",
@@ -432,7 +432,6 @@
     "Tahoma": "Ταχόμα",
     "Target:": "Στόχος",
     "The quick brown fox jumps over the lazy dog.": "Η γρήγορη καφέ αλεπού πηδάει πάνω από το τεμπέλικο σκυλί.",
-    "There": "Εκεί",
     "There are no layers behind.": "Δεν υπάρχουν επίπεδα από πίσω",
     "There is only 1 layer.": "Υπάρχει μόνο ένα επίπεδο",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Αυτό το επίπεδο πρέπει να περιέχει μια εικόνα. Παρακαλώ μετατρέψτε την σε πίνακα για να εφαρμόσετε αυτό το εργαλέιο.",
@@ -1317,6 +1316,7 @@
     "There is no layer below.": "Δεν υπάρχει στρώση από κάτω.",
     "New Adjustment Layer": "Νέα στρώση προσαρμογής",
     "Edit Adjustment Layer": "Επεξεργασία στρώσης προσαρμογής",
+    "Edit Smart Filter": "Επεξεργασία έξυπνου φίλτρου",
     "Adjustment layer": "Στρώση προσαρμογής",
     "Select an adjustment layer first.": "Επιλέξτε πρώτα μια στρώση προσαρμογής.",
     "Merge Down needs a picture layer below.": "Η συγχώνευση προς τα κάτω χρειάζεται μια στρώση εικόνας από κάτω.",

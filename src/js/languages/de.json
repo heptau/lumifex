@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Beim Entfernen des Rückgängig-Verlaufs ist ein Problem aufgetreten. Es",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Beim Entfernen des Rückgängig-Verlaufs ist ein Problem aufgetreten. Speichern Sie Ihre Arbeit und laden Sie die Seite neu, um Speicher freizugeben.",
     "About": "Über",
     "Active": "Aktiv",
     "Advanced": "Fortgeschritten",
@@ -369,7 +369,6 @@
     "Tag Image File Format": "Markieren Sie das Bilddateiformat",
     "Target:": "Ziel:",
     "The quick brown fox jumps over the lazy dog.": "Der schnelle Braunfuchs springt über den faulen Hund.",
-    "There": "Dort",
     "There are no layers behind.": "Es gibt keine Ebenen dahinter.",
     "There is only 1 layer.": "Es gibt nur 1 Ebene.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Diese Ebene muss ein Bild enthalten. Bitte konvertieren Sie es in ein Raster, um dieses Tool anzuwenden.",
@@ -1260,6 +1259,7 @@
     "There is no layer below.": "Darunter gibt es keine Ebene.",
     "New Adjustment Layer": "Neue Einstellungsebene",
     "Edit Adjustment Layer": "Einstellungsebene bearbeiten",
+    "Edit Smart Filter": "Smartfilter bearbeiten",
     "Adjustment layer": "Einstellungsebene",
     "Select an adjustment layer first.": "Wähle zuerst eine Einstellungsebene.",
     "Merge Down needs a picture layer below.": "Nach unten vereinen braucht darunter eine Bildebene.",

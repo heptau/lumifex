@@ -1,5 +1,5 @@
 {
-    "A problem occurred while removing undo history. It": "Er is een probleem opgetreden bij het verwijderen van de ongedaanmaakgeschiedenis. Het",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Er is een probleem opgetreden bij het verwijderen van de ongedaanmaakgeschiedenis. Sla uw werk op en vernieuw de pagina om geheugen vrij te maken.",
     "About": "Over",
     "Active": "Actief",
     "Advanced": "Geavanceerd",
@@ -399,7 +399,6 @@
     "Tag Image File Format": "Tag afbeelding bestandsformaat",
     "Target:": "Doel:",
     "The quick brown fox jumps over the lazy dog.": "De snelle bruine vos springt over de luie hond heen.",
-    "There": "Daar",
     "There are no layers behind.": "Er zijn geen lagen achter.",
     "There is only 1 layer.": "Er is slechts 1 laag.",
     "This layer must contain an image. Please convert it to raster to apply this tool.": "Deze laag moet een afbeelding bevatten. Converteer deze alstublieft naar raster om deze tool toe te passen.",
@@ -1298,6 +1297,7 @@
     "There is no layer below.": "Er is geen laag eronder.",
     "New Adjustment Layer": "Nieuwe aanpassingslaag",
     "Edit Adjustment Layer": "Aanpassingslaag bewerken",
+    "Edit Smart Filter": "Slim filter bewerken",
     "Adjustment layer": "Aanpassingslaag",
     "Select an adjustment layer first.": "Selecteer eerst een aanpassingslaag.",
     "Merge Down needs a picture layer below.": "Samenvoegen met onderliggende laag vereist een afbeeldingslaag eronder.",

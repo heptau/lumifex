@@ -1,6 +1,6 @@
 {
     "A new version is available. Refresh the page?": "Nová verze je k dispozici. Obnovit stránku?",
-    "A problem occurred while removing undo history. It": "Při odstraňování historie kroků zpět došlo k problému. To",
+    "A problem occurred while removing undo history. It's suggested you save your work and refresh the page in order to free up memory.": "Při odstraňování historie kroků zpět došlo k problému. Doporučujeme uložit práci a obnovit stránku, aby se uvolnila paměť.",
     "About": "O aplikaci",
     "Active": "Aktivní",
     "Aden": "Aden",
@@ -468,7 +468,6 @@
     "Tahoma": "Tahoma",
     "Target:": "Cíl:",
     "The quick brown fox jumps over the lazy dog.": "Příliš žluťoučký kůň úpěl ďábelské ódy.",
-    "There": "Tam",
     "There are no layers behind.": "Za není žádná vrstva.",
     "There is only 1 layer.": "Je zde pouze 1 vrstva.",
     "There's nothing to redo": "Není co znovu provést",
@@ -1578,6 +1577,7 @@
     "There is no layer below.": "Pod touto vrstvou není žádná vrstva.",
     "New Adjustment Layer": "Nová korekční vrstva",
     "Edit Adjustment Layer": "Upravit korekční vrstvu",
+    "Edit Smart Filter": "Upravit chytrý filtr",
     "Adjustment layer": "Korekční vrstva",
     "Select an adjustment layer first.": "Nejprve vyberte korekční vrstvu.",
     "Smart Filter": "Chytrý filtr",
