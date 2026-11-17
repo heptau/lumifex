@@ -1,28 +1,37 @@
 /**
  * Reader of Photoshop files (.psd): the size, the layers (pixels, place, opacity, visibility, blend mode, name) and the
  * flattened picture. 8 and 16 bits per channel, RGB and grayscale, raw and RLE data. Groups (also inside groups) are
- * read with their opacity and blend mode. Layer masks (also the masks of groups) are read; layer effects, text and smart objects are not read (they are only
- * skipped).
+ * read with their opacity and blend mode. Layer masks (also the masks of groups) are read; layer effects are read into the
+ * layer styles of the application (libs/psd-effects.js: shadows, glows, stroke, color overlay); text and smart objects
+ * are not read (they are only skipped).
  * Pure functions, no DOM. Every length from the file is checked, a broken file throws an Error.
  *
  * @typedef {{name: string, x: number, y: number, width: number, height: number, opacity: number, visible: boolean,
  *   composition: string, data: Uint8ClampedArray, group?: string|null, mask?: Uint8ClampedArray|null,
- *   mask_enabled?: boolean}} Psd_layer pixels are RGBA, opacity 0-100,
+ *   mask_enabled?: boolean, vector_mask?: Psd_vector|null,
+ *   effects?: {filters: {name: string, params: object}[], hidden: boolean}|null}} Psd_layer pixels are RGBA, opacity 0-100,
  *   group = path of the group ('Faces/Eyes') or null, mask = the layer mask in the pixels of the layer (255 = visible)
+ * @typedef {{anchors: {x: number, y: number, in: {x: number, y: number}|null, out: {x: number, y: number}|null}[],
+ *   invert: boolean, disabled: boolean}} Psd_vector a vector mask (the first closed subpath) in document pixels
  * @typedef {{opacity: number, composition: string, mask?: Uint8ClampedArray|null}} Psd_group opacity 0-100, mask = the mask of the
  *   group over the whole document (width * height values, 255 = visible; null when the group has none or it is disabled)
  * @typedef {{width: number, height: number, layers: Psd_layer[], groups: Object<string, Psd_group>, composite: Uint8ClampedArray|null}} Psd_file
  *   groups = the settings of every group by its path
  */
 
+import { read_effects_descriptor, effects_to_filters } from './psd-effects.js';
+
 export const MAX_PIXELS = 100 * 1000 * 1000;
 export const MAX_SIDE = 30000;
 
-//blend modes of Photoshop as canvas composite operations (unknown ones are drawn normally)
+//blend modes of Photoshop as the composition of a layer (unknown ones are drawn normally)
 const BLEND_MODES = {
 	'norm': 'source-over', 'pass': 'source-over', 'dark': 'darken', 'mul ': 'multiply', 'idiv': 'color-burn', 'lite': 'lighten',
 	'scrn': 'screen', 'div ': 'color-dodge', 'lddg': 'lighter', 'over': 'overlay', 'sLit': 'soft-light', 'hLit': 'hard-light', 'diff': 'difference',
 	'smud': 'exclusion', 'hue ': 'hue', 'sat ': 'saturation', 'colr': 'color', 'lum ': 'luminosity',
+	//blended by libs/custom-blend.js
+	'diss': 'lf-dissolve', 'lbrn': 'lf-linear-burn', 'dkCl': 'lf-darker-color', 'lgCl': 'lf-lighter-color', 'vLit': 'lf-vivid-light',
+	'lLit': 'lf-linear-light', 'pLit': 'lf-pin-light', 'hMix': 'lf-hard-mix', 'fsub': 'lf-subtract', 'fdiv': 'lf-divide',
 };
 
 /**
@@ -233,6 +242,84 @@ function to_rgba(channels, count, mode) {
  * @param {ArrayBuffer} buffer content of the .psd file
  * @returns {Psd_file}
  */
+/**
+ * The vector mask of a layer (the tagged block vmsk / vsms): path records of 26 bytes, the points are fixed 8.24 numbers
+ * relative to the size of the document. Only the first subpath with at least two knots is kept (a vector mask of
+ * Lumifex has one path).
+ *
+ * @param {Uint8Array} bytes
+ * @param {number} start the data of the block
+ * @param {number} length
+ * @param {number} width of the document
+ * @param {number} height of the document
+ * @returns {Psd_vector|null}
+ */
+export function read_vector_mask(bytes, start, length, width, height) {
+	if (start < 0 || length < 8 || start + length > bytes.length) {
+		return null;
+	}
+	const view = new DataView(bytes.buffer, bytes.byteOffset + start, length);
+	const flags = view.getUint32(4);
+	const fixed = (offset) => view.getInt32(offset) / 16777216;
+	/** @type {any[][]} */
+	const subpaths = [];
+	let current = null;
+	let knots = 0;
+	for (let offset = 8; offset + 26 <= length && knots < 10000; offset += 26) {
+		const selector = view.getUint16(offset);
+		if (selector == 0 || selector == 3) {
+			current = [];
+			subpaths.push(current);
+		}
+		else if ((selector == 1 || selector == 2 || selector == 4 || selector == 5) && current) {
+			const point = (index) => ({x: fixed(offset + 2 + index * 8 + 4) * width, y: fixed(offset + 2 + index * 8) * height});
+			const anchor = point(1);
+			const before = point(0);
+			const after = point(2);
+			const same = (p) => Math.abs(p.x - anchor.x) < 1e-6 && Math.abs(p.y - anchor.y) < 1e-6;
+			current.push({x: anchor.x, y: anchor.y, in: same(before) ? null : before, out: same(after) ? null : after});
+			knots++;
+		}
+	}
+	const first = subpaths.find((list) => list.length >= 2);
+	return {anchors: first || [], invert: (flags & 1) != 0, disabled: (flags & 4) != 0};
+}
+
+/**
+ * The global light angle of the document (image resource 1037), the default of Photoshop when there is none
+ *
+ * @param {Uint8Array} bytes
+ * @param {number} start
+ * @param {number} end
+ * @returns {number} degrees
+ */
+export function read_global_angle(bytes, start, end) {
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+	let pos = start;
+	while (pos + 12 <= end) {
+		if (String.fromCharCode(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]) != '8BIM') {
+			break;
+		}
+		const id = view.getUint16(pos + 4);
+		const name_length = bytes[pos + 6];
+		pos += 6 + Math.ceil((1 + name_length) / 2) * 2;
+		if (pos + 4 > end) {
+			break;
+		}
+		const size = view.getUint32(pos);
+		pos += 4;
+		if (pos + size > end) {
+			break;
+		}
+		if (id == 1037 && size >= 4) {
+			const angle = view.getInt32(pos);
+			return angle >= -360 && angle <= 360 ? angle : 120;
+		}
+		pos += size + (size % 2);
+	}
+	return 120;
+}
+
 export function parse_psd(buffer) {
 	const reader = new Reader(buffer);
 	if (reader.text(4) != '8BPS') {
@@ -257,7 +344,12 @@ export function parse_psd(buffer) {
 		throw new Error('Only RGB and grayscale Photoshop files are supported.');
 	}
 	reader.skip(reader.u32()); //color mode data
-	reader.skip(reader.u32()); //image resources
+	//image resources: only the global light angle (1037) is used, by the layer effects
+	const resources_length = reader.u32();
+	const resources_end = reader.pos + resources_length;
+	reader.need(resources_length);
+	const global_angle = read_global_angle(reader.bytes, reader.pos, resources_end);
+	reader.pos = resources_end;
 
 	/** @type {Psd_layer[]} */
 	const layers = [];
@@ -318,6 +410,9 @@ export function parse_psd(buffer) {
 				//tagged blocks: the Unicode name (luni) is better than the ASCII one, lsct marks the start / end of a group
 				reader.pos = name_start + Math.ceil((1 + name_length) / 4) * 4;
 				let section = 0;
+				let vector = null;
+				let effects = null;
+				let multi_effects = null;
 				while (reader.pos + 12 <= extra_end) {
 					const signature = reader.text(4);
 					const tag = reader.text(4);
@@ -339,6 +434,16 @@ export function parse_psd(buffer) {
 					else if (tag == 'lsct' && tag_length >= 4) {
 						section = reader.u32();
 					}
+					else if (tag == 'lfx2' && tag_length >= 8) {
+						effects = read_effects_descriptor(reader.bytes, reader.pos, tag_length);
+					}
+					else if (tag == 'lmfx' && tag_length >= 8) {
+						//newer files: also several effects of one kind; it holds everything lfx2 holds
+						multi_effects = read_effects_descriptor(reader.bytes, reader.pos, tag_length);
+					}
+					else if ((tag == 'vmsk' || tag == 'vsms') && tag_length >= 8) {
+						vector = read_vector_mask(reader.bytes, reader.pos, tag_length, width, height);
+					}
 					reader.pos = Math.min(tag_end, extra_end);
 				}
 				reader.pos = extra_end;
@@ -346,7 +451,8 @@ export function parse_psd(buffer) {
 					x: left, y: top, width: right - left, height: bottom - top, channels: list,
 					opacity: Math.round(opacity / 255 * 100), visible: (flags & 2) == 0, composition: blend_mode(key),
 					name: Array.from(name).filter((c) => c.charCodeAt(0) >= 32).join('').slice(0, 100) || 'Layer',
-					section, mask: mask_info,
+					section, mask: mask_info, vector,
+					effects: multi_effects || effects ? effects_to_filters(multi_effects || effects, global_angle) : null,
 				});
 			}
 			//groups: the end of a group comes first (a divider), then its layers, then the record with its name and settings
@@ -403,6 +509,8 @@ export function parse_psd(buffer) {
 					opacity: record.opacity, visible: record.visible, composition: record.composition,
 					data: to_rgba(planes, record.width * record.height, mode), group: null, chain: [],
 					mask: layer_mask_values(record, record.mask), mask_enabled: !(record.mask && record.mask.disabled),
+					vector_mask: record.vector,
+					effects: record.effects && (record.effects.filters.length > 0 || record.effects.hidden) ? record.effects : null,
 				};
 				layers.push(layer);
 				if (open_groups.length > 0) {

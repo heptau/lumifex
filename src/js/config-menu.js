@@ -98,6 +98,11 @@ const menuDefinition = [
 				]
 			},
 			{
+				name: 'Place Embedded',
+				ellipsis: true,
+				target: 'layer/smart_object.place_embedded'
+			},
+			{
 				divider: true
 			},
 			{
@@ -109,6 +114,10 @@ const menuDefinition = [
 				ellipsis: true,
 				shortcut: 'Shift + S',
 				target: 'file/save.save'
+			},
+			{
+				name: 'Save Smart Object',
+				target: 'layer/smart_object.save_contents'
 			},
 			{
 				name: 'Save as Template',
@@ -172,6 +181,10 @@ const menuDefinition = [
 						target: 'file/export_extra.export_layers'
 					},
 					{
+						name: 'Artboards to Files',
+						target: 'layer/artboards.export_artboards'
+					},
+					{
 						name: 'Export as PSD',
 						target: 'file/export_extra.export_psd'
 					},
@@ -224,6 +237,11 @@ const menuDefinition = [
 				name: 'History',
 				ellipsis: true,
 				target: 'edit/history.history'
+			},
+			{
+				name: 'New Snapshot',
+				ellipsis: true,
+				target: 'edit/history.new_snapshot'
 			},
 			{
 				name: 'Purge Undo History',
@@ -357,6 +375,15 @@ const menuDefinition = [
 				name: 'Warp',
 				ellipsis: true,
 				target: 'edit/warp.warp'
+			},
+			{
+				name: 'Puppet Warp',
+				target: 'edit/puppet_warp.puppet_warp'
+			},
+			{
+				name: 'Sky Replacement',
+				ellipsis: true,
+				target: 'edit/sky_replacement.replace'
 			},
 			{
 				divider: true
@@ -763,6 +790,19 @@ const menuDefinition = [
 				divider: true
 			},
 			{
+				name: 'Apply Image',
+				ellipsis: true,
+				target: 'image/apply_image.apply'
+			},
+			{
+				name: 'Calculations',
+				ellipsis: true,
+				target: 'image/apply_image.calculations'
+			},
+			{
+				divider: true
+			},
+			{
 				name: 'Information',
 				shortcut: 'I',
 				ellipsis: true,
@@ -900,6 +940,18 @@ const menuDefinition = [
 			{
 				name: 'Clear Layer Style',
 				target: 'layer/style.clear'
+			},
+			{
+				name: 'Smart Objects',
+				children: [
+					{ name: 'Convert to Smart Object', target: 'layer/smart_object.convert' },
+					{ divider: true },
+					{ name: 'Edit Contents', target: 'layer/smart_object.edit_contents' },
+					{ name: 'Replace Contents', ellipsis: true, target: 'layer/smart_object.replace_contents' },
+					{ name: 'Export Contents', ellipsis: true, target: 'layer/smart_object.export_contents' },
+					{ divider: true },
+					{ name: 'Rasterize', target: 'layer/smart_object.rasterize' }
+				]
 			},
 			{
 				name: 'Smart Filter',
@@ -1063,6 +1115,26 @@ const menuDefinition = [
 						divider: true
 					},
 					{
+						name: 'Edit Layer Mask',
+						target: 'layer/mask.edit_mask'
+					},
+					{
+						name: 'Edit Layer',
+						target: 'layer/mask.edit_layer'
+					},
+					{
+						name: 'View Layer Mask',
+						target: 'layer/mask.view_mask'
+					},
+					{
+						name: 'Show Mask as Overlay',
+						shortcut: '\\',
+						target: 'layer/mask.toggle_overlay'
+					},
+					{
+						divider: true
+					},
+					{
 						name: 'Apply Mask',
 						target: 'layer/mask.apply'
 					},
@@ -1070,6 +1142,38 @@ const menuDefinition = [
 						name: 'Delete Mask',
 						target: 'layer/mask.remove'
 					}
+				]
+			},
+			{
+				name: 'Vector Mask',
+				children: [
+					{ name: 'Reveal All', target: 'layer/vector_mask.reveal_all' },
+					{ name: 'Hide All', target: 'layer/vector_mask.hide_all' },
+					{ name: 'Current Path', target: 'layer/vector_mask.current_path' },
+					{ divider: true },
+					{ name: 'Disable / Enable Vector Mask', target: 'layer/vector_mask.toggle' },
+					{ name: 'Rasterize Vector Mask', target: 'layer/vector_mask.rasterize' },
+					{ name: 'Delete Vector Mask', target: 'layer/vector_mask.remove' },
+				]
+			},
+			{
+				name: 'Artboards',
+				children: [
+					{ name: 'New Artboard', ellipsis: true, target: 'layer/artboards.new_artboard' },
+					{ name: 'Rename Artboard', ellipsis: true, target: 'layer/artboards.rename_artboard' },
+					{ name: 'Delete Artboard', ellipsis: true, target: 'layer/artboards.delete_artboard' },
+				]
+			},
+			{
+				name: 'Layer Comps',
+				children: [
+					{ name: 'New Layer Comp', ellipsis: true, target: 'layer/comps.new_comp' },
+					{ name: 'Apply Layer Comp', ellipsis: true, target: 'layer/comps.apply_comp' },
+					{ name: 'Previous Layer Comp', target: 'layer/comps.previous' },
+					{ name: 'Next Layer Comp', target: 'layer/comps.next' },
+					{ divider: true },
+					{ name: 'Update Layer Comp', target: 'layer/comps.update_comp' },
+					{ name: 'Delete Layer Comp', ellipsis: true, target: 'layer/comps.delete_comp' },
 				]
 			},
 			{
@@ -1362,6 +1466,16 @@ const menuDefinition = [
 				target: 'layer/warp_text.warp_text'
 			},
 			{
+				name: 'Type on Path',
+				ellipsis: true,
+				target: 'type/type_path.create'
+			},
+			{
+				name: 'Edit Type on Path',
+				ellipsis: true,
+				target: 'type/type_path.edit'
+			},
+			{
 				name: 'Rasterize Type',
 				target: 'type/character.rasterize'
 			},
@@ -1436,6 +1550,11 @@ const menuDefinition = [
 			},
 			{
 				divider: true
+			},
+			{
+				name: 'Select and Mask',
+				ellipsis: true,
+				target: 'edit/select_and_mask.select_and_mask'
 			},
 			{
 				name: 'Refine Edge',
@@ -1541,6 +1660,10 @@ const menuDefinition = [
 				name: 'Save Selection',
 				ellipsis: true,
 				target: 'edit/selection.save_selection'
+			},
+			{
+				name: 'Save Selection as Channel',
+				target: 'edit/selection.save_to_channel'
 			},
 			{
 				name: 'Load Selection',
@@ -2327,6 +2450,14 @@ const menuDefinition = [
 				target: 'view/full_screen.fs'
 			},
 			{
+				name: 'Screen Mode',
+				children: [
+					{ name: 'Standard Screen Mode', target: 'view/screen_mode.set', parameter: 'standard' },
+					{ name: 'Full Screen Mode with Menu Bar', target: 'view/screen_mode.set', parameter: 'menu' },
+					{ name: 'Full Screen Mode', target: 'view/screen_mode.set', parameter: 'full' },
+				]
+			},
+			{
 				divider: true
 			},
 			{
@@ -2470,6 +2601,9 @@ const menuDefinition = [
 			{ name: 'Histogram', panel: 'histogram', target: 'view/panels.toggle', parameter: 'histogram' },
 			{ name: 'Colors', panel: 'colors', target: 'view/panels.toggle', parameter: 'colors' },
 			{ name: 'Channels', panel: 'channels', target: 'view/panels.toggle', parameter: 'channels' },
+			{ name: 'Paths', panel: 'paths', target: 'view/panels.toggle', parameter: 'paths' },
+			{ name: 'Character', panel: 'character', target: 'view/panels.toggle', parameter: 'character' },
+			{ name: 'Paragraph', panel: 'paragraph', target: 'view/panels.toggle', parameter: 'paragraph' },
 			{ name: 'Layer details', panel: 'details', target: 'view/panels.toggle', parameter: 'details' },
 			{ name: 'History', panel: 'history', target: 'view/panels.toggle', parameter: 'history' },
 			{ name: 'Layers', panel: 'layers', target: 'view/panels.toggle', parameter: 'layers' },

@@ -10,12 +10,18 @@ export const PANELS = {
 	preview: '.sidebar_right .preview.block',
 	histogram: '#histogram_base',
 	channels: '#channels_base',
+	paths: '#paths_base',
+	character: '#character_base',
+	paragraph: '#paragraph_base',
 	colors: '.sidebar_right .colors.block',
 	details: '#details_base',
 	history: '#history_base',
 	layers: '.sidebar_right .layers.block',
 	status: '#status_bar',
 };
+
+//panels that are hidden until the user shows them (Window menu), like the Character and Paragraph panels of Photoshop
+export const HIDDEN_BY_DEFAULT = ['character', 'paragraph'];
 
 const helper = new Helper_class();
 
@@ -56,7 +62,8 @@ export function set_panel_visible(name, visible, save = true, notify = true) {
  */
 export function restore_panels() {
 	for (const name in PANELS) {
-		if (helper.getCookie(`panel_${  name}`) === 0) {
+		const saved = helper.getCookie(`panel_${  name}`);
+		if (saved === 0 || ((saved === null || saved === undefined || saved === '') && HIDDEN_BY_DEFAULT.includes(name))) {
 			set_panel_visible(name, false, false, false);
 		}
 	}
@@ -76,7 +83,7 @@ export function toggle_all_panels() {
 
 //panels that are visible in a workspace (all others are hidden)
 export const WORKSPACES = {
-	essentials: ['tools', 'options', 'preview', 'colors', 'details', 'channels', 'history', 'layers', 'status'],
+	essentials: ['tools', 'options', 'preview', 'colors', 'details', 'channels', 'paths', 'history', 'layers', 'status'],
 	painting: ['tools', 'options', 'colors', 'layers', 'status'],
 	photography: ['tools', 'options', 'histogram', 'channels', 'history', 'layers', 'status'],
 	minimal: ['tools', 'options', 'layers'],

@@ -81,7 +81,7 @@ class Image_canvas_rotate_class {
 			const center = rotate_point_arbitrary({x: layer.x + layer.width / 2, y: layer.y + layer.height / 2}, old_size, new_size, angle);
 			const total = (((layer.rotate || 0) + angle) % 360 + 360) % 360;
 
-			if (layer.type == 'image' && !layer.mask) {
+			if (layer.type == 'image' && !layer.mask && !layer.smart_object) {
 				//the picture is turned in pixels, so the layer is not rotated and can be cropped or painted on
 				const box = arbitrary_canvas_size(layer.width, layer.height, total);
 				const canvas = document.createElement('canvas');
@@ -147,7 +147,7 @@ class Image_canvas_rotate_class {
 		for (layer of layers) {
 			const box = rotate_box(layer, old_width, old_height, angle);
 
-			if (layer.type == 'image' && !layer.rotate) {
+			if (layer.type == 'image' && !layer.rotate && !layer.smart_object) {
 				const canvas = this.rotate_pixels(layer, angle);
 				actions.push(
 					new app.Actions.Update_layer_image_action(canvas, layer.id),

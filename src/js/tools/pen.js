@@ -2,6 +2,7 @@ import app from './../app.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
 import Edit_selection_class from './../modules/edit/selection.js';
+import Edit_paths_class from './../modules/edit/paths.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { clean_anchors, drag_smooth, flatten_path, bounds_of, hit_path, move_part, path_mask } from './../libs/pen-path.js';
 import { t } from '../modules/tools/translate.js';
@@ -39,7 +40,7 @@ class Pen_class extends Base_tools_class {
 				this.reset_state();
 			}
 			else if (event.key == 'Enter') {
-				this.make_layer();
+				this.finish();
 			}
 			else if (event.key == 'Backspace' || event.key == 'Delete') {
 				this.anchors.pop();
@@ -100,8 +101,13 @@ class Pen_class extends Base_tools_class {
 		const hit = hit_path(this.anchors, point, this.radius());
 		if (hit && hit.index == 0 && hit.part == 'anchor' && this.anchors.length >= 2 && this.closed == false) {
 			this.closed = true;
-			this.update_bar();
 			config.need_render = true;
+			if (this.is_path_mode()) {
+				//Path mode: a closed path is finished (it goes to the Paths panel)
+				this.finish();
+				return;
+			}
+			this.update_bar();
 			return;
 		}
 		if (hit) {
@@ -149,6 +155,33 @@ class Pen_class extends Base_tools_class {
 	outline() {
 		const params = this.getParams();
 		return {points: flatten_path(this.anchors, this.closed), margin: Math.ceil((params.size || 1) / 2) + 2};
+	}
+
+	/**
+	 * @returns {boolean} the option Tool mode is Path: the path goes to the Paths panel, not to a layer
+	 */
+	is_path_mode() {
+		const settings = config.TOOLS.find((tool) => tool.name == this.name);
+		const mode = settings && settings.attributes.tool_mode;
+		return (mode && mode.value !== undefined ? mode.value : mode) == 'Path';
+	}
+
+	/**
+	 * Enter / the primary button of the bar: a layer in Shape mode, a document path in Path mode
+	 */
+	finish() {
+		if (this.is_path_mode() == false) {
+			return this.make_layer();
+		}
+		if (this.anchors.length < 2) {
+			alertify.error(t('A path needs at least 2 points.'));
+			return;
+		}
+		const anchors = this.anchors;
+		const closed = this.closed;
+		this.reset_state();
+		config.need_render = true;
+		return new Edit_paths_class().store_path(anchors, closed);
 	}
 
 	/**
@@ -245,10 +278,13 @@ class Pen_class extends Base_tools_class {
 				config.need_render = true;
 			});
 			button('Selection', () => this.make_selection());
-			button('Layer', () => this.make_layer()).className = 'primary';
+			this.primary = button('Layer', () => this.finish());
+			this.primary.className = 'primary';
 			document.body.appendChild(bar);
 			this.bar = bar;
 		}
+		//the option can change while the path is drawn
+		this.primary.textContent = t(this.is_path_mode() ? 'Path' : 'Layer');
 	}
 
 	remove_bar() {

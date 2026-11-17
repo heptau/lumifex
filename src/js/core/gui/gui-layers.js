@@ -17,6 +17,14 @@ import { panel_rows, group_props_of } from './../../libs/layer-groups.js';
 import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import { BLEND_MODES } from './../../libs/blend-modes.js';
 import { SMART_FILTERS, is_smart_filter, is_smart_entry } from './../../libs/smart-filters.js';
+import { layer_signature, make_identity } from './../../libs/layer-signature.js';
+import { thumbnail_size } from './../../libs/mask-paint.js';
+import { deserialize_layer_mask } from './../../libs/layer-mask.js';
+import { toggle_selection, range_selection } from './../../libs/layer-multi.js';
+import { selected_layer_ids, set_layer_selection } from './../layer-selection.js';
+
+//the box of a layer / mask thumbnail in the Layers panel (CSS pixels)
+const THUMB_BOX = {width: 28, height: 24};
 
 const template = `
 	<input type="search" id="layer_search" class="layer_search" aria-label="Search layers" autocomplete="off" />
@@ -165,6 +173,11 @@ class GUI_layers_class {
 		});
 
 		document.getElementById('layers_base').addEventListener('click', (event) => {
+			const thumb = event.target.closest ? event.target.closest('.layers_list .thumb') : null;
+			if (thumb) {
+				this.click_thumbnail(thumb, event);
+				return;
+			}
 			let target = event.target;
 			if (target.closest && target.closest('.layer_buttons button')) {
 				//the buttons contain icons, the click can come from the icon
@@ -219,29 +232,7 @@ class GUI_layers_class {
 				);
 			}
 			else if (target.id == 'layer_name') {
-				if (event.ctrlKey || event.metaKey) {
-					//Ctrl+click - select the non transparent pixels of the layer (as in Photoshop)
-					(async function () {
-						if (target.dataset.id != config.layer.id) {
-							await app.State.do_action(
-								new app.Actions.Select_layer_action(target.dataset.id)
-							);
-						}
-						app.GUI.run_target('edit/selection.layer_transparency');
-					})();
-					return;
-				}
-				if (event.shiftKey && target.dataset.id != config.layer.id) {
-					//Shift+click - link / unlink the layer with the active layer
-					app.GUI.run_target('layer/link.toggle_with_active', target.dataset.id);
-					return;
-				}
-				//select layer
-				if (target.dataset.id == config.layer.id)
-					return;
-				app.State.do_action(
-					new app.Actions.Select_layer_action(target.dataset.id)
-				);
+				this.click_layer_name(parseInt(target.dataset.id, 10), event);
 			}
 			else if (target.id == 'delete_mask') {
 				//delete layer mask
@@ -312,6 +303,11 @@ class GUI_layers_class {
 				if (clicked && clicked.type == 'pen') {
 					//a path layer goes back to the Pen tool
 					app.GUI.run_target('layer/path.edit_path');
+					return;
+				}
+				if (clicked && clicked.type == 'text' && clicked.params && Array.isArray(clicked.params.path)) {
+					//type on a path opens the dialog with its text and start offset
+					app.GUI.run_target('type/type_path.edit');
 					return;
 				}
 				//rename layer directly in the list
@@ -437,10 +433,223 @@ class GUI_layers_class {
 	}
 
 	/**
+	 * The thumbnails of a layer row: the picture of the layer and its mask (Photoshop). The canvases are filled by
+	 * draw_thumbnails() after the HTML is in place.
+	 */
+	thumbnails_html(layer) {
+		const mask_edit = app.GUI && app.GUI.GUI_mask_edit;
+		const mask_target = mask_edit ? mask_edit.is_editing(layer.id) : false;
+		const active = config.layer && layer.id == config.layer.id;
+		const size = thumbnail_size(config.WIDTH, config.HEIGHT, THUMB_BOX.width, THUMB_BOX.height);
+		let html = `	<span class="thumbs">`;
+		html += `<button type="button" class="thumb layer_thumb${active && !mask_target ? ' targeted' : ''}" data-id="${layer.id}" title="${t('Layer thumbnail: click = edit the layer, Ctrl+click = load as selection')}">`
+			+ `<canvas data-thumb="layer" data-id="${layer.id}" width="${size.width}" height="${size.height}"></canvas></button>`;
+		if (layer.mask) {
+			const off = layer.mask_enabled === false;
+			html += `<button type="button" class="thumb mask_thumb${mask_target ? ' targeted' : ''}${off ? ' off' : ''}" data-id="${layer.id}" aria-pressed="${mask_target}" title="${t('Layer mask: click = edit the mask, Alt+click = view the mask, Shift+click = disable, Ctrl+click = load as selection')}">`
+				+ `<canvas data-thumb="mask" data-id="${layer.id}" width="${size.width}" height="${size.height}"></canvas></button>`;
+		}
+		html += '</span>';
+		return html;
+	}
+
+	/**
+	 * A click on the name of a layer: select it alone; Ctrl/Cmd + click adds it to the selected layers or takes it
+	 * away, Shift + click selects all layers between the active one and it (Photoshop)
+	 */
+	click_layer_name(id, event) {
+		const current = config.layer ? config.layer.id : null;
+		let result;
+		if (event.ctrlKey || event.metaKey) {
+			result = toggle_selection(selected_layer_ids(), current, id, config.layers.map((layer) => layer.id));
+		}
+		else if (event.shiftKey && current !== null) {
+			const ordered = [...document.querySelectorAll('#layers .layer_name[data-id]')].map((element) => parseInt(element.dataset.id, 10));
+			result = range_selection(ordered, current, id);
+		}
+		else {
+			result = {active: id, selection: [id]};
+		}
+		set_layer_selection(result.selection);
+		if (result.active !== current) {
+			app.State.do_action(new app.Actions.Select_layer_action(result.active));
+		}
+		else {
+			this.render_layers();
+		}
+	}
+
+	click_thumbnail(thumb, event) {
+		const id = parseInt(thumb.dataset.id, 10);
+		const mask_edit = app.GUI.GUI_mask_edit;
+		const select = async () => {
+			if (!config.layer || config.layer.id != id) {
+				await app.State.do_action(new app.Actions.Select_layer_action(id));
+			}
+		};
+		if (thumb.classList.contains('mask_thumb')) {
+			if (event.shiftKey) {
+				//Shift + click switches the mask off and on
+				const layer = app.Layers.get_layer(id);
+				if (layer) {
+					app.State.do_action(
+						new app.Actions.Bundle_action('layer_mask', 'Toggle Mask', [
+							new app.Actions.Update_layer_action(id, {mask_enabled: layer.mask_enabled === false}),
+						])
+					);
+				}
+				return;
+			}
+			if (event.altKey) {
+				mask_edit.toggle_view_mask(id);
+				return;
+			}
+			if (event.ctrlKey || event.metaKey) {
+				select().then(() => app.GUI.run_target('layer/mask.to_selection'));
+				return;
+			}
+			mask_edit.edit_mask(id);
+			return;
+		}
+		if (event.ctrlKey || event.metaKey) {
+			select().then(() => app.GUI.run_target('edit/selection.layer_transparency'));
+			return;
+		}
+		select().then(() => mask_edit.edit_layer());
+	}
+
+	/**
+	 * Fills the thumbnail canvases from the cache; the changed layers are drawn again a moment later (not on every
+	 * render of the panel, a stroke would otherwise draw all thumbnails many times)
+	 */
+	draw_thumbnails() {
+		if (!this.thumb_cache) {
+			this.thumb_cache = new Map(); //key -> {signature, canvas}
+			this.thumb_identity = make_identity();
+		}
+		let stale = false;
+		document.querySelectorAll('#layers canvas[data-thumb]').forEach((canvas) => {
+			const layer = app.Layers ? app.Layers.get_layer(parseInt(canvas.dataset.id, 10)) : null;
+			if (!layer) {
+				return;
+			}
+			const key = `${canvas.dataset.thumb}:${layer.id}`;
+			const cached = this.thumb_cache.get(key);
+			if (cached) {
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(cached.canvas, 0, 0, canvas.width, canvas.height);
+			}
+			if (!cached || cached.signature !== this.thumbnail_signature(layer, canvas)) {
+				stale = true;
+			}
+		});
+		if (stale) {
+			clearTimeout(this.thumb_timer);
+			this.thumb_timer = setTimeout(() => this.update_thumbnails(), 150);
+		}
+	}
+
+	thumbnail_signature(layer, canvas) {
+		const extra = `${config.WIDTH}x${config.HEIGHT}|${canvas.width}x${canvas.height}`;
+		if (canvas.dataset.thumb == 'mask') {
+			return `${extra}|m${layer.mask ? this.thumb_identity(layer.mask) : 0}`;
+		}
+		return `${extra}|${layer_signature(layer, this.thumb_identity)}`;
+	}
+
+	update_thumbnails() {
+		if (config.mouse && config.mouse.is_drag) {
+			//a stroke or a drag is in progress: wait for it
+			this.thumb_timer = setTimeout(() => this.update_thumbnails(), 250);
+			return;
+		}
+		const seen = new Set();
+		document.querySelectorAll('#layers canvas[data-thumb]').forEach((canvas) => {
+			const layer = app.Layers.get_layer(parseInt(canvas.dataset.id, 10));
+			if (!layer) {
+				return;
+			}
+			const key = `${canvas.dataset.thumb}:${layer.id}`;
+			seen.add(key);
+			const signature = this.thumbnail_signature(layer, canvas);
+			let cached = this.thumb_cache.get(key);
+			if (!cached || cached.signature !== signature) {
+				const picture = document.createElement('canvas');
+				picture.width = canvas.width;
+				picture.height = canvas.height;
+				try {
+					if (canvas.dataset.thumb == 'mask') {
+						this.draw_mask_thumbnail(picture, layer);
+					}
+					else {
+						this.draw_layer_thumbnail(picture, layer);
+					}
+				}
+				catch (error) {
+					console.warn('Layer thumbnail failed', error);
+				}
+				cached = {signature, canvas: picture};
+				this.thumb_cache.set(key, cached);
+			}
+			const ctx = canvas.getContext('2d');
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(cached.canvas, 0, 0);
+		});
+		//thumbnails of deleted layers
+		for (const key of this.thumb_cache.keys()) {
+			if (!seen.has(key)) {
+				this.thumb_cache.delete(key);
+			}
+		}
+	}
+
+	draw_layer_thumbnail(canvas, layer) {
+		const ctx = canvas.getContext('2d');
+		if (layer.type == null || layer.type == 'adjustment') {
+			return; //empty, or an adjustment that has no picture of its own (the row shows its icon)
+		}
+		ctx.save();
+		ctx.scale(canvas.width / config.WIDTH, canvas.height / config.HEIGHT);
+		ctx.globalAlpha = 1;
+		app.Layers.render_object_plain(ctx, Object.assign({}, layer, {visible: true, opacity: 100, composition: 'source-over'}), true);
+		ctx.restore();
+	}
+
+	draw_mask_thumbnail(canvas, layer) {
+		const ctx = canvas.getContext('2d');
+		const mask = deserialize_layer_mask(layer.mask);
+		ctx.fillStyle = '#000000';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		if (!mask) {
+			return;
+		}
+		const gray = document.createElement('canvas');
+		gray.width = mask.width;
+		gray.height = mask.height;
+		const gray_ctx = gray.getContext('2d');
+		const image = gray_ctx.createImageData(mask.width, mask.height);
+		for (let p = 0, i = 0; p < mask.data.length; p++, i += 4) {
+			image.data[i] = image.data[i + 1] = image.data[i + 2] = mask.data[p];
+			image.data[i + 3] = 255;
+		}
+		gray_ctx.putImageData(image, 0, 0);
+		const sx = canvas.width / config.WIDTH;
+		const sy = canvas.height / config.HEIGHT;
+		ctx.save();
+		ctx.translate((layer.x + layer.width / 2) * sx, (layer.y + layer.height / 2) * sy);
+		ctx.rotate(((layer.rotate || 0) * Math.PI) / 180);
+		ctx.drawImage(gray, -layer.width / 2 * sx, -layer.height / 2 * sy, layer.width * sx, layer.height * sy);
+		ctx.restore();
+	}
+
+	/**
 	 * renders layers list
 	 */
 	render_layers() {
 		const target_id = 'layers';
+		if (app.GUI && app.GUI.GUI_mask_edit) {
+			app.GUI.GUI_mask_edit.sync(); //the mask stops being the target when another layer is selected
+		}
 		const layers = config.layers.concat().sort(
 			//sort function
 				(a, b) => b.order - a.order
@@ -449,6 +658,7 @@ class GUI_layers_class {
 		document.getElementById(target_id).innerHTML = '';
 		let html = '';
 
+		const multi_ids = config.layer ? selected_layer_ids() : [];
 		if (config.layer) {
 			//layers of a group get a header row and can be folded (not while searching, the matches must stay visible)
 			const rows = this.layer_filter
@@ -482,7 +692,11 @@ class GUI_layers_class {
 				if (value.id == config.layer.id){
 					class_extra += ' active';
 				}
+				else if (multi_ids.includes(value.id)) {
+					class_extra += ' multi_selected';
+				}
 
+				class_extra += ' with_thumbs';
 				html += `<div class="item ${class_extra}"${  row.depth > 0 ? ` style="margin-left:${row.depth * 12}px"` : ''  }>`;
 				if (value.visible == true)
 					html += `	<button class="visibility visible trn" id="visibility" data-id="${value.id}" title="Hide"></button>`;
@@ -508,22 +722,33 @@ class GUI_layers_class {
 				const layer_title = kind_icon + (value.locked === true ? '\uD83D\uDD12 ' : '')
 					+ (value.effects_hidden === true ? `<span class="layer_effects_hidden" title="${t('Effects hidden')}" aria-label="${t('Effects hidden')}">\u25CC</span> ` : '')
 					+ (value.lock_alpha === true ? `<span class="layer_lock_alpha" title="${t('Lock Transparency')}" aria-label="${t('Lock Transparency')}">\u25A7</span> ` : '')
+					+ (value.type == 'image' && value.smart_object ? `<span class="layer_smart_object" title="${t('Smart Object')}" aria-label="${t('Smart Object')}">\u29C9</span> ` : '')
 					+ (linked ? `<span class="layer_link" title="${t('Linked layer')}" aria-label="${t('Linked layer')}">\uD83D\uDD17</span> ` : '')
 					+ this.Helper.escapeHtml(value.name);
 
 				const label = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'gray'].indexOf(value.color_label) >= 0 ? value.color_label : '';
+				html += this.thumbnails_html(value);
 				html += `	<button class="layer_name" id="layer_name" draggable="${this.layer_filter ? 'false' : 'true'}" data-label="${label}" data-id="${value.id}"${value.id == config.layer.id ? ' aria-current="true"' : ''}>${layer_title}</button>`;
 				html += '	<div class="clear"></div>';
 				html += '</div>';
 
 				//show filters
-				if (layers[i].filters.length > 0 || layers[i].mask) {
+				if (layers[i].filters.length > 0 || layers[i].mask || layers[i].vector_mask) {
 					html += '<div class="filters">';
 					if (layers[i].mask) {
 						html += '<div class="filter">';
 						html += `	<span class="delete" id="delete_mask" data-pid="${layers[i].id}" title="delete"></span>`;
 						html += `	<span class="layer_name" id="mask_name" data-pid="${layers[i].id}" title="Disable / Enable Mask">`
 							+ `<span class="trn">Layer Mask</span>${layers[i].mask_enabled === false ? ' (<span class="trn">off</span>)' : ''}</span>`;
+						html += '	<div class="clear"></div>';
+						html += '</div>';
+					}
+					//the clicks are handled by modules/layer/vector_mask.js
+					if (layers[i].vector_mask) {
+						html += '<div class="filter">';
+						html += `	<span class="delete" id="delete_vector_mask" data-pid="${layers[i].id}" title="delete"></span>`;
+						html += `	<span class="layer_name" id="vector_mask_toggle" data-pid="${layers[i].id}" title="Disable / Enable Vector Mask">`
+							+ `<span class="trn">Vector Mask</span>${layers[i].vector_mask_enabled === false ? ' (<span class="trn">off</span>)' : ''}</span>`;
 						html += '	<div class="clear"></div>';
 						html += '</div>';
 					}
@@ -570,6 +795,7 @@ class GUI_layers_class {
 		if (config.LANG != 'en') {
 			this.Tools_translate.translate(config.LANG, document.getElementById(target_id));
 		}
+		this.draw_thumbnails();
 		//converting to raster makes sense for a vector layer and for the empty first layer (it becomes a transparent picture)
 		const raster_button = document.getElementById('layer_raster');
 		if (raster_button) {

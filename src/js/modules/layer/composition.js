@@ -2,6 +2,7 @@ import app from './../../app.js';
 import config from './../../config.js';
 import Dialog_class from './../../libs/popup.js';
 import Base_gui_class from "../../core/base-gui.js";
+import { CUSTOM_BLEND } from "../../libs/custom-blend.js";
 
 class Layer_composition_class {
 
@@ -40,6 +41,8 @@ class Layer_composition_class {
 			"source-out",
 			"source-over",
 			"xor",
+			//Photoshop modes the canvas can not do (libs/custom-blend.js)
+			...Object.values(CUSTOM_BLEND),
 		];
 
 		const initial_composition = config.layer.composition;

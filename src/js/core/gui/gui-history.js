@@ -24,9 +24,19 @@ class GUI_history_class {
 		container.appendChild(this.list);
 
 		this.list.addEventListener('click', (event) => {
+			if (this.History.handle_snapshot_click(event, this.list)) {
+				return;
+			}
 			const item = event.target.closest('[data-step]');
 			if (item) {
 				this.History.go_to(parseInt(item.dataset.step, 10), this.list);
+			}
+		});
+		//a double click on a snapshot renames it
+		this.list.addEventListener('dblclick', (event) => {
+			const row = event.target.closest('[data-snapshot-action="restore"]');
+			if (row) {
+				this.History.rename_snapshot_dialog(parseInt(row.dataset.snapshot, 10));
 			}
 		});
 		this.list.addEventListener('keydown', (event) => {

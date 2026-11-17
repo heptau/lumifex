@@ -9,6 +9,7 @@ import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.j
 import EXIF from './../../../../node_modules/exif-js/exif.js';
 import GUI_tools_class from "../../core/gui/gui-tools";
 import { parse_psd } from './../../libs/psd.js';
+import { vector_mask_from_path } from './../../libs/document-paths.js';
 import { group_ancestors, is_isolated } from './../../libs/layer-groups.js';
 import { serialize_layer_mask } from './../../libs/layer-mask.js';
 import { validate_file, validate_json_file, validate_data_url, sanitize_filename } from './../../libs/input-validator.js';
@@ -496,6 +497,12 @@ class File_open_class {
 				group_props: group_props_of_layer(layer),
 				mask: layer.mask ? serialize_layer_mask({width: layer.width, height: layer.height, data: layer.mask}) : null,
 				mask_enabled: layer.mask_enabled !== false,
+				//a vector mask of the file (document pixels) goes into the coordinates of the layer
+				vector_mask: layer.vector_mask ? vector_mask_from_path(layer.vector_mask.anchors, layer, layer.vector_mask.invert) : null,
+				vector_mask_enabled: !(layer.vector_mask && layer.vector_mask.disabled),
+				//layer effects of the file as layer styles
+				filters: layer.effects ? layer.effects.filters.map((filter) => ({id: Math.floor(Math.random() * 999999999) + 1, name: filter.name, params: filter.params})) : [],
+				effects_hidden: layer.effects ? layer.effects.hidden : false,
 			}, layers.indexOf(layer) > 0 || actions.length > 0 ? false : true));
 		});
 		await app.State.do_action(new app.Actions.Bundle_action('open_psd', 'Open Image', actions));
@@ -567,8 +574,8 @@ class File_open_class {
 		return this.url_ops.file_open_url_handler(user_response);
 	}
 
-	load_json(data) {
-		return this.json_ops.load_json(data);
+	load_json(data, options = {}) {
+		return this.json_ops.load_json(data, options);
 	}
 
 	/**

@@ -287,6 +287,7 @@ body .sp-preview{
 .sidebar_left .selection:after{ background-image: url('images/icons/selection.svg'); }
 .sidebar_left .lasso:after{ background-image: url('images/icons/lasso.svg'); }
 .sidebar_left .magic_wand:after{ background-image: url('images/icons/magic_wand.svg'); }
+.sidebar_left .object_select:after{ background-image: url('images/icons/object_select.svg'); }
 .sidebar_left .quick_select:after{ background-image: url('images/icons/quick_select.svg'); }
 .sidebar_left .quick_mask:after{ background-image: url('images/icons/quick_mask.svg'); }
 .sidebar_left .brush:after{ background-image: url('images/icons/brush.svg'); }
@@ -305,7 +306,10 @@ body .sp-preview{
 .sidebar_left .dodge_burn:after{ background-image: url('images/icons/dodge_burn.svg'); }
 .sidebar_left .smudge:after{ background-image: url('images/icons/smudge.svg'); }
 .sidebar_left .pen:after{ background-image: url('images/icons/pen.svg'); }
+.sidebar_left .path_select:after{ background-image: url('images/icons/path_select.svg'); }
+.sidebar_left .direct_select:after{ background-image: url('images/icons/direct_select.svg'); }
 .sidebar_left .patch:after{ background-image: url('images/icons/patch.svg'); }
+.sidebar_left .content_move:after{ background-image: url('images/icons/content_move.svg'); }
 .sidebar_left .history_brush:after{ background-image: url('images/icons/history_brush.svg'); }
 .sidebar_left .pattern_stamp:after{ background-image: url('images/icons/pattern_stamp.svg'); }
 .sidebar_left .color_replace:after{ background-image: url('images/icons/color_replace.svg'); }

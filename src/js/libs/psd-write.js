@@ -3,7 +3,7 @@
  * flattened picture. 8 bits, RGB, no compression. Groups and layer masks (also the masks of groups) are written, no effects. Pure functions, no DOM.
  *
  * @typedef {{name: string, x: number, y: number, width: number, height: number, opacity: number, visible: boolean,
- *   composition: string, data: Uint8ClampedArray, mask?: Uint8Array|null}} Psd_out_layer pixels are RGBA (not premultiplied),
+ *   composition: string, data: Uint8ClampedArray, mask?: Uint8Array|null, vector?: Psd_out_vector|null}} Psd_out_layer pixels are RGBA (not premultiplied),
  *   opacity 0-100; mask = a layer mask over the same rectangle as the pixels (width * height bytes, 255 = visible)
  * @typedef {{section: 'end'}} Psd_group_end the divider that starts a group (the layers of the group follow it)
  * @typedef {{section: 'start', name: string, opacity: number, visible: boolean, composition: string, pass?: boolean,
@@ -16,6 +16,8 @@ const BLEND_KEYS = {
 	'source-over': 'norm', 'darken': 'dark', 'multiply': 'mul ', 'color-burn': 'idiv', 'lighten': 'lite', 'screen': 'scrn',
 	'color-dodge': 'div ', 'lighter': 'lddg', 'overlay': 'over', 'soft-light': 'sLit', 'hard-light': 'hLit', 'difference': 'diff',
 	'exclusion': 'smud', 'hue': 'hue ', 'saturation': 'sat ', 'color': 'colr', 'luminosity': 'lum ',
+	'lf-dissolve': 'diss', 'lf-linear-burn': 'lbrn', 'lf-darker-color': 'dkCl', 'lf-lighter-color': 'lgCl', 'lf-vivid-light': 'vLit',
+	'lf-linear-light': 'lLit', 'lf-pin-light': 'pLit', 'lf-hard-mix': 'hMix', 'lf-subtract': 'fsub', 'lf-divide': 'fdiv',
 };
 
 /**
@@ -113,6 +115,62 @@ function unicode_name_block(name) {
 }
 
 /**
+ * @typedef {{anchors: {x: number, y: number, in: {x: number, y: number}|null, out: {x: number, y: number}|null}[],
+ *   invert?: boolean, disabled?: boolean}} Psd_out_vector a vector mask in document pixels (one closed path)
+ */
+
+/**
+ * The vector mask as the tagged block vmsk: the fill rule records, then one closed subpath of unlinked knots, the
+ * points as fixed 8.24 numbers relative to the size of the document
+ *
+ * @param {Psd_out_vector} vector
+ * @param {number} width of the document
+ * @param {number} height of the document
+ * @returns {number[]}
+ */
+export function vector_mask_block(vector, width, height) {
+	const data = new Writer();
+	data.u32(3); //version
+	data.u32((vector.invert ? 1 : 0) | (vector.disabled ? 4 : 0)); //bit 0 invert, bit 2 disabled
+	const record = (selector, fill) => {
+		data.u16(selector);
+		fill();
+	};
+	const zeros = (count) => {
+		for (let i = 0; i < count; i++) {
+			data.u8(0);
+		}
+	};
+	const fixed = (value) => {
+		const number = Math.round(Math.max(-127, Math.min(127, value)) * 16777216);
+		data.u32(number >>> 0);
+	};
+	record(6, () => zeros(24)); //path fill rule
+	record(8, () => zeros(24)); //initial fill rule
+	const anchors = vector.anchors.slice(0, 10000);
+	if (anchors.length >= 2) {
+		record(0, () => {
+			data.u16(anchors.length);
+			zeros(22);
+		});
+		anchors.forEach((anchor) => {
+			const before = anchor.in || anchor;
+			const after = anchor.out || anchor;
+			record(2, () => {
+				[before, anchor, after].forEach((p) => {
+					fixed(p.y / height);
+					fixed(p.x / width);
+				});
+			});
+		});
+	}
+	const bytes = Array.from(data.bytes);
+	const block = [0x38, 0x42, 0x49, 0x4d, 0x76, 0x6d, 0x73, 0x6b];
+	block.push((bytes.length >>> 24) & 255, (bytes.length >>> 16) & 255, (bytes.length >>> 8) & 255, bytes.length & 255);
+	return block.concat(bytes);
+}
+
+/**
  * @param {object} layer
  * @returns {boolean} the layer has a mask of the right size
  */
@@ -204,7 +262,8 @@ export function build_psd(width, height, layers, composite) {
 			const key = marker.section == 'start' ? (marker.pass ? 'pass' : blend_key(marker.composition)) : 'norm';
 			section.push(key.charCodeAt(0), key.charCodeAt(1), key.charCodeAt(2), key.charCodeAt(3));
 		}
-		info.u32((masked ? 24 : 4) + 4 + name.length + unicode.length + section.length);
+		const vector = !marker && layer.vector && Array.isArray(layer.vector.anchors) ? vector_mask_block(layer.vector, width, height) : [];
+		info.u32((masked ? 24 : 4) + 4 + name.length + unicode.length + section.length + vector.length);
 		if (masked) {
 			info.u32(20); //layer mask: the rectangle (the same as the layer), the color outside it, flags, padding
 			info.u32(mask_box.y);
@@ -222,6 +281,7 @@ export function build_psd(width, height, layers, composite) {
 		info.append(name);
 		info.append(unicode);
 		info.append(section);
+		info.append(vector);
 	});
 	planes.forEach((list) => {
 		list.forEach((channel) => {

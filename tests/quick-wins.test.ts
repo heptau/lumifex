@@ -2497,12 +2497,15 @@ describe('keyboard shortcut registry', () => {
 			expect(clashes).toEqual([]);
 		});
 
+		//commands that have a plain key in Photoshop: Q (Quick Mask), \\ (mask as an overlay), F / Shift+F (screen modes)
+		const PLAIN_KEY_COMMANDS = ['edit/selection.quick_mask', 'layer/mask.toggle_overlay', 'view/screen_mode.cycle', 'view/screen_mode.cycle_back'];
+
 		it('has only valid default specs, and plain keys only for the tools and the colors', () => {
 			registry.forEach((entry) => {
 				if (entry.spec === '') return;
 				expect(normalize_spec(entry.spec)).toBe(entry.spec);
 				if (!has_modifier_or_function_key(entry.spec) && !entry.fixed) {
-					expect(entry.group === 'Tools' || entry.id === 'edit/selection.quick_mask').toBe(true);
+					expect(entry.group === 'Tools' || PLAIN_KEY_COMMANDS.includes(entry.id)).toBe(true);
 				}
 			});
 		});
@@ -2537,7 +2540,7 @@ describe('keyboard shortcut registry', () => {
 
 		it('does not use a plain letter of the menu for anything else than a tool any more', () => {
 			const plain = registry.filter((entry) => !entry.tool && entry.spec !== '' && !has_modifier_or_function_key(entry.spec) && !entry.fixed);
-			expect(plain.map((entry) => entry.id).sort()).toEqual(['edit/selection.quick_mask', 'tools/brush_size.decrease', 'tools/brush_size.increase', 'tools/brush_size.decrease_hardness', 'tools/brush_size.increase_hardness', 'tools/colors.reset', 'tools/colors.swap'].sort());
+			expect(plain.map((entry) => entry.id).sort()).toEqual([...PLAIN_KEY_COMMANDS, 'tools/brush_size.decrease', 'tools/brush_size.increase', 'tools/brush_size.decrease_hardness', 'tools/brush_size.increase_hardness', 'tools/colors.reset', 'tools/colors.swap'].sort());
 		});
 	});
 });
@@ -2885,7 +2888,8 @@ describe('Linear Dodge (Add)', () => {
 		const keys = BLEND_MODES.map((m: string[]) => m[0]);
 		expect(keys[keys.indexOf('color-dodge') + 1]).toBe('lighter');
 		expect(cycle_blend_mode('color-dodge', 1)).toBe('lighter');
-		expect(cycle_blend_mode('lighter', 1)).toBe('overlay');
+		expect(cycle_blend_mode('lighter', 1)).toBe('lf-lighter-color');
+		expect(cycle_blend_mode('lf-lighter-color', 1)).toBe('overlay');
 	});
 
 	it('is written to and read from a PSD as lddg', async () => {

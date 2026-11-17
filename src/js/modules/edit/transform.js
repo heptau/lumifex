@@ -5,33 +5,51 @@ import Dialog_class from './../../libs/popup.js';
 import { apply_transform, last_transform } from './../../libs/transform-repeat.js';
 import { quad_for, quad_bounds, warp_to_quad } from './../../libs/perspective.js';
 import Edit_distort_session_class from './distort_session.js';
+import Edit_free_transform_session_class from './free_transform_session.js';
 import { t } from '../tools/translate.js';
 
 const MAX_SIDE = 8192;
 
 /**
- * Edit > Free Transform (Ctrl+T) - the selection tool shows handles to move, scale and rotate the active layer
+ * Edit > Free Transform (Ctrl+T) - a frame on the canvas moves, scales, turns, mirrors and distorts the active layer
+ *   (or the selected pixels), see free_transform_session.js
  * Edit > Transform Again (Shift+Ctrl+T) - the last move, scale or rotation is repeated on the active layer
  */
 class Edit_transform_class {
 
 	free_transform() {
-		return app.State.do_action(new app.Actions.Activate_tool_action('select'));
+		if (new Edit_distort_session_class().active) {
+			return;
+		}
+		new Edit_free_transform_session_class().start();
 	}
 
 	/**
 	 * Edit > Skew / Perspective / Distort - with the mouse (the numbers are in the dialogs below)
 	 */
 	skew() {
-		new Edit_distort_session_class().start('skew');
+		this.distort_session('skew');
 	}
 
 	perspective() {
-		new Edit_distort_session_class().start('perspective');
+		this.distort_session('perspective');
 	}
 
 	distort() {
-		new Edit_distort_session_class().start('distort');
+		this.distort_session('distort');
+	}
+
+	/**
+	 * @param {'skew'|'perspective'|'distort'} mode
+	 */
+	distort_session(mode) {
+		const free = new Edit_free_transform_session_class();
+		if (free.active) {
+			//inside of Free Transform the menu item switches its mode
+			free.set_mode(mode);
+			return;
+		}
+		new Edit_distort_session_class().start(mode);
 	}
 
 	skew_numbers() {

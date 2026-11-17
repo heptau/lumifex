@@ -10,6 +10,7 @@ import { save_blob } from './../../libs/file-save.js';
 import { layer_file_names } from './../../libs/export-names.js';
 import { build_psd, content_bounds } from './../../libs/psd-write.js';
 import { deserialize_layer_mask } from './../../libs/layer-mask.js';
+import { clean_vector_mask, vector_mask_to_document } from './../../libs/document-paths.js';
 import { effective_alpha, group_props_of, is_isolated, nest_layers } from './../../libs/layer-groups.js';
 import { t } from '../tools/translate.js';
 
@@ -189,10 +190,16 @@ class File_export_extra_class {
 			const ctx = work.getContext('2d', {willReadFrequently: true});
 			const out = [];
 			const records = new Map();
-			for (const layer of layers) {
+			for (const source of layers) {
 				ctx.clearRect(0, 0, width, height);
 				ctx.globalAlpha = 1;
 				ctx.globalCompositeOperation = 'source-over';
+				//a vector mask is written as a real vector mask (vmsk), the pixels are not cut by it
+				const vector_mask = clean_vector_mask(source.vector_mask);
+				const layer = vector_mask ? Object.assign({}, source, {vector_mask: null}) : source;
+				const vector = vector_mask ? {
+					anchors: vector_mask_to_document(vector_mask, source), invert: vector_mask.invert, disabled: source.vector_mask_enabled === false,
+				} : null;
 				//a layer with a mask is written as pixels + a real layer mask (so it stays editable in Photoshop)
 				const masked = !!layer.mask && layer.mask_enabled !== false && this.Base_layers.get_mask_canvas(layer) != null;
 				this.Base_layers.render_object(ctx, masked ? Object.assign({}, layer, {mask: null}) : layer);
@@ -220,10 +227,10 @@ class File_export_extra_class {
 						mask[i] = shape[i * 4 + 3];
 					}
 				}
-				records.set(layer, {
+				records.set(source, {
 					name: String(layer.name), x: box.x, y: box.y, width: box.width, height: box.height,
 					opacity: Math.round(effective_alpha(layer) * 100), visible: layer.visible !== false,
-					composition: layer.composition, data: part.data, mask,
+					composition: layer.composition, data: part.data, mask, vector,
 				});
 			}
 			if (records.size == 0) {

@@ -1,4 +1,4 @@
-import { apply_meta, read_meta, toggle_flag, change_case, replace_text } from '../src/js/libs/text-style.js';
+import { apply_meta, read_meta, toggle_flag, change_case, replace_text, meta_from_attributes, set_tool_attributes } from '../src/js/libs/text-style.js';
 
 const defaults = {size: 40, family: 'Arial', bold: false, italic: false, fill_color: '#008800', kerning: 0};
 const data = () => [[{text: 'Hello ', meta: {fill_color: '#111111'}}, {text: 'world', meta: {bold: true, fill_color: '#111111'}}], [{text: 'two words', meta: {}}]];
@@ -92,5 +92,21 @@ describe('a range of the text', () => {
 		expect(read_meta(data, defaults, range(6, 11)).size).toBe(10);
 		expect(read_meta(data, defaults, range(0, 5)).size).toBe(40);
 		expect(is_empty_range(range(3, 3))).toBe(true);
+	});
+});
+
+describe('meta_from_attributes / set_tool_attributes', () => {
+	const tool_defaults = {size: 40, family: 'Arial', kerning: 0, leading: 0, bold: false, italic: false, underline: false, strikethrough: false, fill_color: '#008800', stroke_size: 0, stroke_color: '#000000'};
+	it('reads the options of the Text tool, plain values and objects with a value', () => {
+		const meta = meta_from_attributes({font: {value: 'Impact'}, size: 12, bold: {value: true}, fill: '#ff0000', stroke_size: {value: 2, min: 0}, kerning: {value: 'x'}}, tool_defaults);
+		expect(meta).toEqual(Object.assign({}, tool_defaults, {family: 'Impact', size: 12, bold: true, fill_color: '#ff0000', stroke_size: 2}));
+	});
+	it('ignores an empty font', () => {
+		expect(meta_from_attributes({font: {value: ''}}, tool_defaults).family).toBe('Arial');
+	});
+	it('writes values back without losing the other properties of an option', () => {
+		const attributes = {font: {value: 'Arial', values: []}, size: 40, stroke_size: {value: 0, min: 0}};
+		set_tool_attributes(attributes, {family: 'Impact', size: 20, stroke_size: 3, unknown: 1});
+		expect(attributes).toEqual({font: {value: 'Impact', values: []}, size: 20, stroke_size: {value: 3, min: 0}});
 	});
 });

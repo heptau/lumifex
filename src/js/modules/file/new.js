@@ -149,7 +149,9 @@ class File_new_class {
 					mouse: {},
 					visible_width: null,
 					visible_height: null,
-					user_fonts: {}
+					user_fonts: {},
+					paths: [],
+					alpha_channels: [],
 				}),
 				new app.Actions.Prepare_canvas_action('do'),
 				new app.Actions.Refresh_action_attributes_action('do'),

@@ -6,6 +6,7 @@ import {
 	default_view, is_default_view, toggle_channel, solo_channel, view_matrix, compose_filter, COLOR_CHANNELS,
 } from './../../libs/channel-view.js';
 import { t } from './../../modules/tools/translate.js';
+import { channel_to_mask } from './../../libs/alpha-channels.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const THUMB_WIDTH = 40;
@@ -34,6 +35,8 @@ class GUI_channels_class {
 		this.rows = {};
 		this.pending = false;
 		this.matrix_node = null;
+		this.alpha_list = null;
+		this.alpha_signature = null;
 	}
 
 	render_main_channels() {
@@ -97,10 +100,150 @@ class GUI_channels_class {
 		});
 		container.appendChild(list);
 
+		//alpha channels of the document (saved selections that belong to the project)
+		this.alpha_list = document.createElement('div');
+		this.alpha_list.className = 'channels_list alpha_channels_list';
+		this.alpha_list.setAttribute('role', 'group');
+		this.alpha_list.setAttribute('aria-label', t('Alpha channels'));
+		this.alpha_list.addEventListener('click', (event) => this.click_alpha(event));
+		this.alpha_list.addEventListener('dblclick', (event) => {
+			const name = event.target.closest('.channel_name[data-alpha]');
+			if (name) {
+				app.GUI.run_target('edit/selection.rename_alpha_channel', parseInt(name.dataset.alpha, 10));
+			}
+		});
+		container.appendChild(this.alpha_list);
+
+		const footer = document.createElement('div');
+		footer.className = 'channels_footer';
+		const save = document.createElement('button');
+		save.type = 'button';
+		save.className = 'channel_save';
+		save.dataset.alphaAction = 'save';
+		save.textContent = t('Save Selection as Channel');
+		save.addEventListener('click', () => app.GUI.run_target('edit/selection.save_to_channel'));
+		footer.appendChild(save);
+		container.appendChild(footer);
+
 		document.addEventListener('minipaint:history', () => this.schedule());
 		document.addEventListener('minipaint:view-filter', () => this.apply());
 		this.update_state();
 		this.render();
+	}
+
+	/**
+	 * Clicks on the rows of the alpha channels: the name or the dotted circle = load as selection,
+	 * the arrow = replace with the current selection, × = delete
+	 */
+	click_alpha(event) {
+		const button = event.target.closest('[data-alpha-action]');
+		if (!button) {
+			return;
+		}
+		const id = parseInt(button.dataset.alpha, 10);
+		const targets = {
+			load: 'edit/selection.load_alpha_channel',
+			replace: 'edit/selection.replace_alpha_channel',
+			delete: 'edit/selection.delete_alpha_channel',
+		};
+		const target = targets[button.dataset.alphaAction];
+		if (target) {
+			app.GUI.run_target(target, id);
+		}
+	}
+
+	/**
+	 * Rows of the alpha channels, rebuilt only when the list changes (the lists are replaced, never changed in place)
+	 */
+	render_alpha() {
+		if (!this.alpha_list) {
+			return;
+		}
+		const channels = Array.isArray(config.alpha_channels) ? config.alpha_channels : [];
+		if (this.alpha_signature === channels && this.alpha_list.dataset.lang === config.LANG) {
+			return;
+		}
+		this.alpha_signature = channels;
+		this.alpha_list.dataset.lang = config.LANG;
+		this.alpha_list.innerHTML = '';
+		this.alpha_list.setAttribute('aria-label', t('Alpha channels'));
+		const save = document.querySelector('#toggle_channels .channel_save');
+		if (save) {
+			save.textContent = t('Save Selection as Channel');
+		}
+		for (const channel of channels) {
+			const row = document.createElement('div');
+			row.className = 'channel_row alpha_channel_row';
+
+			const spacer = document.createElement('span');
+			spacer.className = 'channel_eye placeholder';
+			spacer.setAttribute('aria-hidden', 'true');
+			row.appendChild(spacer);
+
+			const thumb = document.createElement('canvas');
+			thumb.width = THUMB_WIDTH;
+			thumb.height = THUMB_HEIGHT;
+			thumb.className = 'channel_thumb';
+			thumb.setAttribute('aria-hidden', 'true');
+			row.appendChild(thumb);
+			this.draw_alpha_thumb(thumb, channel);
+
+			const name = document.createElement('button');
+			name.type = 'button';
+			name.className = 'channel_name';
+			name.dataset.alpha = channel.id;
+			name.dataset.alphaAction = 'load';
+			name.textContent = channel.name;
+			name.title = `${t('Load channel as selection')} (${t('double click renames')})`;
+			row.appendChild(name);
+
+			const replace = document.createElement('button');
+			replace.type = 'button';
+			replace.className = 'channel_select';
+			replace.dataset.alpha = channel.id;
+			replace.dataset.alphaAction = 'replace';
+			replace.title = t('Replace with the current selection');
+			replace.setAttribute('aria-label', `${channel.name}: ${t('Replace with the current selection')}`);
+			replace.textContent = '\u21A7';
+			row.appendChild(replace);
+
+			const remove = document.createElement('button');
+			remove.type = 'button';
+			remove.className = 'channel_select';
+			remove.dataset.alpha = channel.id;
+			remove.dataset.alphaAction = 'delete';
+			remove.title = t('Delete Channel');
+			remove.setAttribute('aria-label', `${channel.name}: ${t('Delete Channel')}`);
+			remove.textContent = '\u00D7';
+			row.appendChild(remove);
+
+			this.alpha_list.appendChild(row);
+		}
+	}
+
+	/**
+	 * @param {HTMLCanvasElement} thumb
+	 * @param {object} channel
+	 */
+	draw_alpha_thumb(thumb, channel) {
+		//a small picture is enough, the mask is decoded at a reduced size
+		const scale = Math.min(1, 96 / Math.max(channel.width, channel.height));
+		const width = Math.max(1, Math.round(channel.width * scale));
+		const height = Math.max(1, Math.round(channel.height * scale));
+		const mask = channel_to_mask(channel, width, height);
+		if (!mask) {
+			return;
+		}
+		const gray = document.createElement('canvas');
+		gray.width = width;
+		gray.height = height;
+		const out = gray.getContext('2d').createImageData(width, height);
+		for (let p = 0, i = 0; p < mask.data.length; p++, i += 4) {
+			out.data[i] = out.data[i + 1] = out.data[i + 2] = mask.data[p];
+			out.data[i + 3] = 255;
+		}
+		gray.getContext('2d').putImageData(out, 0, 0);
+		this.draw_thumb(thumb, gray);
 	}
 
 	/**
@@ -226,6 +369,7 @@ class GUI_channels_class {
 		if (!block || !container || block.classList.contains('panel_hidden') || container.classList.contains('hidden')) {
 			return;
 		}
+		this.render_alpha();
 		const names = Object.keys(this.rows);
 		names.forEach((channel) => {
 			const thumb = this.rows[channel].thumb;

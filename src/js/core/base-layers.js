@@ -4,6 +4,7 @@
  */
 
 import app from "./../app.js";
+import { draw_artboards } from './../libs/artboards.js';
 import config from "./../config.js";
 import Base_gui_class from "./base-gui.js";
 import Base_selection_class from "./base-selection.js";
@@ -21,6 +22,8 @@ import { make_identity, stack_signature, split_for_cache, preview_scale } from "
 import { needs_generic_rotation, rotation_pivot } from "./../libs/vector-rotation.js";
 import { is_default as blend_if_is_default, apply_blend_if } from "./../libs/blend-if.js";
 import { adjust_image, mix_adjusted } from "./../libs/adjustment-layers.js";
+import { is_custom_blend, canvas_operation, blend_custom } from "./../libs/custom-blend.js";
+import { clean_vector_mask, trace_path } from "./../libs/document-paths.js";
 
 let instance = null;
 
@@ -286,6 +289,22 @@ class Base_layers_class {
 				render_function
 			](this.ctx);
 		}
+		//the layer mask shown alone or as a red overlay (the mask thumbnail with Alt, "\\")
+		if (this.Base_gui.GUI_mask_edit) {
+			this.Base_gui.GUI_mask_edit.render_overlay(this.ctx);
+		}
+		//the frames and names of the artboards (Layer > Artboards)
+		if (Array.isArray(config.artboards) && config.artboards.length) {
+			draw_artboards(this.ctx, config.artboards, config.ZOOM);
+		}
+		//the size circle while the brush size is dragged on the canvas (Alt + right button)
+		if (this.Base_gui.GUI_brush_drag) {
+			this.Base_gui.GUI_brush_drag.render_overlay(this.ctx);
+		}
+		//the selected path of the Paths panel (modules/edit/paths.js)
+		if (typeof config.paths_overlay == "function") {
+			config.paths_overlay(this.ctx);
+		}
 		//an overlay of a command that is running (for example the handles of Edit > Distort)
 		if (typeof config.view_overlay == "function") {
 			config.view_overlay(this.ctx);
@@ -343,10 +362,10 @@ class Base_layers_class {
 		//a group with its own opacity or blend mode is drawn on its own first
 		const plan = plan_groups(layers);
 
-		//Adjustment and Blend If layers work on everything below them. Drawing that again for every one of them is slow
+		//Adjustment, Blend If and custom blend mode layers (and groups) work on everything below them. Drawing that again for every one of them is slow
 		//(n layers cost n times n), so everything up to the top one of them is drawn once on a canvas of its own, that
 		//already holds what is below the next one; the layers above it are drawn directly.
-		const top = plan.findIndex((entry) => entry.kind !== "group" && this.needs_backdrop(entry));
+		const top = plan.findIndex((entry) => this.needs_backdrop(entry));
 		const clipped = plan.some((entry) => entry.composition === "source-atop");
 		if (top < 0 || clipped) {
 			this.render_objects_flat(ctx, tempCanvas, plan, prepare, shouldSkip);
@@ -391,7 +410,7 @@ class Base_layers_class {
 		const plan = plan_groups(split.upper);
 		const width = Math.max(1, config.WIDTH);
 		const height = Math.max(1, config.HEIGHT);
-		const backdrop_dependent = plan.some((entry) => entry.kind !== "group" && this.needs_backdrop(entry));
+		const backdrop_dependent = plan.some((entry) => this.needs_backdrop(entry));
 		if (backdrop_dependent) {
 			//an adjustment or Blend If layer above the active one works on the cached picture plus the layers above it.
 			//The picture and its small copy in the Navigator are drawn one after the other with the same layers, so
@@ -529,11 +548,16 @@ class Base_layers_class {
 	}
 
 	/**
-	 * @param {object} layer
-	 * @returns {boolean} the layer is drawn from what is below it (adjustment layer, Blend If)
+	 * @param {object} layer a layer or a group entry of plan_groups
+	 * @returns {boolean} the layer is drawn from what is below it (adjustment layer, Blend If, a blend mode the canvas
+	 *   can not do - libs/custom-blend.js)
 	 */
 	needs_backdrop(layer) {
-		return layer.type === "adjustment" || Boolean(layer.blend_if && blend_if_is_default(layer.blend_if) == false);
+		if (layer.kind === "group") {
+			return is_custom_blend(layer.props && layer.props.composition);
+		}
+		return layer.type === "adjustment" || is_custom_blend(layer.composition)
+			|| Boolean(layer.blend_if && blend_if_is_default(layer.blend_if) == false);
 	}
 
 	/**
@@ -543,8 +567,10 @@ class Base_layers_class {
 	 * @param {CanvasRenderingContext2D} ctx where the group goes
 	 * @param {{name: string, props: {opacity: number, composition: string, mask: object|null}, entries: object[]}} group
 	 * @param {Function} [shouldSkip]
+	 * @param {object[]} [below] the layers below the group (top first), for a blend mode of libs/custom-blend.js
+	 * @param {CanvasRenderingContext2D|null} [current] a canvas that already holds everything below the group
 	 */
-	render_group(ctx, group, shouldSkip) {
+	render_group(ctx, group, shouldSkip, below, current) {
 		const width = Math.max(1, config.WIDTH);
 		const height = Math.max(1, config.HEIGHT);
 		const make = () => {
@@ -565,8 +591,15 @@ class Base_layers_class {
 			own_ctx.drawImage(mask_canvas, 0, 0, width, height);
 			own_ctx.globalCompositeOperation = "source-over";
 		}
+		if (is_custom_blend(group.props.composition)) {
+			this.render_with_backdrop(ctx, below || [], shouldSkip, current, (target) => {
+				target.drawImage(own, 0, 0);
+			}, null, group.props.composition, group.props.opacity / 100);
+			own.width = own.height = 1;
+			return;
+		}
 		ctx.globalAlpha = group.props.opacity / 100;
-		ctx.globalCompositeOperation = group.props.composition;
+		ctx.globalCompositeOperation = canvas_operation(group.props.composition);
 		ctx.drawImage(own, 0, 0);
 		ctx.globalAlpha = 1;
 		ctx.globalCompositeOperation = "source-over";
@@ -590,7 +623,7 @@ class Base_layers_class {
 
 			// A group drawn on its own (its layers are skipped inside of it if they are not needed)
 			if (layer.kind === "group") {
-				this.render_group(ctx, layer, shouldSkip);
+				this.render_group(ctx, layer, shouldSkip, layers.slice(i + 1), inline_backdrop === true ? ctx : null);
 				continue;
 			}
 
@@ -616,7 +649,7 @@ class Base_layers_class {
 			) {
 				// Apply the effect in a isolated temporary canvas
 				tempCtx.globalAlpha = effective_alpha(layer);
-				tempCtx.globalCompositeOperation = layer.composition;
+				tempCtx.globalCompositeOperation = canvas_operation(layer.composition);
 
 				// If the next layer has the clip masking effect then
 				// isolated the shadow filter from temporary canvas and keep that in the original canvas
@@ -624,7 +657,7 @@ class Base_layers_class {
 					// Render the base layer (a clipped layer in the middle of a stack is drawn only through the temporary canvas)
 					if (layer.composition !== "source-atop") {
 						ctx.globalAlpha = effective_alpha(layer);
-						ctx.globalCompositeOperation = layer.composition;
+						ctx.globalCompositeOperation = canvas_operation(layer.composition);
 						this.render_object(ctx, layer);
 					}
 					// Then remove the shadow (if it exists) from the render process in the temporary canvas
@@ -651,14 +684,15 @@ class Base_layers_class {
 					tempCtx.globalCompositeOperation = null;
 					tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
 				}
-			} else if (layer.blend_if && blend_if_is_default(layer.blend_if) == false) {
-				//Blend If - the layer is limited by its own brightness and by what is below it
+			} else if (is_custom_blend(layer.composition) || (layer.blend_if && blend_if_is_default(layer.blend_if) == false)) {
+				//Blend If - the layer is limited by its own brightness and by what is below it; a blend mode of
+				//libs/custom-blend.js is computed from what is below it
 				ctx.globalAlpha = effective_alpha(layer);
-				ctx.globalCompositeOperation = layer.composition;
+				ctx.globalCompositeOperation = canvas_operation(layer.composition);
 				this.render_blend_if(ctx, layer, layers.slice(i + 1), shouldSkip, inline_backdrop === true ? ctx : null);
 			} else {
 				ctx.globalAlpha = effective_alpha(layer);
-				ctx.globalCompositeOperation = layer.composition;
+				ctx.globalCompositeOperation = canvas_operation(layer.composition);
 				this.render_object(ctx, layer);
 			}
 		}
@@ -731,15 +765,47 @@ class Base_layers_class {
 	}
 
 	/**
-	 * Draws a layer with Blend If: the layer and everything below it are drawn on their own canvases (the size of the
-	 * document), the layer loses its pixels where the ranges say so and the rest goes to the picture.
+	 * Draws a layer with Blend If and / or a blend mode of libs/custom-blend.js: the layer and everything below it are
+	 * drawn on their own canvases (the size of the document), the layer loses its pixels where the Blend If ranges say
+	 * so and is blended with the picture below.
 	 *
-	 * @param {CanvasRenderingContext2D} ctx where the layer goes (its alpha and blend mode are already set)
+	 * @param {CanvasRenderingContext2D} ctx where the layer goes (its alpha and canvas blend mode are already set)
 	 * @param {object} layer
 	 * @param {object[]} below the layers below this one (top first)
 	 * @param {Function} [shouldSkip]
+	 * @param {CanvasRenderingContext2D|null} [current] a canvas that already holds everything below the layer
 	 */
 	render_blend_if(ctx, layer, below, shouldSkip, current) {
+		if (layer.visible == false || layer.type == null) {
+			return;
+		}
+		const blend_if = layer.blend_if && blend_if_is_default(layer.blend_if) == false ? layer.blend_if : null;
+		const custom = is_custom_blend(layer.composition);
+		this.render_with_backdrop(ctx, below, shouldSkip, current, (target) => {
+			if (custom) {
+				//the opacity goes into the alpha of the layer, the blending uses it
+				target.globalAlpha = effective_alpha(layer);
+			}
+			this.render_object(target, layer);
+		}, blend_if ? (image, backdrop_image) => {
+			apply_blend_if(image, backdrop_image, blend_if);
+		} : null, custom ? layer.composition : null, 1);
+	}
+
+	/**
+	 * The common part of Blend If and of the blend modes the canvas can not do (libs/custom-blend.js).
+	 *
+	 * @param {CanvasRenderingContext2D} ctx where the result goes
+	 * @param {object[]} below the layers below (top first), drawn again when `current` is missing
+	 * @param {Function|null|undefined} shouldSkip
+	 * @param {CanvasRenderingContext2D|null|undefined} current a canvas that already holds everything below (it can be a
+	 *   smaller copy of the document, then its transform scales the layers to it)
+	 * @param {function(CanvasRenderingContext2D): void} draw draws the layer (or the group) alone
+	 * @param {function(ImageData, ImageData): void|null} process changes the pixels of the layer by the pixels below
+	 * @param {string|null} mode a custom blend mode, or null: the layer is drawn with the settings of `ctx`
+	 * @param {number} opacity 0-1, multiplies the alpha of the layer in the custom blend
+	 */
+	render_with_backdrop(ctx, below, shouldSkip, current, draw, process, mode, opacity) {
 		const width = current ? current.canvas.width : Math.max(1, config.WIDTH);
 		const height = current ? current.canvas.height : Math.max(1, config.HEIGHT);
 		const make = () => {
@@ -763,20 +829,38 @@ class Base_layers_class {
 		if (current) {
 			own_ctx.setTransform(current.getTransform());
 		}
-		this.render_object(own_ctx, layer);
+		draw(own_ctx);
 
 		const image = own_ctx.getImageData(0, 0, width, height);
-		apply_blend_if(image, backdrop_ctx.getImageData(0, 0, width, height), layer.blend_if);
-		own_ctx.putImageData(image, 0, 0);
+		const backdrop_image = backdrop_ctx.getImageData(0, 0, width, height);
+		if (process) {
+			process(image, backdrop_image);
+		}
 
-		if (current) {
-			//the canvas of the work has its own size and transform, `own` is already in its pixels
-			ctx.save();
-			ctx.setTransform(1, 0, 0, 1, 0, 0);
-			ctx.drawImage(own, 0, 0);
-			ctx.restore();
+		if (mode) {
+			blend_custom(backdrop_image, image, mode, opacity);
+			if (current) {
+				//the blended picture takes the place of the one below, in the pixels of the canvas of the work
+				current.putImageData(backdrop_image, 0, 0);
+			} else {
+				backdrop_ctx.putImageData(backdrop_image, 0, 0);
+				ctx.save();
+				ctx.globalAlpha = 1;
+				ctx.globalCompositeOperation = "copy";
+				ctx.drawImage(backdrop, 0, 0);
+				ctx.restore();
+			}
 		} else {
-			ctx.drawImage(own, 0, 0);
+			own_ctx.putImageData(image, 0, 0);
+			if (current) {
+				//the canvas of the work has its own size and transform, `own` is already in its pixels
+				ctx.save();
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				ctx.drawImage(own, 0, 0);
+				ctx.restore();
+			} else {
+				ctx.drawImage(own, 0, 0);
+			}
 		}
 		if (backdrop) {
 			backdrop.width = backdrop.height = 1;
@@ -814,12 +898,12 @@ class Base_layers_class {
 	render_object(ctx, object, is_preview) {
 		if (object.visible == false || object.type == null) return;
 
-		if (object.mask && object.mask_enabled !== false) {
-			const mask_canvas = this.get_mask_canvas(object);
-			if (mask_canvas) {
-				this.render_masked_object(ctx, object, is_preview, mask_canvas);
-				return;
-			}
+		//a layer mask and / or a vector mask (a path, libs/document-paths.js) cut the layer
+		const mask_canvas = object.mask && object.mask_enabled !== false ? this.get_mask_canvas(object) : null;
+		const vector_mask = object.vector_mask && object.vector_mask_enabled !== false ? clean_vector_mask(object.vector_mask) : null;
+		if (mask_canvas || vector_mask) {
+			this.render_masked_object(ctx, object, is_preview, mask_canvas, vector_mask);
+			return;
 		}
 
 		this.render_object_plain(ctx, object, is_preview);
@@ -862,7 +946,7 @@ class Base_layers_class {
 	 * Renders a layer with a layer mask: the layer (with its filters) goes to a temporary canvas,
 	 * the mask cuts it and the result is drawn with the current alpha and blend mode of the context
 	 */
-	render_masked_object(ctx, object, is_preview, mask_canvas) {
+	render_masked_object(ctx, object, is_preview, mask_canvas, vector_mask) {
 		const temp = document.createElement("canvas");
 		temp.width = ctx.canvas.width;
 		temp.height = ctx.canvas.height;
@@ -871,13 +955,37 @@ class Base_layers_class {
 
 		this.render_object_plain(temp_ctx, object, is_preview);
 
-		temp_ctx.save();
-		temp_ctx.globalCompositeOperation = "destination-in";
-		temp_ctx.filter = "none";
-		temp_ctx.translate(object.x + object.width / 2, object.y + object.height / 2);
-		temp_ctx.rotate(((object.rotate || 0) * Math.PI) / 180);
-		temp_ctx.drawImage(mask_canvas, -object.width / 2, -object.height / 2, object.width, object.height);
-		temp_ctx.restore();
+		if (mask_canvas) {
+			temp_ctx.save();
+			temp_ctx.globalCompositeOperation = "destination-in";
+			temp_ctx.filter = "none";
+			temp_ctx.translate(object.x + object.width / 2, object.y + object.height / 2);
+			temp_ctx.rotate(((object.rotate || 0) * Math.PI) / 180);
+			temp_ctx.drawImage(mask_canvas, -object.width / 2, -object.height / 2, object.width, object.height);
+			temp_ctx.restore();
+		}
+		if (vector_mask) {
+			//the path in the coordinates of the layer: stretched and turned with it
+			const area = vector_mask.anchors.length >= 2;
+			temp_ctx.save();
+			temp_ctx.filter = "none";
+			if (!area && vector_mask.invert) {
+				temp_ctx.setTransform(1, 0, 0, 1, 0, 0);
+				temp_ctx.clearRect(0, 0, temp.width, temp.height); //Hide All
+			}
+			else if (area) {
+				temp_ctx.globalCompositeOperation = vector_mask.invert ? "destination-out" : "destination-in";
+				temp_ctx.translate(object.x + object.width / 2, object.y + object.height / 2);
+				temp_ctx.rotate(((object.rotate || 0) * Math.PI) / 180);
+				temp_ctx.translate(-object.width / 2, -object.height / 2);
+				temp_ctx.scale(object.width / vector_mask.width, object.height / vector_mask.height);
+				temp_ctx.beginPath();
+				trace_path(temp_ctx, vector_mask.anchors, true);
+				temp_ctx.fillStyle = "#000";
+				temp_ctx.fill();
+			}
+			temp_ctx.restore();
+		}
 
 		ctx.save();
 		ctx.setTransform(1, 0, 0, 1, 0, 0);

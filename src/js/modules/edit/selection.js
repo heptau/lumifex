@@ -20,6 +20,9 @@ import Selection_class from './../../tools/selection.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { clean_anchors, path_mask } from './../../libs/pen-path.js';
 import { t } from '../tools/translate.js';
+import {
+	add_channel, replace_channel, remove_channel, rename_channel, channel_to_mask, next_channel_name,
+} from './../../libs/alpha-channels.js';
 
 let instance = null;
 
@@ -766,6 +769,86 @@ class Edit_selection_class {
 				}
 				const overwritten = this.Selection_mask.save(name, mask.mask);
 				alertify.success(t(overwritten ? 'Saved selection replaced.' : 'Selection saved.'));
+			},
+		});
+	}
+
+	/**
+	 * Select > Save Selection as Channel (also the button of the Channels panel) - the current selection becomes a new
+	 * alpha channel of the document, saved with the project; one undo step
+	 */
+	async save_to_channel() {
+		const current = this.get_mask();
+		if (current == null) {
+			alertify.error(t('Empty selection'));
+			return;
+		}
+		const channels = Array.isArray(config.alpha_channels) ? config.alpha_channels : [];
+		const result = add_channel(channels, current.mask, next_channel_name(channels, t('Alpha')));
+		if (result == null) {
+			alertify.error(t('A document can have at most 50 alpha channels.'));
+			return;
+		}
+		await app.State.do_action(new app.Actions.Set_alpha_channels_action(result.list, 'New Channel'));
+	}
+
+	/**
+	 * The channel of the id as a selection (the Channels panel)
+	 *
+	 * @param {number} id
+	 */
+	async load_alpha_channel(id) {
+		const channel = (config.alpha_channels || []).find((item) => item.id === id);
+		const mask = channel_to_mask(channel, config.WIDTH, config.HEIGHT);
+		if (mask == null) {
+			return;
+		}
+		await this.set_mask(mask, !config.TOOL.keep_selection);
+	}
+
+	/**
+	 * Overwrites the channel of the id with the current selection
+	 *
+	 * @param {number} id
+	 */
+	async replace_alpha_channel(id) {
+		const current = this.get_mask();
+		if (current == null) {
+			alertify.error(t('Empty selection'));
+			return;
+		}
+		await app.State.do_action(new app.Actions.Set_alpha_channels_action(
+			replace_channel(config.alpha_channels, id, current.mask), 'Replace Channel'
+		));
+	}
+
+	/**
+	 * @param {number} id
+	 */
+	async delete_alpha_channel(id) {
+		if (!(config.alpha_channels || []).some((item) => item.id === id)) {
+			return;
+		}
+		await app.State.do_action(new app.Actions.Set_alpha_channels_action(remove_channel(config.alpha_channels, id), 'Delete Channel'));
+	}
+
+	/**
+	 * @param {number} id
+	 */
+	rename_alpha_channel(id) {
+		const channel = (config.alpha_channels || []).find((item) => item.id === id);
+		if (!channel) {
+			return;
+		}
+		this.Dialog.show({
+			title: 'Rename Channel',
+			params: [
+				{name: 'name', title: 'Name:', value: channel.name},
+			],
+			on_finish: (params) => {
+				app.State.do_action(new app.Actions.Set_alpha_channels_action(
+					rename_channel(config.alpha_channels, id, params.name), 'Rename Channel'
+				));
 			},
 		});
 	}

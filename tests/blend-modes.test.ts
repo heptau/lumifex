@@ -3,9 +3,11 @@ import shortcuts, { EXTRA_SHORTCUTS } from '../src/js/config-shortcuts.js';
 
 describe('blend mode cycling', () => {
 	it('steps to the next and the previous mode', () => {
-		expect(cycle_blend_mode('source-over', 1)).toBe('darken');
+		expect(cycle_blend_mode('source-over', 1)).toBe('lf-dissolve');
+		expect(cycle_blend_mode('lf-dissolve', 1)).toBe('darken');
 		expect(cycle_blend_mode('multiply', -1)).toBe('darken');
 		expect(cycle_blend_mode('multiply', 1)).toBe('color-burn');
+		expect(cycle_blend_mode('color-burn', 1)).toBe('lf-linear-burn');
 	});
 
 	it('is circular', () => {
@@ -14,9 +16,9 @@ describe('blend mode cycling', () => {
 	});
 
 	it('a missing or unknown mode counts as Normal', () => {
-		expect(cycle_blend_mode(undefined, 1)).toBe('darken');
+		expect(cycle_blend_mode(undefined, 1)).toBe('lf-dissolve');
 		expect(cycle_blend_mode(null, -1)).toBe('luminosity');
-		expect(cycle_blend_mode('plus-darker', 1)).toBe('darken');
+		expect(cycle_blend_mode('plus-darker', 1)).toBe('lf-dissolve');
 	});
 
 	it('a full circle returns to the start', () => {

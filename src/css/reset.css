@@ -31,6 +31,7 @@
 	--text-color-blue: #64acff;
 	--link-color: #4da3ff;
 	--section-background-color: #2a2a2c;
+	--surface-elevated: #2c2c2e; /* floating bars over the canvas (Distort, Free Transform, Puppet Warp) */
 	--area-background-color: #3a3a3d;
 	--block-background-color: #2a2a2c;
 	--header-background-color: #323235;
@@ -93,6 +94,7 @@ body.theme-light{
 	--text-color-blue: #0066d6;
 	--link-color: #0066cc;
 	--section-background-color: #f4f4f6;
+	--surface-elevated: #ffffff; /* floating bars over the canvas (Distort, Free Transform, Puppet Warp) */
 	--area-background-color: #e6e6e9;
 	--block-background-color: #f4f4f6;
 	--header-background-color: #ebebee;
@@ -140,6 +142,7 @@ body.theme-green{
 	--text-color-muted: #8ea68c;
 	--link-color: #7fe08f;
 	--section-background-color: #1f2a1f;
+	--surface-elevated: #283628; /* floating bars over the canvas (Distort, Free Transform, Puppet Warp) */
 	--area-background-color: #2f3e2f;
 	--block-background-color: #1f2a1f;
 	--header-background-color: #273527;
@@ -185,6 +188,7 @@ body.theme-contrast{
 	--text-color-blue: #82b1ff;
 	--link-color: #8ab4ff;
 	--section-background-color: #000000;
+	--surface-elevated: #000000; /* floating bars over the canvas (Distort, Free Transform, Puppet Warp) */
 	--area-background-color: #1a1a1a;
 	--block-background-color: #000000;
 	--header-background-color: #000000;

@@ -3,6 +3,7 @@ import config from './../config.js';
 import Base_tools_class from './base-tools.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
+import { is_smart_object, SMART_OBJECT_MESSAGE } from './../libs/smart-object.js';
 
 /**
  * Base for tools that edit pixels of the active image layer along the mouse stroke
@@ -80,6 +81,10 @@ class Base_pixel_tool_class extends Base_tools_class {
 		}
 		if (config.layer.type != 'image') {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
+			return;
+		}
+		if (is_smart_object(config.layer)) {
+			alertify.error(t(SMART_OBJECT_MESSAGE));
 			return;
 		}
 		if (config.layer.rotate || 0 > 0) {

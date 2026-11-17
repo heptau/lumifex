@@ -23,6 +23,9 @@ const EXCLUDED_PREFIXES = [
 	'tools/actions', 'tools/settings', 'tools/search', 'view/', 'image/information', 'image/histogram',
 	//these are done with the mouse on the picture, so they can not be played
 	'edit/transform', 'edit/warp', 'edit/selection.transform_selection',
+	//smart objects: files and document tabs
+	'layer/smart_object.edit_contents', 'layer/smart_object.save_contents', 'layer/smart_object.replace_contents',
+	'layer/smart_object.export_contents', 'layer/smart_object.place_embedded',
 ];
 
 /**

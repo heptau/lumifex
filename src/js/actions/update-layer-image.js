@@ -6,6 +6,7 @@ import image_store from './store/image-store.js';
 import { Base_action } from './base.js';
 import { t } from '../modules/tools/translate.js';
 import { keep_alpha } from '../libs/alpha-lock.js';
+import { is_smart_object, SMART_OBJECT_MESSAGE } from '../libs/smart-object.js';
 
 const Helper = new Helper_class();
 
@@ -17,11 +18,14 @@ export class Update_layer_image_action extends Base_action {
 	 * @param {int} layer_id (optional)
 	 * @param {{keep_alpha?: boolean}} options keep_alpha: a layer with Lock Transparency keeps its alpha channel
 	 *        (set by tools that paint, fill or filter; not by operations that change the geometry)
+	 *        allow_smart: the new picture is the render of the contents of a smart object (Layer > Smart Objects);
+	 *        any other change of the pixels of a smart object is refused
 	 */
 	constructor(canvas, layer_id, options = {}) {
 		super('update_layer_image', 'Update Layer Image');
 		this.canvas = canvas;
 		this.keep_alpha = options != null && options.keep_alpha === true;
+		this.allow_smart = options != null && options.allow_smart === true;
 		if (layer_id == null)
 			layer_id = config.layer.id;
 		this.layer_id = parseInt(layer_id);
@@ -45,6 +49,11 @@ export class Update_layer_image_action extends Base_action {
 		if (this.reference_layer.type != 'image'){
 			alertify.error(t('Error: layer must be image.'));
 			throw new Error('Aborted - layer is not an image');
+		}
+		if (is_smart_object(this.reference_layer) && this.allow_smart !== true && !this.new_image_id) {
+			alertify.error(t(SMART_OBJECT_MESSAGE));
+			this.reference_layer = null;
+			throw new Error('Aborted - layer is a smart object');
 		}
 
 		if (this.keep_alpha && this.reference_layer.lock_alpha === true && this.canvas && !this.new_image_id) {
@@ -105,11 +114,21 @@ export class Update_layer_image_action extends Base_action {
 
 		// Assign layer properties
 		this.reference_layer.link.src = canvas_data_url;
+		this.forget_smart_cache();
 		this.old_link_database_id = this.reference_layer._link_database_id;
 		this.reference_layer._link_database_id = this.new_image_id;
 
 		this.canvas = null;
 		config.need_render = true;
+	}
+
+	/**
+	 * The smart filters keep their result per picture element; the element stays, only its source changes
+	 */
+	forget_smart_cache() {
+		if (app.Layers && app.Layers.smart_cache && this.reference_layer && this.reference_layer.link) {
+			app.Layers.smart_cache.delete(this.reference_layer.link);
+		}
 	}
 
 	/**
@@ -150,6 +169,7 @@ export class Update_layer_image_action extends Base_action {
 		if (this.old_image_id != null) {
 			try {
 				this.reference_layer.link.src = await image_store.get(this.old_image_id);
+				this.forget_smart_cache();
 			} catch (error) {
 				throw new Error('Failed to retrieve image from store', { cause: error });
 			}

@@ -238,3 +238,73 @@ export function replace_text(data, text) {
 }
 
 export const LOREM_IPSUM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+//names of the options of the Text tool (config.TOOLS) for the keys of the meta of a span
+export const TOOL_ATTRIBUTE_KEYS = {
+	family: 'font',
+	size: 'size',
+	bold: 'bold',
+	italic: 'italic',
+	underline: 'underline',
+	strikethrough: 'strikethrough',
+	fill_color: 'fill',
+	stroke_color: 'stroke',
+	stroke_size: 'stroke_size',
+	kerning: 'kerning',
+	leading: 'leading',
+};
+
+function attribute_value(attribute) {
+	return attribute !== null && typeof attribute == 'object' && 'value' in attribute ? attribute.value : attribute;
+}
+
+/**
+ * The style that a new text gets from the options of the Text tool (the Character panel shows it when no text layer is active).
+ *
+ * @param {object} attributes the attributes of the text tool in config.TOOLS
+ * @param {Meta} defaults
+ * @returns {Meta}
+ */
+export function meta_from_attributes(attributes, defaults) {
+	const result = Object.assign({}, defaults);
+	Object.keys(TOOL_ATTRIBUTE_KEYS).forEach((key) => {
+		const value = attribute_value(attributes ? attributes[TOOL_ATTRIBUTE_KEYS[key]] : undefined);
+		if (typeof defaults[key] == 'boolean') {
+			if (typeof value == 'boolean') {
+				result[key] = value;
+			}
+		}
+		else if (typeof defaults[key] == 'number') {
+			const number = parseFloat(value);
+			if (isFinite(number)) {
+				result[key] = number;
+			}
+		}
+		else if (typeof value == 'string' && value !== '') {
+			result[key] = value;
+		}
+	});
+	return result;
+}
+
+/**
+ * Writes style values into the options of the Text tool (an option that is an object keeps its other properties).
+ *
+ * @param {object} attributes changed in place
+ * @param {Meta} changes
+ */
+export function set_tool_attributes(attributes, changes) {
+	Object.keys(changes).forEach((key) => {
+		const name = TOOL_ATTRIBUTE_KEYS[key];
+		if (!name || !attributes || !(name in attributes)) {
+			return;
+		}
+		const current = attributes[name];
+		if (current !== null && typeof current == 'object' && 'value' in current) {
+			current.value = changes[key];
+		}
+		else {
+			attributes[name] = changes[key];
+		}
+	});
+}

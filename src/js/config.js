@@ -44,7 +44,12 @@ config.swatches = {
 config.user_fonts = {};
 config.guides_enabled = true;
 config.guides = [];
+config.layer_comps = []; //Layer > Layer Comps of the active document
+config.artboards = []; //Layer > Artboards of the active document
+config.layer_comp_current = null;
 config.guides_locked = false;
+config.alpha_channels = []; //alpha channels of the Channels panel (libs/alpha-channels.js), saved in the project
+config.paths = []; //document paths of the Paths panel ({id, name, closed, anchors} in document pixels, libs/document-paths.js)
 config.freeze_render = false; //true while the history is replayed
 config.compare = null; //View > Split Compare: {before: canvas, x}
 config.ruler_active = false;
@@ -172,6 +177,24 @@ config.TOOLS = [
 			},
 			contiguous: true,
 			sample_all: false,
+			feather: {
+				value: 0,
+				min: 0,
+				max: 100,
+			},
+		},
+		on_leave: 'on_leave',
+		keep_selection: true,
+	},
+	{
+		name: 'object_select',
+		title: 'Object Selection (drag a rectangle around an object; Shift: add, Alt: subtract)',
+		attributes: {
+			tolerance: {
+				value: 32,
+				min: 1,
+				max: 128,
+			},
 			feather: {
 				value: 0,
 				min: 0,
@@ -800,12 +823,29 @@ config.TOOLS = [
 		title: 'Pen Tool (click for a corner, drag for a curve, click the first point to close)',
 		on_leave: 'on_leave',
 		attributes: {
+			//Shape makes a layer, Path stores the path in the Paths panel (Photoshop)
+			tool_mode: {
+				value: 'Shape',
+				values: ['Shape', 'Path'],
+			},
 			size: 2,
 			mode: {
 				value: 'Stroke',
 				values: ['Stroke', 'Fill', 'Fill + Stroke'],
 			},
 		},
+	},
+	{
+		name: 'path_select',
+		title: 'Path Selection (click a path to select it, drag to move it)',
+		on_leave: 'on_leave',
+		attributes: {},
+	},
+	{
+		name: 'direct_select',
+		title: 'Direct Selection (drag anchors and handles of a path, Alt = break the handles)',
+		on_leave: 'on_leave',
+		attributes: {},
 	},
 	{
 		name: 'patch',
@@ -820,6 +860,23 @@ config.TOOLS = [
 				value: 100,
 				min: 0,
 				max: 100,
+			},
+		},
+	},
+	{
+		name: 'content_move',
+		title: 'Content-Aware Move (draw around an object, drag it to a new place)',
+		on_leave: 'on_leave',
+		attributes: {
+			adapt: {
+				value: 100,
+				min: 0,
+				max: 100,
+			},
+			softness: {
+				value: 2,
+				min: 0,
+				max: 20,
 			},
 		},
 	},

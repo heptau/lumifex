@@ -15,6 +15,9 @@ import GUI_information_class from './gui/gui-information.js';
 import GUI_history_class from './gui/gui-history.js';
 import GUI_histogram_class from './gui/gui-histogram.js';
 import GUI_channels_class from './gui/gui-channels.js';
+import GUI_type_panels_class from './gui/gui-type-panels.js';
+import GUI_mask_edit_class from './gui/gui-mask-edit.js';
+import GUI_brush_drag_class from './gui/gui-brush-drag.js';
 import GUI_documents_class from './gui/gui-documents.js';
 import GUI_context_menu_class, { CANVAS_MENU, LAYER_MENU } from './gui/gui-context-menu.js';
 import { restore_panels } from './../libs/panels.js';
@@ -101,6 +104,9 @@ class Base_gui_class {
 		this.GUI_history = new GUI_history_class();
 		this.GUI_histogram = new GUI_histogram_class();
 		this.GUI_channels = new GUI_channels_class();
+		this.GUI_type_panels = new GUI_type_panels_class();
+		this.GUI_mask_edit = new GUI_mask_edit_class();
+		this.GUI_brush_drag = new GUI_brush_drag_class();
 		this.GUI_documents = new GUI_documents_class();
 		this.GUI_menu = new GUI_menu_class();
 		this.Tools_translate = new Tools_translate_class();
@@ -187,11 +193,14 @@ class Base_gui_class {
 		this.GUI_history.render_main_history();
 		this.GUI_histogram.render_main_histogram();
 		this.GUI_channels.render_main_channels();
+		this.GUI_type_panels.render_main();
 		this.GUI_documents.render_main_documents();
 		this.GUI_menu.render_main();
 		this.load_saved_changes();
 
 		this.set_events();
+		this.GUI_mask_edit.init();
+		this.GUI_brush_drag.init(this.GUI_tools);
 		this.load_translations();
 	}
 

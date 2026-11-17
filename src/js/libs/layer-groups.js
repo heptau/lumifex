@@ -2,6 +2,7 @@
  * Layer groups. A group is a name stored in layer.group, layers with the same name belong together.
  * It does not change how the layers are rendered; it lets you show/hide or merge the whole group at once.
  */
+import { clean_blend_mode } from './blend-modes.js';
 
 /**
  * @param {{group?: string|null}[]} layers
@@ -109,7 +110,7 @@ export function group_props_of(layer, name) {
 		}
 		const value = parseFloat(String(stored.opacity));
 		opacity = isNaN(value) ? 100 : Math.min(100, Math.max(0, value));
-		composition = typeof stored.composition === 'string' && /^[a-z-]{1,20}$/.test(stored.composition) ? stored.composition : 'source-over';
+		composition = clean_blend_mode(stored.composition);
 	}
 	else if (layer && layer.group === name && layer.group_opacity !== undefined && layer.group_opacity !== null) {
 		const old = parseFloat(String(layer.group_opacity));

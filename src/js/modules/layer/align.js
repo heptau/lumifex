@@ -1,4 +1,6 @@
 import app from './../../app.js';
+import { selected_layers } from './../../core/layer-selection.js';
+import { union_bounds } from './../../libs/layer-multi.js';
 import config from './../../config.js';
 import Edit_selection_class from './../edit/selection.js';
 import { mask_bounds } from './../../libs/selection-mask.js';
@@ -54,6 +56,17 @@ class Layer_align_class {
 	 */
 	align(mode) {
 		const layer = config.layer;
+		const chosen = selected_layers().filter((item) => this.is_movable(item) && item.locked !== true);
+		if (chosen.length > 1) {
+			//several layers selected in the Layers panel are aligned to each other (to the selection when there is one)
+			const reference = this.has_selection() ? this.get_reference() : union_bounds(chosen.map((item) => layer_bounds(item)));
+			const deltas = chosen.map((item) => ({id: item.id, ...align_delta(layer_bounds(item), mode, reference)}))
+				.filter((delta) => delta.dx != 0 || delta.dy != 0);
+			if (deltas.length) {
+				return this.move_layers(deltas, 'Align Layers');
+			}
+			return;
+		}
 		if (!this.is_movable(layer)) {
 			alertify.error(t('Layer is empty.'));
 			return;
@@ -69,7 +82,9 @@ class Layer_align_class {
 	 * @param {'x'|'y'} axis
 	 */
 	distribute(axis) {
-		const layers = config.layers.filter((layer) => this.is_movable(layer) && layer.visible != false);
+		//the layers selected in the Layers panel, or all visible ones when fewer than three are selected
+		const chosen = selected_layers().filter((layer) => this.is_movable(layer));
+		const layers = chosen.length >= 3 ? chosen : config.layers.filter((layer) => this.is_movable(layer) && layer.visible != false);
 		if (layers.length < 3) {
 			alertify.error(t('At least 3 visible layers are needed.'));
 			return;
@@ -84,6 +99,13 @@ class Layer_align_class {
 
 	is_movable(layer) {
 		return layer != null && layer.type != null && layer.width > 0 && layer.height > 0;
+	}
+
+	has_selection() {
+		if (this.Edit_selection == null) {
+			this.Edit_selection = new Edit_selection_class();
+		}
+		return this.Edit_selection.get_mask() != null;
 	}
 
 	/**

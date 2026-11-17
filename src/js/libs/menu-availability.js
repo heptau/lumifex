@@ -14,8 +14,8 @@ const IMAGE_MODULES = [
 
 //single methods
 const IMAGE_TARGETS = [
-	'image/trim.trim_to_content',
-	'edit/warp.warp', 'edit/transform.skew', 'edit/transform.perspective', 'edit/transform.distort',
+	'image/trim.trim_to_content', 'image/apply_image.apply',
+	'edit/warp.warp', 'edit/puppet_warp.puppet_warp', 'edit/sky_replacement.replace', 'edit/transform.skew', 'edit/transform.perspective', 'edit/transform.distort',
 	'layer/mask.remove_background', 'layer/mask.apply', 'layer/lock.toggle_alpha',
 	'edit/selection.color_range', 'edit/selection.select_subject', 'edit/selection.select_sky',
 	'edit/selection.select_edges', 'edit/selection.luminosity', 'edit/selection.channel', 'edit/selection.layer_transparency',
@@ -36,9 +36,34 @@ const ANY_LAYER_EFFECTS = [
 //fill works on an image and also on the empty first layer, which it turns into a picture
 const IMAGE_OR_EMPTY_TARGETS = ['edit/fill.fill', 'edit/fill.fill_background', 'edit/fill.fill_pattern'];
 
+//the commands of a smart object
+const SMART_OBJECT_TARGETS = [
+	'layer/smart_object.edit_contents', 'layer/smart_object.replace_contents', 'layer/smart_object.export_contents',
+	'layer/smart_object.rasterize',
+];
+
+//items of the image modules and targets above that do not change the pixels of the layer, so they work also on a
+//smart object (its pixels are refused until it is rasterized)
+const SMART_OBJECT_ALLOWED = [
+	'layer/smart_filter', 'edit/selection', 'layer/mask.remove_background', 'layer/lock.toggle_alpha',
+];
+
+/**
+ * @param {string} target
+ * @param {string} module_name
+ * @returns {boolean} the item would change the pixels of a smart object
+ */
+function edits_smart_pixels(target, module_name) {
+	if (NOT_IMAGE_TARGETS.includes(target) || SMART_OBJECT_ALLOWED.includes(module_name) || SMART_OBJECT_ALLOWED.includes(target)) {
+		return false;
+	}
+	return IMAGE_MODULES.includes(module_name) || IMAGE_TARGETS.includes(target) || IMAGE_OR_EMPTY_TARGETS.includes(target)
+		|| (module_name.startsWith('effects/') && ANY_LAYER_EFFECTS.includes(module_name) == false);
+}
+
 /**
  * @param {string|undefined} target menu item target, "<folder>/<file>.<method>"
- * @param {{type: string|null}|null} layer active layer
+ * @param {{type: string|null, smart_object?: object|null}|null} layer active layer
  * @returns {boolean} the menu item can not be used on the layer
  */
 export function is_menu_item_disabled(target, layer) {
@@ -47,6 +72,13 @@ export function is_menu_item_disabled(target, layer) {
 	}
 	const module_name = target.split('.')[0];
 	const is_image = layer.type == 'image';
+	const is_smart = is_image && layer.smart_object != null;
+	if (SMART_OBJECT_TARGETS.includes(target)) {
+		return !is_smart;
+	}
+	if (is_smart && edits_smart_pixels(target, module_name)) {
+		return true;
+	}
 	if (IMAGE_OR_EMPTY_TARGETS.includes(target)) {
 		return !is_image && layer.type != null;
 	}

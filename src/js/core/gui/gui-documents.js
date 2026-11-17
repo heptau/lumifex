@@ -49,6 +49,9 @@ class GUI_documents_class {
 				{name: 'Duplicate Document', target: 'view/documents.duplicate_tab', parameter: index},
 				{divider: true},
 			];
+			if (index == this.active && this.documents[index].smart_link) {
+				items.push({name: 'Save Smart Object', target: 'layer/smart_object.save_contents'}, {divider: true});
+			}
 			items.push({name: 'Close', target: 'view/documents.close_tab', parameter: index});
 			if (many) {
 				items.push({name: 'Close Others', target: 'view/documents.close_others', parameter: index});
@@ -261,6 +264,12 @@ class GUI_documents_class {
 		this.documents[this.active].json = export_as_json();
 		this.documents.splice(this.active + 1, 0, doc);
 		this.active = this.active + 1;
+		//the layer comps belong to the document that stays in its tab
+		const comps = config.layer_comps;
+		const artboards = config.artboards;
+		config.layer_comps = [];
+		config.artboards = [];
+		config.layer_comp_current = null;
 		this.render();
 		//undo of this step (when creating the project fails)
 		return () => {
@@ -269,6 +278,8 @@ class GUI_documents_class {
 				this.documents.splice(index, 1);
 			}
 			this.active = Math.min(previous, this.documents.length - 1);
+			config.layer_comps = comps;
+			config.artboards = artboards;
 			this.render();
 		};
 	}
@@ -278,8 +289,10 @@ class GUI_documents_class {
 	 *
 	 * @param {string} name
 	 * @param {string} json
+	 * @param {object} [extra] more properties of the tab (smart_link: the contents of a smart object)
+	 * @returns {Promise<boolean>} true when the document was opened
 	 */
-	async open_json_as_new(name, json) {
+	async open_json_as_new(name, json, extra = null) {
 		if (this.busy) {
 			return;
 		}
@@ -287,10 +300,11 @@ class GUI_documents_class {
 		const previous = this.active;
 		try {
 			this.documents[previous].json = export_as_json();
-			this.documents.splice(previous + 1, 0, {name, json, dirty: false});
+			this.documents.splice(previous + 1, 0, Object.assign({name, json, dirty: false}, extra || {}));
 			this.active = previous + 1;
 			this.render();
 			await this.load(json);
+			return true;
 		}
 		catch {
 			alertify.error(t('Document could not be opened.'));
@@ -385,6 +399,9 @@ class GUI_documents_class {
 		state.action_history = [];
 		state.action_history_index = 0;
 		state.original_canvas = null;
+		//snapshots belong to the document that is being replaced
+		state.snapshots = [];
+		state.history_brush_source = null;
 		for (let i = 0; i < actions.length; i++) {
 			try {
 				await actions[i].free();
@@ -429,11 +446,21 @@ class GUI_documents_class {
 			this.busy = false;
 			return;
 		}
+		//the contents of a smart object go back to its layer when its document is selected again
+		let smart_update = null;
+		const Smart_object = this.documents[previous].smart_link && this.documents[previous].smart_link.parent === this.documents[index]
+			? (await import('./../../modules/layer/smart_object.js')).default : null;
+		if (Smart_object) {
+			smart_update = new Smart_object().capture(this.documents[previous], current_json);
+		}
 		try {
 			this.documents[previous].json = current_json;
 			this.active = index;
 			this.render();
 			await this.load(this.documents[index].json);
+			if (smart_update) {
+				await new Smart_object().apply(smart_update);
+			}
 		}
 		catch {
 			alertify.error(t('Document could not be opened.'));

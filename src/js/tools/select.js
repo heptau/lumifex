@@ -7,6 +7,7 @@ import { schedule_ants_redraw } from './../core/base-selection.js';
 import app from './../app.js';
 import { describe_transform, remember_transform } from './../libs/transform-repeat.js';
 import { linked_with, follow_transform } from './../libs/layer-link.js';
+import { selected_layers } from './../core/layer-selection.js';
 import { constrain_axis } from './../libs/move-constrain.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
@@ -177,7 +178,14 @@ class Select_tool_class extends Base_tools_class {
 	 * the layers linked with the active layer (Layer > Link Layers) that move together with it, with their positions now
 	 */
 	linked_starts() {
-		return linked_with(config.layers, config.layer)
+		//the linked layers and the other layers selected in the Layers panel move together with the active one
+		const followers = linked_with(config.layers, config.layer);
+		selected_layers().forEach((layer) => {
+			if (layer.id != config.layer.id && !followers.includes(layer)) {
+				followers.push(layer);
+			}
+		});
+		return followers
 			.filter((layer) => layer.locked !== true)
 			.map((layer) => ({layer, x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotate: layer.rotate}));
 	}

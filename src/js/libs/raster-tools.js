@@ -4,7 +4,7 @@
  */
 export const RASTER_TOOLS = [
 	'lasso', 'quick_select', 'magic_wand', 'quick_mask',
-	'clone', 'pattern_stamp', 'color_replace', 'heal', 'patch', 'history_brush', 'red_eye', 'background_eraser', 'liquify',
+	'clone', 'pattern_stamp', 'color_replace', 'heal', 'patch', 'content_move', 'history_brush', 'red_eye', 'background_eraser', 'liquify',
 	'erase', 'magic_erase', 'fill',
 	'blur', 'sharpen', 'smudge', 'dodge_burn', 'sponge', 'bulge_pinch',
 ];
@@ -25,12 +25,15 @@ function samples_all(tool_name, attributes) {
 	return Boolean(option !== null && typeof option === 'object' ? option.value : option);
 }
 
+//these only read the pixels (selections) or paint a mask, so they work also on a smart object
+export const SMART_OBJECT_TOOLS = ['lasso', 'quick_select', 'magic_wand', 'quick_mask'];
+
 //these refuse also an image that is still a vector (opened SVG) until it is converted to raster
 export const STRICT_RASTER_TOOLS = ['erase', 'magic_erase', 'fill'];
 
 /**
  * @param {string} tool_name
- * @param {{type: string|null, is_vector: boolean}|null} layer active layer
+ * @param {{type: string|null, is_vector?: boolean, smart_object?: object|null}|null} layer active layer
  * @param {Object} [attributes] the options of the tool
  * @returns {boolean} the tool can not be used on the layer
  */
@@ -40,6 +43,10 @@ export function is_tool_disabled(tool_name, layer, attributes) {
 	}
 	//the empty first layer has no type yet and every tool can start on it
 	if (layer.type != null && layer.type != 'image') {
+		return true;
+	}
+	//a smart object keeps its source, its pixels are not edited (Layer > Smart Objects > Rasterize first)
+	if (layer.type == 'image' && layer.smart_object != null && SMART_OBJECT_TOOLS.includes(tool_name) == false) {
 		return true;
 	}
 	return STRICT_RASTER_TOOLS.includes(tool_name) && layer.is_vector === true;

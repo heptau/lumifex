@@ -1,4 +1,5 @@
 import app from './../../app.js';
+import { selected_layers } from './../../core/layer-selection.js';
 import config from './../../config.js';
 import Dialog_class from './../../libs/popup.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
@@ -7,7 +8,7 @@ import { t } from '../tools/translate.js';
 
 /**
  * Layer > Link Layers / Unlink Layer. Layers that are linked with the active layer move together with it
- * (Move tool and arrow keys). Shift+click on a layer in the Layers panel links / unlinks it with the active layer.
+ * (Move tool and arrow keys). With several layers selected in the Layers panel, Link Layers links them at once.
  */
 class Layer_link_class {
 
@@ -16,6 +17,13 @@ class Layer_link_class {
 	 */
 	link() {
 		const active = config.layer;
+		const chosen_layers = selected_layers().filter((layer) => layer.type != null);
+		if (chosen_layers.length > 1 && active && active.type != null) {
+			//the layers selected in the Layers panel are linked at once (Photoshop: the link button)
+			const ids = chosen_layers.filter((layer) => layer.id != active.id).map((layer) => layer.id);
+			this.apply(link_changes(config.layers, active, ids.concat(linked_with(config.layers, active).map((layer) => layer.id).filter((id) => !ids.includes(id)))), 'Link Layers');
+			return;
+		}
 		const others = config.layers.filter((layer) => layer.type != null && layer.id != active.id);
 		if (active == null || active.type == null || others.length == 0) {
 			alertify.warning(t('There is no other layer to link with.'));

@@ -12,6 +12,7 @@ import Tools_translate_class, { t } from './../../modules/tools/translate.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import Base_gui_class from '../base-gui.js';
 import { pick_shape, is_shape_module, sort_shapes, carry_shape_options, LAST_SHAPE_KEY } from './../../libs/shape-tools.js';
+import { is_smart_object, SMART_OBJECT_MESSAGE } from './../../libs/smart-object.js';
 
 //a double click on these tools in the toolbar runs a command (Photoshop: Hand = Fit on Screen, Zoom = 100 %)
 const DOUBLE_CLICK_TARGETS = {hand: 'view/zoom.auto', zoom: 'view/zoom.original'};
@@ -191,18 +192,18 @@ class GUI_tools_class {
 		//the order of the Photoshop toolbar read row by row in two columns; the groups have an even number
 		//of tools (the animation is the last one) so no hole is left before a separator
 		const groups = [
-			//Move, Marquee, Lasso, Quick Selection, Magic Wand, Quick Mask
-			['select', 'selection', 'lasso', 'quick_select', 'magic_wand', 'quick_mask'],
-			//Crop, Eyedropper, Ruler, Healing, Patch, Red Eye, Brush, Pencil, Color Replacement, Clone Stamp, Pattern Stamp,
+			//Move, Marquee, Lasso, Object Selection, Quick Selection, Magic Wand, Quick Mask, Crop
+			['select', 'selection', 'lasso', 'object_select', 'quick_select', 'magic_wand', 'quick_mask', 'crop'],
+			//Eyedropper, Ruler, Healing, Patch, Content-Aware Move, Red Eye, Brush, Pencil, Color Replacement, Clone Stamp, Pattern Stamp,
 			//History Brush, Eraser,
 			//Background Eraser, Magic Eraser, Gradient, Paint Bucket, Blur, Sharpen, Smudge, Dodge/Burn, Sponge,
 			//Liquify, Bulge/Pinch
-			['crop', 'pick_color', 'measure', 'heal', 'patch', 'red_eye', 'brush', 'pencil', 'color_replace', 'clone',
+			['pick_color', 'measure', 'heal', 'patch', 'content_move', 'red_eye', 'brush', 'pencil', 'color_replace', 'clone',
 				'pattern_stamp', 'history_brush',
 				'erase', 'background_eraser', 'magic_erase', 'gradient', 'fill', 'blur', 'sharpen', 'smudge', 'dodge_burn',
 				'sponge', 'liquify', 'bulge_pinch'],
-			//Pen, Type, Shapes, Hand
-			['pen', 'text', 'shape', 'hand'],
+			//Pen, Type, Path Selection, Direct Selection, Shapes, Hand
+			['pen', 'text', 'path_select', 'direct_select', 'shape', 'hand'],
 			//Zoom, Animation
 			['zoom', 'animation'],
 		];
@@ -273,7 +274,7 @@ class GUI_tools_class {
 
 	async activate_tool(key) {
 		if (is_tool_disabled(key, config.layer, this.tool_attributes(key))) {
-			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
+			alertify.error(t(is_smart_object(config.layer) ? SMART_OBJECT_MESSAGE : 'This layer must contain an image. Please convert it to raster to apply this tool.'));
 			return;
 		}
 		if (needs_raster_layer(key, config.layer, this.tool_attributes(key))) {

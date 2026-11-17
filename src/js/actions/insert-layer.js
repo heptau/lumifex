@@ -4,6 +4,7 @@ import { Base_action } from './base.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
 import { normalize_rotate } from '../libs/vector-rotation.js';
+import { clean_blend_mode } from '../libs/blend-modes.js';
 
 export class Insert_layer_action extends Base_action {
 	/**
@@ -55,8 +56,21 @@ export class Insert_layer_action extends Base_action {
 			//would lose them when it is opened ("wrong key")
 			mask: null,
 			mask_enabled: true,
+			mask_density: 100,
+			mask_feather: 0,
+			//the mask of the smart filters (Layer > Smart Filter > Filter Mask) and its shape
+			smart_mask: null,
+			smart_mask_enabled: true,
+			smart_mask_density: 100,
+			smart_mask_feather: 0,
+			//Layer > Vector Mask
+			vector_mask: null,
+			vector_mask_enabled: true,
+			effects_hidden: false,
 			locked: false,
 			lock_alpha: false,
+			//Layer > Smart Objects: the source of the picture (libs/smart-object.js)
+			smart_object: null,
 			group: null,
 			group_opacity: 100,
 			group_props: null,
@@ -81,6 +95,8 @@ export class Insert_layer_action extends Base_action {
 			layer[i] = this.settings[i];
 		}
 		layer.rotate = normalize_rotate(layer);
+		//a blend mode from a project or a file that is not known is drawn as Normal
+		layer.composition = clean_blend_mode(layer.composition);
 
 		// Prepare image
 		let image_load_promise;

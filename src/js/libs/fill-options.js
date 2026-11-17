@@ -1,20 +1,20 @@
 /**
  * Edit > Fill... (Photoshop): what the fill is made of, how it is blended and how strong it is. Pure functions, no DOM.
  */
-import { BLEND_MODES } from './blend-modes.js';
+import { CANVAS_BLEND_MODES } from './blend-modes.js';
 
 /** The contents of the Fill dialog */
 export const FILL_CONTENTS = ['Foreground Color', 'Background Color', 'Pattern', 'Black', '50% Gray', 'White'];
 
 /** The labels of the blend modes (Normal, Multiply...) as the Layers panel has them */
-export const FILL_MODES = BLEND_MODES.map((mode) => mode[1]);
+export const FILL_MODES = CANVAS_BLEND_MODES.map((mode) => mode[1]);
 
 /**
  * @param {string} label one of FILL_MODES
  * @returns {string} the canvas composite operation, source-over for anything unknown
  */
 export function fill_operation(label) {
-	const mode = BLEND_MODES.find((entry) => entry[1] === label);
+	const mode = CANVAS_BLEND_MODES.find((entry) => entry[1] === label);
 	return mode ? mode[0] : 'source-over';
 }
 

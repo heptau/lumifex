@@ -10,7 +10,7 @@ export const LONG_PRESS_TOLERANCE = 10; //px the finger may move and it is still
  * Tools where a touch on the canvas does not paint: moving, selecting, looking. With the other tools a touch is the
  * start of a stroke (or a click that changes the picture), so holding the finger there must not open a menu.
  */
-export const CONTEXT_MENU_TOOLS = ['select', 'hand', 'zoom', 'selection', 'lasso', 'magic_wand', 'quick_select', 'crop', 'measure', 'pick_color', 'text'];
+export const CONTEXT_MENU_TOOLS = ['select', 'hand', 'zoom', 'selection', 'lasso', 'magic_wand', 'quick_select', 'object_select', 'crop', 'measure', 'pick_color', 'text'];
 
 /**
  * @param {string|null|undefined} tool_name name of the active tool

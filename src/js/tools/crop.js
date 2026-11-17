@@ -221,8 +221,8 @@ class Crop_class extends Base_tools_class {
 			x -= parseInt(selection.x);
 			y -= parseInt(selection.y);
 
-			if (link.type == 'image') {
-				//also remove unvisible data
+			if (link.type == 'image' && !link.smart_object) {
+				//also remove unvisible data (a smart object keeps its whole picture and only moves)
 				let left = 0;
 				if (x < 0)
 					left = -x;

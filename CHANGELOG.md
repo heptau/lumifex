@@ -10,7 +10,32 @@ Only changes since version 5.0.0 are listed here.
 ## [Unreleased]
 
 ### Added
+- Edit > Sky Replacement: finds the sky of the photo and puts a new one (a built-in Blue Sky, Sunset, Dusk or Overcast gradient, or another image layer) above it as a masked layer, with Shift Edge, Fade Edge, Scale, Move Down, Flip and a Lighting layer that tints the foreground with the color of the new sky; a live preview and one undo step.
+- Opening a PSD file keeps the layer effects Drop Shadow, Outer Glow, Inner Shadow, Inner Glow, Stroke and Color Overlay as layer styles (also several of one kind from newer files and the global light angle); other effects are still skipped.
+- Image > Apply Image: blends a layer or the merged picture (all colors or one channel, optionally inverted) into the active layer with a blending mode and opacity, with a live preview; only inside the selection when there is one.
+- Image > Calculations: blends two channels (red, green, blue, gray or transparency of any layer or the merged picture) into a new alpha channel, a selection or a new gray layer.
+- Alpha channels (Select > Save Selection as Channel, or the button under the Channels panel): selections saved with the project and shown in the Channels panel; a click loads one as a selection, a double click renames it, ↧ replaces it with the current selection, × deletes it. Every change can be undone.
+- History snapshots (Edit > New Snapshot, or "+ New Snapshot" in the History panel): named states of the document; a click restores one as a single undo step, a double click renames it, and the circle in front of it makes it the source of the History Brush.
+- Paths panel (Window > Paths): document paths saved with the project, select / rename, Fill Path, Stroke Path, Load Path as Selection, Make Work Path from Selection, Add Vector Mask, New / Delete Path; the Pen has a Shape / Path mode.
+- Path Selection (A) and Direct Selection (Shift+A) tools: move a whole path, drag anchors and handles (Alt breaks the handles), also on Pen layers; one undo step per drag.
+- Vector masks (Layer > Vector Mask: Reveal All, Hide All, Current Path, Disable / Enable, Rasterize, Delete), a "Vector Mask" row in the Layers panel, read and written in PSD files.
 
+- Smart objects (Layer > Smart Objects): Convert to Smart Object keeps the source of a layer, pixel edits are refused until Rasterize, smart filters and transformations keep working; Edit Contents opens the source in a new tab and Save Smart Object (or selecting the parent tab) puts the edited contents back in one undo step; Replace Contents, Export Contents and File > Place Embedded.
+- Character and Paragraph panels (Window > Character / Paragraph): the font, size, color, styles, kerning, leading, outline and alignment of the active text layer or of the marked text, changed live with one undo step per change; without a text layer they set the Text tool defaults.
+- Type > Type on Path: a text that follows the path of a Pen layer, with a start offset; Type > Edit Type on Path (or a double click with the Text tool) changes the text and the offset.
+- Layer > Artboards: named areas of the document (from the selection, a preset size such as iPhone, iPad, web or Instagram, or any size) drawn with their names; File > Export > Artboards to Files saves each one as a PNG in a ZIP.
+- Select > Select and Mask: refine the selection in one dialog with views Overlay, On Black, On White, Black & White and Marching Ants, Decontaminate Colors and output to a selection, a layer mask, a new layer or a new layer with a mask.
+- Object Selection tool: drag a rectangle around an object and the object inside is selected (works on any layer).
+- Content-Aware Move tool: draw around an object and drag it; it moves with a soft edge and its old place is filled from the surroundings. Crop moved to the end of the selection tools group in the toolbar.
+- Layer > Layer Comps: save the visibility, position and appearance of the layers under a name and switch between the versions (New, Apply, Previous / Next, Update, Delete); the comps are saved in the project.
+- Several layers can be selected in the Layers panel (Ctrl/Cmd + click, Shift + click for a range): they move together, and Delete, Group (Ctrl+G), Align / Distribute, Link Layers and Merge Layers (Ctrl+E) work with all of them. Loading a layer as a selection moved to Ctrl + click on its thumbnail, linking to Layer > Link Layers.
+- Edit > Puppet Warp: a triangle mesh over the opaque pixels of the image layer (Density: Fewer Points / Normal / More Points, Expansion, Show Mesh). A click on the mesh puts a pin, dragging a pin bends the picture around the other pins, Alt + click or Backspace removes a pin; Enter / Apply makes it in one history step, Esc / Cancel throws it away.
+- Brush size and hardness by dragging on the canvas: Alt + right button (on a Mac also Ctrl + Option), left / right = size, up / down = hardness, with a preview circle (Photoshop).
+- View > Screen Mode: Standard, Full Screen Mode with Menu Bar and Full Screen Mode (only the picture); F cycles them, Shift+F backwards.
+- The Layers panel always keeps room in the right column: the panels above it shrink and scroll when the window is short.
+- Layers panel thumbnails of the layer and its mask. A click on the mask thumbnail makes the mask the target: Brush, Pencil, Eraser, Gradient, Paint Bucket and Edit > Fill then paint into it in shades of gray (black hides, white reveals). Alt+click shows the mask alone, Shift+click disables it, Ctrl+click loads it as a selection, `\` shows it as a red overlay (Photoshop).
+- Edit > Free Transform (Ctrl+T) works on the canvas like in Photoshop: a frame with handles moves, scales (Shift frees the proportions, Alt from the center), rotates (Shift by 15°), Ctrl/Cmd + a corner distorts; the bar shows X, Y, W, H and the angle and has Flip Horizontal / Vertical; the right button offers Scale, Rotate, Skew, Distort, Perspective, Warp, Rotate 180° / 90° and Flip; with a selection on a picture layer only the selected pixels are transformed. Enter applies as one undo step, Esc cancels.
+- The Photoshop blend modes the canvas can not do: Dissolve, Linear Burn, Darker Color, Lighter Color, Vivid Light, Linear Light, Pin Light, Hard Mix, Subtract and Divide, for layers and groups, in the layers panel, the Next / Previous Blend Mode cycle and in PSD files.
 - Layer > Smart Filter > Filter Mask to Selection loads the part where the filters apply as a selection.
 - Density and Feather of the smart filter mask in the Layer details panel, as for the layer mask.
 - Quick Mask can paint the smart filter mask with a brush (target "Filter mask"): painting reveals the filters, Alt / Subtract hides them again.
@@ -130,6 +155,8 @@ Only changes since version 5.0.0 are listed here.
 
 ### Fixed
 
+- A project with a filter mask, the Density / Feather of a mask or hidden effects opened with a "wrong key" error and lost them.
+- The floating bars of Distort, Free Transform and Puppet Warp had dark text on a dark background in the light theme.
 - The page no longer reloads by itself a few seconds after the first visit (the service worker taking control did it).
 - Lowering History steps in Settings now trims the existing history with the next step, not only after a reload.
 - Magic Wand and Quick Selection with "Sample all layers" are no longer disabled on text, shape and other non-image layers.

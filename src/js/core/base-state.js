@@ -38,6 +38,11 @@ class Base_state_class {
 		//the number of steps is a setting (Settings > Behavior > History steps)
 		this.action_history_max = clean_history_steps(this.Helper.getCookie('history_steps'));
 		this.original_canvas = null;
+		//History snapshots of the active document ({id, name, json, canvas}, session only; edit/history.js)
+		this.snapshots = [];
+		this.snapshot_counter = 0;
+		//the snapshot the History Brush paints from (null = the state before the first change)
+		this.history_brush_source = null;
 
 		this.set_events();
 	}

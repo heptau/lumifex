@@ -114,6 +114,15 @@ class Edit_fill_class {
 	 */
 	fill(mask, extra) {
 		const layer = config.layer;
+		const mask_edit = app.GUI && app.GUI.GUI_mask_edit;
+		if (!(mask && mask.data) && mask_edit && mask_edit.is_editing()) {
+			//the layer mask is the target: the fill goes into it as a shade of gray (Photoshop)
+			const options = extra ? clean_fill_options(extra) : (this.options || null);
+			const use_background = options ? options.contents == 'Background Color' : this.use_background;
+			const own = options ? (options.color || fill_color(options.contents, config.COLOR, config.COLOR_BG)) : null;
+			mask_edit.fill(own || (use_background ? config.COLOR_BG : config.COLOR), options ? options.opacity / 100 : 1);
+			return;
+		}
 		if (layer.type != 'image' && layer.type !== null) {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
 			return;

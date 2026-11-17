@@ -1,6 +1,11 @@
 import app from './../../app.js';
 import config from './../../config.js';
 import { is_unit } from './../../libs/units.js';
+import { sanitize_smart_object } from './../../libs/smart-object.js';
+import { clean_comps } from './../../libs/layer-comps.js';
+import { clean_artboards } from './../../libs/artboards.js';
+import { clean_paths } from './../../libs/document-paths.js';
+import { clean_alpha_channels } from './../../libs/alpha-channels.js';
 import semver_compare from './../../../../node_modules/semver-compare/';
 
 /**
@@ -14,7 +19,12 @@ class File_open_json_class {
 		this.owner = owner;
 	}
 
-	async load_json(data) {
+	/**
+	 * @param {string|object} data project JSON
+	 * @param {{action_id?: string, description?: string, keep_zoom?: boolean}} options the history entry
+	 *     (History snapshots restore a document under their own name and keep the zoom)
+	 */
+	async load_json(data, options = {}) {
 		let i, j, old_type;
 		let json;
 		if(typeof data == 'string')
@@ -134,19 +144,23 @@ class File_open_json_class {
 		const actions = [];
 
 		//reset zoom
-		await this.owner.Base_gui.GUI_preview.zoom(100); //reset zoom
+		if (!options.keep_zoom) {
+			await this.owner.Base_gui.GUI_preview.zoom(100);
+		}
 
 		//set attributes
 		actions.push(
 			new app.Actions.Refresh_action_attributes_action('undo'),
 			new app.Actions.Prepare_canvas_action('undo'),
 			new app.Actions.Update_config_action({
-				ZOOM: 1,
+				ZOOM: options.keep_zoom ? config.ZOOM : 1,
 				WIDTH: parseInt(json.info.width),
 				HEIGHT: parseInt(json.info.height),
 				RESOLUTION: json.info.resolution > 0 ? json.info.resolution : null,
 				UNITS: is_unit(json.info.units) ? json.info.units : null,
-				user_fonts: json.user_fonts || {}
+				user_fonts: json.user_fonts || {},
+				paths: clean_paths(json.info.paths),
+				alpha_channels: clean_alpha_channels(json.info.alpha_channels),
 			}),
 			new app.Actions.Reset_layers_action(),
 			new app.Actions.Prepare_canvas_action('do'),
@@ -162,6 +176,10 @@ class File_open_json_class {
 			if(typeof value.order != 'undefined' && value.order > max_id_order)
 				max_id_order = value.order;
 
+			if ('smart_object' in value) {
+				//a smart object from a file is checked; an invalid one leaves an ordinary picture
+				value.smart_object = value.type == 'image' ? sanitize_smart_object(value.smart_object) : null;
+			}
 			if (value.type == 'image') {
 				//add image data
 				value.link = null;
@@ -183,6 +201,10 @@ class File_open_json_class {
 		if (json.info.guides != undefined) {
 			config.guides = json.info.guides;
 		}
+		//Layer > Layer Comps of the document (validated, a file can contain anything)
+		config.layer_comps = clean_comps(json.info.layer_comps);
+		config.layer_comp_current = null;
+		config.artboards = clean_artboards(json.info.artboards);
 		actions.push(
 			new app.Actions.Set_object_property_action(this.owner.Base_layers, 'auto_increment', max_id_order + 1),
 			new app.Actions.Update_config_action({
@@ -194,7 +216,7 @@ class File_open_json_class {
 			new app.Actions.Prepare_canvas_action('do')
 		);
 		await app.State.do_action(
-			new app.Actions.Bundle_action('open_json_file', 'Open JSON File', actions)
+			new app.Actions.Bundle_action(options.action_id || 'open_json_file', options.description || 'Open JSON File', actions)
 		);
 	}
 

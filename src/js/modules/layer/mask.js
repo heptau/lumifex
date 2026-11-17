@@ -38,7 +38,7 @@ class Layer_mask_class {
 	 * @param {boolean} [keep_shape] keep the Density and Feather of the layer (inverting changes the mask only)
 	 */
 	set_mask(layer, mask, name, keep_shape = false) {
-		return app.State.do_action(
+		const done = app.State.do_action(
 			new app.Actions.Bundle_action('layer_mask', name || 'Layer Mask', [
 				new app.Actions.Update_layer_action(layer.id, {
 					mask: mask ? serialize_layer_mask(mask) : null,
@@ -48,6 +48,42 @@ class Layer_mask_class {
 				}),
 			])
 		);
+		//as in Photoshop, a new mask becomes the target of the painting tools (its thumbnail gets the frame)
+		return Promise.resolve(done).then((result) => {
+			if (mask && app.GUI && app.GUI.GUI_mask_edit && (!result || result.status != 'aborted')) {
+				app.GUI.GUI_mask_edit.edit_mask(layer.id);
+			}
+			return result;
+		});
+	}
+
+	/**
+	 * Layer > Layer Mask > Edit Layer Mask - the painting tools (Brush, Pencil, Eraser, Gradient, Paint Bucket)
+	 * and Edit > Fill paint into the mask (a click on the mask thumbnail in the Layers panel does the same)
+	 */
+	edit_mask() {
+		app.GUI.GUI_mask_edit.edit_mask();
+	}
+
+	/**
+	 * Layer > Layer Mask > Edit Layer - the tools work with the pixels of the layer again
+	 */
+	edit_layer() {
+		app.GUI.GUI_mask_edit.edit_layer();
+	}
+
+	/**
+	 * Layer > Layer Mask > View Layer Mask - the mask alone in gray (Alt + click on the mask thumbnail)
+	 */
+	view_mask() {
+		app.GUI.GUI_mask_edit.toggle_view_mask();
+	}
+
+	/**
+	 * Layer > Layer Mask > Show Mask as Overlay - the hidden parts in red ("\\")
+	 */
+	toggle_overlay() {
+		app.GUI.GUI_mask_edit.toggle_overlay();
 	}
 
 	/**

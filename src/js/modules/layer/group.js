@@ -1,4 +1,5 @@
 import app from './../../app.js';
+import { selected_layers } from './../../core/layer-selection.js';
 import config from './../../config.js';
 import Dialog_class from './../../libs/popup.js';
 import Base_layers_class from './../../core/base-layers.js';
@@ -7,13 +8,24 @@ import Edit_selection_class from './../edit/selection.js';
 import { serialize_layer_mask, layer_mask_from_selection } from './../../libs/layer-mask.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../tools/translate.js';
+import { BLEND_MODES } from './../../libs/blend-modes.js';
 
 /**
  * Layer > Group - layers with the same group name belong together (layer.group, see libs/layer-groups.js).
  * Groups do not change how layers are rendered; the whole group can be shown/hidden or merged at once.
  */
-//blend modes a group can have (Pass Through is the default 'source-over': the layers are drawn in their places)
-const GROUP_MODES = ['source-over', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity'];
+//blend modes a group can have as [id, label] (Pass Through is the default 'source-over': the layers are drawn in their
+//places); the dialog shows the labels
+const GROUP_MODES = BLEND_MODES.map((mode) => (mode[0] === 'source-over' ? ['source-over', 'Pass Through'] : mode));
+
+/**
+ * @param {string} value a label of the dialog (or an id, as older recorded Actions have it)
+ * @returns {string} the id of the mode, source-over for anything unknown
+ */
+function group_mode(value) {
+	const found = GROUP_MODES.find((mode) => mode[1] === value || mode[0] === value);
+	return found ? found[0] : 'source-over';
+}
 
 class Layer_group_class {
 
@@ -44,6 +56,14 @@ class Layer_group_class {
 					return;
 				}
 				//the layer takes the opacity and blend mode of the groups it joins
+				const members = selected_layers().filter((item) => item.type != null);
+				if (members.length > 1) {
+					//all layers selected in the Layers panel go into the group in one step (Photoshop: Ctrl+G)
+					app.State.do_action(new app.Actions.Bundle_action('set_group', 'Set Group', members.map((item) => new app.Actions.Update_layer_action(item.id, {
+						group: name, group_opacity: 100, group_props: props_for_join(config.layers, item.id, name),
+					}))));
+					return;
+				}
 				this.update(layer.id, {group: name, group_opacity: 100, group_props: props_for_join(config.layers, layer.id, name)}, 'Set Group');
 			},
 		};
@@ -110,7 +130,7 @@ class Layer_group_class {
 		const apply = (values, final) => {
 			const props = {
 				opacity: Math.min(100, Math.max(0, parseInt(values.opacity, 10) || 0)),
-				composition: GROUP_MODES.includes(values.mode) ? values.mode : 'source-over',
+				composition: group_mode(values.mode),
 				mask: current.mask,
 			};
 			if (final) {
@@ -132,7 +152,7 @@ class Layer_group_class {
 			title: 'Group Settings',
 			params: [
 				{name: "opacity", title: "Opacity:", value: current.opacity, range: [0, 100]},
-				{name: "mode", title: "Blend mode:", values: GROUP_MODES, value: current.composition},
+				{name: "mode", title: "Blend mode:", type: 'select', values: GROUP_MODES.map((mode) => mode[1]), value: (GROUP_MODES.find((mode) => mode[0] === current.composition) || GROUP_MODES[0])[1]},
 			],
 			on_change: (values) => apply(values, false),
 			on_finish: (values) => {

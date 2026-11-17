@@ -1,4 +1,5 @@
 import { warp_settings, warp_text } from './../libs/text-warp.js';
+import { clean_text_path, measure_path, layout_on_path, path_glyphs } from './../libs/text-path.js';
 import app from './../app.js';
 import config from './../config.js';
 import Base_tools_class from './../core/base-tools.js';
@@ -42,6 +43,8 @@ const fontMetricsMap = new Map();
 const layerEditors = new WeakMap();
 const fontLoadPromiseMap = new Map();
 const fontLoadMap = new Map();
+//measured paths of texts on a path, by the stored path array (replaced, never changed in place)
+const measuredPaths = new WeakMap();
 fontLoadMap.set('Arial', true);
 fontLoadMap.set('Courier', true);
 fontLoadMap.set('Impact', true);
@@ -2330,6 +2333,17 @@ class Text_class extends Base_tools_class {
 		}
 
 		const existingLayer = this.get_text_layer_at_mouse(e);
+		if (existingLayer && existingLayer.params && existingLayer.params.path) {
+			//a text on a path is not edited in place (a double click opens Type > Edit Type on Path)
+			this.layer = existingLayer;
+			if (this.textarea) {
+				this.textarea.blur();
+			}
+			if (existingLayer !== config.layer) {
+				app.State.do_action(new app.Actions.Select_layer_action(existingLayer.id));
+			}
+			return;
+		}
 		if (existingLayer) {
 			this.selecting = true;
 			this.layer = existingLayer;
@@ -2496,7 +2510,12 @@ class Text_class extends Base_tools_class {
 	}
 
 
-	doubleClick() {
+	doubleClick(event) {
+		if (config.TOOL.name == this.name && config.layer && config.layer.type == 'text' && config.layer.params && config.layer.params.path
+			&& event && this.get_mouse_info(event).click_valid && this.get_text_layer_at_mouse(event) === config.layer) {
+			app.GUI.run_target('type/type_path.edit');
+			return;
+		}
 		if (document.activeElement === this.textarea) {
 			const editor = this.get_editor(this.layer);
 			if (editor.selection.is_empty()) {
@@ -2608,7 +2627,7 @@ class Text_class extends Base_tools_class {
 	}
 
 	extend_fixed_bounds(layer, editor) {
-		if (layer && layer.params && layer.params.boundary !== 'dynamic') {
+		if (layer && layer.params && layer.params.boundary !== 'dynamic' && !layer.params.path) {
 			const isHorizontalTextDirection = ['ltr', 'rtl'].includes(layer.params.textDirection);
 			let new_width = layer.width;
 			let new_height = layer.height;
@@ -2627,12 +2646,18 @@ class Text_class extends Base_tools_class {
 			return;
 
 		const isActiveLayerAndTextTool = layer === config.layer && config.TOOL.name === 'text';
-		const editor = this.get_editor(layer);
-		editor.selection.set_visible(isActiveLayerAndTextTool);
-		editor.selection.set_cursor_visible(isActiveLayerAndTextTool && (this.selecting || this.focused));
-		this.render_with_warp(ctx, layer, editor);
-		if (layer === config.layer) {
-			this.resize_to_dynamic_bounds(layer, editor);
+		const text_path = clean_text_path(layer.params);
+		if (text_path) {
+			this.render_on_path(ctx, layer, text_path);
+		}
+		else {
+			const editor = this.get_editor(layer);
+			editor.selection.set_visible(isActiveLayerAndTextTool);
+			editor.selection.set_cursor_visible(isActiveLayerAndTextTool && (this.selecting || this.focused));
+			this.render_with_warp(ctx, layer, editor);
+			if (layer === config.layer) {
+				this.resize_to_dynamic_bounds(layer, editor);
+			}
 		}
 		if (!this.resizing && isActiveLayerAndTextTool) {
 			this.selection.x = layer.x;
@@ -2646,6 +2671,77 @@ class Text_class extends Base_tools_class {
 			this.selection.width = 0;
 			this.selection.height = 0;
 		}
+	}
+
+	/**
+	 * Type on a Path (Type > Type on Path): every letter is drawn on its own, its center on the path, turned along it.
+	 * Supported per letter: font, size, bold, italic, color, outline (stroke) and kerning (extra spacing); underline,
+	 * strikethrough, leading, alignment and Warp Text do not apply. Moving the layer moves the path, rotating the layer
+	 * turns it around the center of the layer; stretching the frame does not stretch the text.
+	 *
+	 * @param {CanvasRenderingContext2D} ctx
+	 * @param {object} layer
+	 * @param {ReturnType<typeof clean_text_path>} text_path
+	 */
+	render_on_path(ctx, layer, text_path) {
+		let measured = measuredPaths.get(layer.params.path);
+		if (!measured || measured.closed !== text_path.closed) {
+			measured = measure_path(text_path.anchors, text_path.closed);
+			measuredPaths.set(layer.params.path, measured);
+		}
+		const glyphs = path_glyphs(layer.data);
+		if (glyphs.length == 0) {
+			return;
+		}
+		const font_of = (meta) => {
+			const family = meta.family || metaDefaults.family;
+			const size = Math.max(1, Math.round(meta.size || metaDefaults.size));
+			return `${meta.italic ? 'italic ' : ''}${meta.bold ? 'bold ' : ''}${size}px ${family}`;
+		};
+		ctx.save();
+		const advances = glyphs.map((glyph) => {
+			const family = glyph.meta.family || metaDefaults.family;
+			if (fontLoadMap.get(family) !== true) {
+				const variants = config.user_fonts && config.user_fonts[family] ? config.user_fonts[family].variants : undefined;
+				load_font_family({ family, variants }, () => {
+					this.Base_layers.render();
+				});
+			}
+			ctx.font = font_of(glyph.meta);
+			const kerning = Number(glyph.meta.kerning) || 0;
+			return ctx.measureText(glyph.char).width + kerning;
+		});
+		const placed = layout_on_path(advances, measured, text_path.offset);
+		if (layer.rotate) {
+			ctx.translate(layer.x + layer.width / 2, layer.y + layer.height / 2);
+			ctx.rotate(layer.rotate * Math.PI / 180);
+			ctx.translate(-layer.x - layer.width / 2, -layer.y - layer.height / 2);
+		}
+		ctx.translate(layer.x - text_path.origin.x, layer.y - text_path.origin.y);
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'alphabetic';
+		const color = (value, fallback) => (typeof value == 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value) ? value : fallback);
+		placed.forEach((spot) => {
+			const glyph = glyphs[spot.index];
+			if (glyph.char.trim() === '') {
+				return;
+			}
+			const meta = glyph.meta;
+			ctx.save();
+			ctx.translate(spot.x, spot.y);
+			ctx.rotate(spot.angle);
+			ctx.font = font_of(meta);
+			ctx.fillStyle = color(meta.fill_color, metaDefaults.fill_color);
+			ctx.fillText(glyph.char, 0, 0);
+			const stroke_size = Number(meta.stroke_size) || 0;
+			if (stroke_size > 0) {
+				ctx.lineWidth = stroke_size;
+				ctx.strokeStyle = color(meta.stroke_color, metaDefaults.stroke_color);
+				ctx.strokeText(glyph.char, 0, 0);
+			}
+			ctx.restore();
+		});
+		ctx.restore();
 	}
 
 	/**

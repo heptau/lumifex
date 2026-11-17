@@ -297,7 +297,8 @@ class Image_resize_class {
 		}
 
 		//is vector
-		else if (layer.is_vector == true && layer.width != null && layer.height != null) {
+		//a smart object keeps its picture, only its frame is scaled (it is drawn again from the full picture)
+		else if ((layer.is_vector == true || layer.smart_object) && layer.width != null && layer.height != null) {
 			// Return actions
 			return [
 				new app.Actions.Update_layer_action(layer.id, {

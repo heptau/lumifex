@@ -46,7 +46,7 @@ export class Update_layer_action extends Base_action {
 		if (this.settings.params || this.settings.width || this.settings.height) {
 			config.need_render_changed_params = true;
 		}
-		if ('filters' in this.settings || 'mask' in this.settings ||'mask_enabled' in this.settings || 'smart_mask' in this.settings || 'smart_mask_enabled' in this.settings || 'locked' in this.settings || 'lock_alpha' in this.settings || 'group' in this.settings || 'group_opacity' in this.settings || 'group_props' in this.settings || 'link_id' in this.settings) {
+		if ('filters' in this.settings || 'mask' in this.settings ||'mask_enabled' in this.settings || 'smart_mask' in this.settings || 'smart_mask_enabled' in this.settings || 'locked' in this.settings || 'lock_alpha' in this.settings || 'group' in this.settings || 'group_opacity' in this.settings || 'group_props' in this.settings || 'link_id' in this.settings || 'smart_object' in this.settings) {
 			app.GUI.GUI_layers.render_layers(); //the layer list shows the layer mask
 		}
 		config.need_render = true;
@@ -64,7 +64,7 @@ export class Update_layer_action extends Base_action {
 			if (this.old_settings.params || this.old_settings.width || this.old_settings.height) {
 				config.need_render_changed_params = true;
 			}
-			if ('filters' in this.old_settings || 'mask' in this.old_settings ||'mask_enabled' in this.old_settings || 'smart_mask' in this.old_settings || 'smart_mask_enabled' in this.old_settings || 'locked' in this.old_settings || 'lock_alpha' in this.old_settings || 'group' in this.old_settings || 'group_opacity' in this.old_settings || 'group_props' in this.old_settings || 'link_id' in this.old_settings) {
+			if ('filters' in this.old_settings || 'mask' in this.old_settings ||'mask_enabled' in this.old_settings || 'smart_mask' in this.old_settings || 'smart_mask_enabled' in this.old_settings || 'locked' in this.old_settings || 'lock_alpha' in this.old_settings || 'group' in this.old_settings || 'group_opacity' in this.old_settings || 'group_props' in this.old_settings || 'link_id' in this.old_settings || 'smart_object' in this.old_settings) {
 				app.GUI.GUI_layers.render_layers();
 			}
 			this.old_settings = {};

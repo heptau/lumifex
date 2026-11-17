@@ -3,10 +3,12 @@ import config from './../config.js';
 import Base_pixel_tool_class from './../core/base-pixel-tool.js';
 import alertify from './../../../node_modules/alertifyjs/build/alertify.min.js';
 import { t } from '../modules/tools/translate.js';
+import Edit_history_class from './../modules/edit/history.js';
 
 /**
  * History brush - paints back the picture the document had before its first change (the same snapshot that
- * View > Split Compare shows), so a filter or a stroke can be undone just where the brush goes.
+ * View > Split Compare shows), or a History snapshot chosen as the source in the History panel, so a filter or
+ * a stroke can be undone just where the brush goes.
  */
 class History_brush_class extends Base_pixel_tool_class {
 
@@ -18,8 +20,9 @@ class History_brush_class extends Base_pixel_tool_class {
 	}
 
 	mousedown(e) {
-		this.source = app.State.original_canvas;
-		if (!this.source || app.State.action_history_index == 0) {
+		const source = new Edit_history_class().get_brush_source();
+		this.source = source.canvas;
+		if (!this.source || (!source.snapshot && app.State.action_history_index == 0)) {
 			if (this.get_mouse_info(e).click_valid) {
 				alertify.warning(t('There are no changes to paint back.'));
 			}

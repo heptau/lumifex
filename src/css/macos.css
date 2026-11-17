@@ -486,6 +486,44 @@ body.no_documents .documents_bar {
 	background: var(--accent);
 	color: var(--accent-text);
 }
+/* History snapshots: rows above the steps (source of the History Brush, name = restore, delete) */
+.history_list .history_snapshot {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin: 0 0 1px;
+}
+.history_list .history_snapshot button {
+	width: auto;
+	height: 22px;
+	margin: 0;
+	padding: 0 6px;
+	background: none;
+	border: 0;
+	border-radius: 5px;
+	box-shadow: none;
+}
+.history_list .history_snapshot .history_snapshot_name {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+}
+.history_list .history_snapshot .history_snapshot_source[aria-pressed="true"] {
+	color: var(--accent);
+}
+.history_list .history_snapshot button:hover {
+	background: var(--surface-hover);
+}
+.history_list .history_snapshot_new {
+	color: var(--accent);
+	border-bottom: 0.5px solid var(--separator) !important;
+	border-radius: 0 !important;
+	margin-bottom: 3px !important;
+}
 
 /* panels hidden from the Window menu */
 .panel_hidden {
@@ -1797,6 +1835,33 @@ html.large_ui input[type="number"] {
 	align-self: stretch;
 	background: var(--separator);
 }
+/* Edit > Puppet Warp: the mesh options in the bar */
+.puppet_bar {
+	background: var(--section-background-color);
+}
+.puppet_bar label {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+	margin: 0;
+	color: inherit;
+}
+.puppet_bar button {
+	white-space: nowrap;
+}
+.puppet_bar input[type="number"] {
+	width: 52px;
+}
+/* Edit > Free Transform: the numbers in the bar */
+.free_transform_bar label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.free_transform_bar input[type="number"] {
+	width: 64px;
+}
 
 /* holding a finger opens our context menu, not the one of iPadOS (selection handles, copy callout) */
 #canvas_minipaint,
@@ -2092,6 +2157,281 @@ html.large_ui input[type="number"] {
 	outline-offset: 1px;
 }
 
+/* alpha channels of the document below the color channels */
+.alpha_channels_list:not(:empty) {
+	margin-top: 4px;
+	padding-top: 4px;
+	border-top: 0.5px solid var(--separator);
+}
+span.channel_eye {
+	display: block;
+}
+.channels_footer {
+	margin-top: 4px;
+}
+.channel_save {
+	width: 100%;
+	height: 22px;
+	padding: 0 6px;
+	text-align: left;
+	color: var(--accent);
+	background: none;
+	border: 0;
+	border-radius: 5px;
+	box-shadow: none;
+}
+.channel_save:hover {
+	background: var(--surface-hover);
+}
+
+/* Character and Paragraph panels */
+.type-panel-content {
+	padding: 4px 10px 8px;
+}
+.type_panel_note {
+	margin: 0 0 4px;
+	font-size: 11px;
+	color: var(--text-color-muted);
+}
+.type_panel_row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 3px 0;
+}
+.type_panel_label {
+	flex: 0 0 84px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.type_panel_row select,
+.type_panel_row input[type="number"] {
+	flex: 1;
+	min-width: 0;
+}
+.type_panel_row input[type="color"] {
+	flex: none;
+	width: 40px;
+	height: 22px;
+	padding: 0;
+}
+.type_panel_buttons {
+	display: flex;
+	gap: 4px;
+	margin-top: 6px;
+}
+.type_panel_buttons button {
+	flex: 1;
+	height: 24px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.type_panel_buttons button[aria-pressed="true"] {
+	color: var(--accent);
+	background: var(--accent-soft, var(--surface-pressed));
+}
+.type_panel_buttons button:disabled {
+	opacity: .4;
+}
+.type_flag_bold { font-weight: bold; }
+.type_flag_italic { font-style: italic; }
+.type_flag_underline { text-decoration: underline; }
+.type_flag_strikethrough { text-decoration: line-through; }
+
 /* the Move tool is over a guide: it can be dragged (View > Lock Guides turns this off) */
 body.guide_hover_x #main_wrapper, body.guide_hover_x #main_wrapper * { cursor: ew-resize !important; }
 body.guide_hover_y #main_wrapper, body.guide_hover_y #main_wrapper * { cursor: ns-resize !important; }
+
+/* Layers panel: thumbnails of the layer and its mask (Photoshop); the targeted one has a frame */
+.layers_list .item.with_thumbs {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.layers_list .item.with_thumbs .visibility {
+	order: 0;
+	flex: 0 0 auto;
+	margin-right: 0;
+}
+.layers_list .item.with_thumbs .arrow_down {
+	order: 1;
+	flex: 0 0 auto;
+	margin-right: 0;
+}
+.layers_list .item.with_thumbs .thumbs {
+	order: 2;
+	display: flex;
+	gap: 3px;
+	flex: 0 0 auto;
+}
+.layers_list .item.with_thumbs .layer_name {
+	order: 3;
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+	text-overflow: ellipsis;
+}
+.layers_list .item.with_thumbs .delete {
+	order: 4;
+	flex: 0 0 auto;
+	float: none;
+	margin-left: 0;
+}
+.layers_list .item.with_thumbs .clear {
+	display: none;
+}
+.layers_list .thumb {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 28px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background: transparent;
+	box-shadow: none;
+	cursor: pointer;
+}
+.layers_list .thumb canvas {
+	display: block;
+	max-width: 28px;
+	max-height: 24px;
+	outline: 0.5px solid var(--separator);
+	background-color: #ffffff;
+	background-image: linear-gradient(45deg, #cccccc 25%, transparent 25%), linear-gradient(-45deg, #cccccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #cccccc 75%), linear-gradient(-45deg, transparent 75%, #cccccc 75%);
+	background-size: 8px 8px;
+	background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+}
+.layers_list .thumb.targeted {
+	border-color: var(--text-color);
+}
+.layers_list .mask_thumb.off canvas {
+	opacity: 0.45;
+}
+/* a disabled mask is crossed out in red, as in Photoshop */
+.layers_list .mask_thumb.off {
+	position: relative;
+}
+.layers_list .mask_thumb.off::after {
+	content: '';
+	position: absolute;
+	inset: 2px;
+	background: linear-gradient(to top right, transparent calc(50% - 1px), #ff3b30 calc(50% - 1px), #ff3b30 calc(50% + 1px), transparent calc(50% + 1px)),
+		linear-gradient(to top left, transparent calc(50% - 1px), #ff3b30 calc(50% - 1px), #ff3b30 calc(50% + 1px), transparent calc(50% + 1px));
+	pointer-events: none;
+}
+.layers_list .thumb:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+/* View > Screen Mode > Full Screen Mode: only the picture */
+body.screen_full {
+	--menubar-height: 0px;
+}
+body.screen_full .main_menu {
+	display: none;
+}
+
+/* The Layers panel always keeps room (Photoshop): when the column is too short, the panels above it shrink and
+   scroll inside, their headers stay visible */
+.sidebar_right .block:not(.layers) {
+	flex: 0 1 auto;
+	min-height: 28px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+.sidebar_right .block:not(.layers) > h2 {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background-color: var(--section-background-color);
+}
+.sidebar_right .block.layers {
+	flex: 1 0 auto;
+	min-height: min(260px, 45vh);
+}
+
+/* layers selected together with the active one (Ctrl/Cmd or Shift + click) */
+.layers_list .item.multi_selected .layer_name {
+	background-color: color-mix(in srgb, var(--accent) 45%, transparent);
+	color: var(--text-color);
+}
+
+/* Paths panel (core/gui/gui-paths.js) */
+.paths-content {
+	padding: 0 6px 6px;
+}
+.paths_list {
+	max-height: 180px;
+	overflow-y: auto;
+}
+.path_row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 4px;
+	border-radius: 5px;
+}
+.path_row.current {
+	background: var(--accent-soft, var(--surface-pressed));
+}
+.path_thumb {
+	flex: none;
+	width: 40px;
+	height: 30px;
+	background: var(--field-background);
+	border: 0.5px solid var(--separator);
+	border-radius: 3px;
+}
+.path_name {
+	flex: 1;
+	min-width: 0;
+	height: 22px;
+	padding: 0 4px;
+	overflow: hidden;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	background: none;
+	border: 0;
+	box-shadow: none;
+}
+.path_rename {
+	flex: 1;
+	min-width: 0;
+}
+.paths_empty {
+	padding: 6px 4px;
+	opacity: .7;
+	font-size: 11px;
+}
+.paths_buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 2px;
+	padding-top: 4px;
+	border-top: 0.5px solid var(--separator);
+}
+.paths_button {
+	width: 24px;
+	height: 22px;
+	padding: 0;
+	background: none;
+	border: 0;
+	box-shadow: none;
+	color: inherit;
+	opacity: .75;
+}
+.paths_button:hover {
+	opacity: 1;
+}
+.path_name:focus-visible,
+.paths_button:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}

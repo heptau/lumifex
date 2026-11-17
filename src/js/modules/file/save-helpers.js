@@ -67,8 +67,12 @@ export function export_as_json() {
 		version: VERSION,
 		layer_active: config.layer.id,
 		guides: config.guides,
+		paths: Array.isArray(config.paths) ? config.paths : [],
+		alpha_channels: Array.isArray(config.alpha_channels) ? config.alpha_channels : [],
 		resolution: config.RESOLUTION,
 		units: config.UNITS,
+		layer_comps: config.layer_comps || [],
+		artboards: config.artboards || [],
 	};
 
 	//fonts

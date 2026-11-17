@@ -13,6 +13,7 @@ import * as Distort from './../../libs/distort.js';
 import alertify from './../../../../node_modules/alertifyjs/build/alertify.min.js';
 import { build_curve_editor } from './curve_editor.js';
 import { t } from '../tools/translate.js';
+import { is_smart_object, SMART_OBJECT_MESSAGE } from './../../libs/smart-object.js';
 
 let instance = null;
 
@@ -36,6 +37,10 @@ class Image_adjustments_class {
 	can_apply() {
 		if (config.layer.type != 'image') {
 			alertify.error(t('This layer must contain an image. Please convert it to raster to apply this tool.'));
+			return false;
+		}
+		if (is_smart_object(config.layer)) {
+			alertify.error(t(SMART_OBJECT_MESSAGE));
 			return false;
 		}
 		return true;
