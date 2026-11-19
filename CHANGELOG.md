@@ -9,6 +9,8 @@ Only changes since version 5.0.0 are listed here.
 
 ## [Unreleased]
 
+## [26.4.0] - 2026-11-19
+
 ### Added
 - Edit > Sky Replacement: finds the sky of the photo and puts a new one (a built-in Blue Sky, Sunset, Dusk or Overcast gradient, or another image layer) above it as a masked layer, with Shift Edge, Fade Edge, Scale, Move Down, Flip and a Lighting layer that tints the foreground with the color of the new sky; a live preview and one undo step.
 - Opening a PSD file keeps the layer effects Drop Shadow, Outer Glow, Inner Shadow, Inner Glow, Stroke and Color Overlay as layer styles (also several of one kind from newer files and the global light angle); other effects are still skipped.
